@@ -1,5 +1,9 @@
 # Kewkew high-level architecture
 
+## UX concept
+
+An interactive, responsive mock for the first visitor and staff workflows is available at [`ux-mock.html`](ux-mock.html). Open the file directly in a browser. It includes a staff live queue view, visitor service selection and ticket tracking, and queue settings with a visitor-form preview. The sample services demonstrate the two initial identity policies: required first/last name and anonymous numbered ticket. This is a discussion prototype, not a connected application screen.
+
 ## Purpose
 
 Kewkew lets a business operate one or more virtual queues. A visitor joins a queue from a phone browser, follows their place and estimated wait, and receives updates. Staff manage the queue from a live operations view. The architecture should keep the core queue workflow reliable and understandable while leaving room for service routing, displays, notifications, analytics, and multiple locations.

@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kewkew — UX concept</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17251f;
+      --muted: #718078;
+      --line: #e4eae5;
+      --paper: #fff;
+      --canvas: #f4f7f4;
+      --green: #176b4b;
+      --green-dark: #10523a;
+      --mint: #e6f4ec;
+      --lime: #d4f078;
+      --amber: #fff4d8;
+      --amber-ink: #936516;
+      --red: #a64338;
+      --shadow: 0 18px 50px rgba(26, 52, 39, .09);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell { min-height: 100vh; }
+    .topbar {
+      height: 76px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(20px, 5vw, 72px); background: var(--paper); border-bottom: 1px solid var(--line);
+    }
+    .brand { display:flex; align-items:center; gap:11px; font-weight:800; letter-spacing:-.04em; font-size:22px; }
+    .brand-mark { width:34px; height:34px; display:grid; place-items:center; color:#fff; background:var(--green); border-radius:12px; font-size:17px; letter-spacing:0; }
+    .brand small { display:block; margin-top:2px; color:var(--muted); font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
+    .top-actions { display:flex; align-items:center; gap:18px; }
+    .location-switch { border:1px solid var(--line); background:#fff; border-radius:12px; padding:10px 13px; color:#34443b; font-size:13px; }
+    .avatar { display:grid; place-items:center; width:38px; height:38px; border-radius:50%; background:#dcebe1; color:var(--green-dark); font-size:12px; font-weight:800; }
+    .workspace { display:grid; grid-template-columns:220px minmax(0,1fr); max-width:1440px; margin:auto; min-height:calc(100vh - 76px); }
+    aside { padding:30px 16px 24px 28px; border-right:1px solid var(--line); background:#f9fbf9; }
+    .side-label { margin:0 0 12px 10px; color:#99a39d; font-size:10px; letter-spacing:.13em; text-transform:uppercase; font-weight:800; }
+    .nav-list { display:grid; gap:5px; margin-bottom:32px; }
+    .nav-button { display:flex; gap:12px; align-items:center; width:100%; padding:11px 12px; border:0; border-radius:11px; text-align:left; color:#66736b; background:transparent; font-size:13px; font-weight:650; }
+    .nav-button:hover { background:#edf3ee; color:var(--ink); }
+    .nav-button.active { background:var(--mint); color:var(--green-dark); }
+    .nav-icon { width:18px; text-align:center; font-size:16px; }
+    .side-card { margin:30px 4px 0; padding:15px; border-radius:15px; background:#eef4ef; }
+    .side-card strong { display:block; font-size:12px; }
+    .side-card p { color:var(--muted); font-size:11px; line-height:1.5; margin:7px 0 12px; }
+    .side-card a { color:var(--green); font-size:11px; font-weight:750; text-decoration:none; }
+    main { min-width:0; padding:42px clamp(22px, 5vw, 70px) 64px; }
+    .page { display:none; max-width:1050px; margin:0 auto; animation:fade .18s ease-out; }
+    .page.active { display:block; }
+    @keyframes fade { from { opacity:.5; transform:translateY(3px); } to { opacity:1; transform:none; } }
+    .eyebrow { color:var(--green); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.13em; }
+    h1 { margin:10px 0 8px; font-size:clamp(28px, 4vw, 38px); line-height:1.08; letter-spacing:-.055em; }
+    .subhead { color:var(--muted); margin:0; font-size:14px; line-height:1.6; }
+    .page-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:30px; }
+    .primary, .secondary, .quiet { border:0; border-radius:11px; padding:12px 16px; font-weight:750; font-size:13px; }
+    .primary { color:white; background:var(--green); box-shadow:0 5px 12px rgba(23,107,75,.17); }
+    .primary:hover { background:var(--green-dark); }
+    .secondary { color:var(--green-dark); background:var(--mint); }
+    .quiet { padding:9px 11px; color:#5e6c63; background:transparent; }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:18px; box-shadow:0 5px 20px rgba(26,52,39,.035); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+    .stat { padding:19px 20px; }
+    .stat-label { color:var(--muted); font-size:12px; font-weight:600; }
+    .stat-value { margin-top:10px; font-size:28px; line-height:1; letter-spacing:-.05em; font-weight:800; }
+    .stat-note { margin-top:8px; color:#87948c; font-size:11px; }
+    .positive { color:var(--green); }
+    .queue-card { overflow:hidden; }
+    .queue-head { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:20px 22px; border-bottom:1px solid var(--line); }
+    .queue-title { font-weight:800; font-size:15px; }
+    .queue-title span { display:block; margin-top:5px; color:var(--muted); font-size:11px; font-weight:500; }
+    .online { display:inline-flex; align-items:center; gap:7px; color:var(--green); font-size:11px; font-weight:750; }
+    .dot { width:7px; height:7px; border-radius:50%; background:#45ac73; box-shadow:0 0 0 3px #e4f4e9; }
+    .queue-controls { display:flex; align-items:center; gap:8px; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; min-width:620px; }
+    th { padding:13px 20px; color:#929d96; text-transform:uppercase; letter-spacing:.09em; text-align:left; font-size:9px; }
+    td { padding:15px 20px; border-top:1px solid #eff2ef; font-size:12px; }
+    .ticket-number { color:var(--green-dark); font-weight:850; font-size:14px; }
+    .person { display:flex; align-items:center; gap:10px; font-weight:700; }
+    .person-avatar { width:29px; height:29px; display:grid; place-items:center; border-radius:50%; background:#eef3ef; color:#718078; font-size:10px; font-weight:800; }
+    .status { display:inline-flex; border-radius:99px; padding:6px 9px; background:#eef3ef; color:#68756d; font-size:10px; font-weight:750; }
+    .status.called { color:#906512; background:var(--amber); }
+    .status.serving { color:#176b4b; background:var(--mint); }
+    .table-action { border:0; padding:8px 10px; background:#f0f6f1; color:var(--green-dark); border-radius:8px; font-size:10px; font-weight:800; }
+    .table-action:hover { background:var(--mint); }
+    .lower-grid { display:grid; grid-template-columns:1.25fr .75fr; gap:16px; margin-top:18px; }
+    .lower-card { padding:20px; }
+    .lower-card h3 { font-size:13px; margin:0 0 16px; }
+    .activity { display:grid; gap:14px; }
+    .activity-row { display:flex; gap:11px; align-items:flex-start; color:#5f6d64; font-size:11px; line-height:1.45; }
+    .activity-icon { display:grid; place-items:center; flex:0 0 27px; height:27px; border-radius:9px; background:var(--mint); color:var(--green); }
+    .activity-row time { display:block; margin-top:3px; color:#a0aaa3; font-size:10px; }
+    .bar-area { display:flex; align-items:flex-end; justify-content:space-between; height:89px; padding:4px 4px 0; border-bottom:1px solid var(--line); }
+    .bar-col { display:grid; justify-items:center; gap:7px; height:100%; flex:1; }
+    .bar { width:18px; max-width:60%; align-self:end; border-radius:5px 5px 0 0; background:#b9ddc6; }
+    .bar:nth-child(2) { background:var(--green); }
+    .bar-label { color:#99a39d; font-size:9px; }
+    .visitor-wrap { max-width:980px; margin:10px auto; display:grid; grid-template-columns:1fr 390px; align-items:center; gap:clamp(30px, 7vw, 95px); }
+    .visitor-copy h1 { font-size:clamp(36px, 5vw, 54px); max-width:490px; }
+    .visitor-copy .subhead { max-width:410px; font-size:15px; }
+    .trust-points { display:grid; gap:13px; margin-top:29px; }
+    .trust-point { display:flex; gap:10px; color:#647168; font-size:12px; align-items:center; }
+    .check { width:22px; height:22px; display:grid; place-items:center; background:var(--mint); color:var(--green); border-radius:50%; font-weight:900; }
+    .phone-card { padding:25px; border-radius:25px; box-shadow:var(--shadow); }
+    .business { display:flex; align-items:center; gap:11px; margin-bottom:21px; }
+    .business-mark { width:42px; height:42px; display:grid; place-items:center; background:var(--green); color:white; border-radius:14px; font-weight:850; }
+    .business strong { font-size:13px; display:block; }
+    .business span { color:var(--muted); display:block; margin-top:4px; font-size:10px; }
+    .phone-card h2 { margin:0 0 6px; font-size:20px; letter-spacing:-.04em; }
+    .phone-card .hint { margin:0 0 18px; color:var(--muted); font-size:11px; }
+    .service-option { display:flex; align-items:center; justify-content:space-between; width:100%; padding:13px 14px; margin-bottom:8px; text-align:left; border:1px solid var(--line); background:white; border-radius:12px; color:var(--ink); }
+    .service-option.selected { border:1.5px solid var(--green); background:#f4faf5; }
+    .service-option strong { display:block; font-size:12px; }
+    .service-option small { display:block; margin-top:4px; color:var(--muted); font-size:10px; }
+    .radio { width:17px; height:17px; border:1px solid #cbd6ce; border-radius:50%; }
+    .selected .radio { border:5px solid var(--green); }
+    .field { display:block; margin:13px 0 0; color:#44534a; font-size:10px; font-weight:750; }
+    .field input, .field select { width:100%; margin-top:6px; padding:12px; border:1px solid var(--line); border-radius:10px; outline:none; background:white; color:var(--ink); font-size:12px; }
+    .field input:focus { border-color:var(--green); box-shadow:0 0 0 3px #e5f4eb; }
+    .phone-card .primary { width:100%; margin-top:18px; padding:14px; }
+    .privacy-note { margin:12px 0 0; text-align:center; color:#99a39d; font-size:9px; line-height:1.5; }
+    .ticket-view { max-width:530px; margin:20px auto; text-align:center; padding:32px; }
+    .ticket-check { margin:0 auto 16px; display:grid; place-items:center; width:52px; height:52px; border-radius:18px; color:var(--green); background:var(--mint); font-size:24px; }
+    .ticket-number-large { margin:23px auto 5px; color:var(--green-dark); font-size:64px; font-weight:850; letter-spacing:-.07em; }
+    .ticket-caption { color:var(--muted); font-size:12px; }
+    .wait-box { display:grid; grid-template-columns:1fr 1fr; margin:26px 0; padding:17px 7px; border:1px solid var(--line); border-radius:14px; }
+    .wait-box div + div { border-left:1px solid var(--line); }
+    .wait-box strong { display:block; font-size:20px; }
+    .wait-box span { display:block; margin-top:5px; color:var(--muted); font-size:10px; }
+    .progress-label { display:flex; justify-content:space-between; margin-bottom:8px; color:#6e7a72; font-size:10px; }
+    .progress { height:7px; overflow:hidden; background:#edf1ed; border-radius:99px; }
+    .progress i { display:block; width:38%; height:100%; background:var(--green); border-radius:inherit; }
+    .callout { margin-top:18px; padding:13px; text-align:left; border-radius:12px; background:#f3f7f3; color:#68756d; font-size:10px; line-height:1.5; }
+    .ticket-actions { display:flex; gap:8px; margin-top:17px; }
+    .ticket-actions button { flex:1; }
+    .setup-layout { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(250px,.7fr); gap:18px; }
+    .setup-card { padding:23px; }
+    .setup-card h2 { margin:0 0 6px; font-size:16px; letter-spacing:-.03em; }
+    .setup-card > p { margin:0 0 20px; color:var(--muted); font-size:11px; line-height:1.55; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .radio-choice { display:flex; gap:11px; align-items:flex-start; padding:14px; border:1px solid var(--line); border-radius:12px; margin-top:10px; cursor:pointer; }
+    .radio-choice.selected { border-color:var(--green); background:#f5faf6; }
+    .radio-choice input { accent-color:var(--green); margin:2px 0 0; }
+    .radio-choice strong { display:block; font-size:11px; }
+    .radio-choice span { display:block; color:var(--muted); margin-top:4px; font-size:10px; line-height:1.45; }
+    .preview { padding:21px; background:#f1f6f1; border-radius:16px; }
+    .preview-label { color:#87948b; text-transform:uppercase; letter-spacing:.12em; font-size:9px; font-weight:850; }
+    .preview h3 { font-size:14px; margin:9px 0 13px; }
+    .preview-input { padding:11px; border:1px solid #dce5dd; border-radius:9px; background:white; color:#9aa49c; font-size:10px; margin:8px 0; }
+    .preview-button { margin-top:12px; padding:11px; border-radius:9px; color:white; background:var(--green); text-align:center; font-size:10px; font-weight:800; }
+    .preview-foot { margin-top:13px; color:#87948b; font-size:9px; line-height:1.5; }
+    .inline-note { color:var(--muted); font-size:10px; line-height:1.5; padding:11px 12px; background:#f4f7f4; border-radius:10px; margin-top:14px; }
+    .save-row { display:flex; justify-content:flex-end; gap:8px; margin-top:21px; }
+    .toast { position:fixed; right:22px; bottom:22px; padding:13px 17px; color:white; background:#173d2d; border-radius:12px; box-shadow:var(--shadow); font-size:12px; font-weight:700; opacity:0; transform:translateY(10px); pointer-events:none; transition:.2s; }
+    .toast.show { opacity:1; transform:none; }
+    .mobile-nav { display:none; }
+    @media(max-width:900px) {
+      .workspace { grid-template-columns:180px minmax(0,1fr); }
+      aside { padding-left:14px; }
+      main { padding:32px 24px 50px; }
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .visitor-wrap { grid-template-columns:1fr 360px; gap:26px; }
+      .lower-grid { grid-template-columns:1fr; }
+    }
+    @media(max-width:650px) {
+      .topbar { height:64px; padding:0 17px; }
+      .location-switch { display:none; }
+      .workspace { display:block; min-height:calc(100vh - 64px); }
+      aside { display:none; }
+      main { padding:27px 16px 95px; }
+      .mobile-nav { position:fixed; z-index:5; bottom:0; left:0; right:0; display:flex; justify-content:space-around; padding:9px 8px calc(9px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:rgba(255,255,255,.97); }
+      .mobile-nav .nav-button { width:auto; display:grid; justify-items:center; gap:3px; padding:6px 12px; font-size:9px; }
+      .mobile-nav .nav-icon { font-size:17px; }
+      .page-heading { align-items:flex-start; flex-direction:column; margin-bottom:22px; }
+      .page-heading .primary { width:100%; }
+      .stats { gap:9px; }
+      .stat { padding:15px; }
+      .stat-value { font-size:24px; }
+      .queue-head { align-items:flex-start; flex-direction:column; padding:17px; }
+      .queue-controls { width:100%; justify-content:space-between; }
+      .lower-grid { gap:10px; }
+      .visitor-wrap { display:flex; flex-direction:column; align-items:stretch; gap:24px; margin:0; }
+      .visitor-copy h1 { font-size:37px; }
+      .visitor-copy .subhead { font-size:13px; }
+      .trust-points { margin-top:17px; gap:9px; }
+      .phone-card { padding:20px; }
+      .ticket-view { padding:25px 19px; }
+      .ticket-number-large { font-size:57px; }
+      .setup-layout { grid-template-columns:1fr; }
+      .form-row { grid-template-columns:1fr; gap:0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">k</div><div>Kewkew<small>Queue, without the wait</small></div></div>
+      <div class="top-actions">
+        <button class="location-switch" aria-label="Current location">⌖ &nbsp; Riverside Community Hub &nbsp;⌄</button>
+        <div class="avatar" title="Alex Morgan">AM</div>
+      </div>
+    </header>
+    <div class="workspace">
+      <aside>
+        <p class="side-label">Workspace</p>
+        <nav class="nav-list" aria-label="Main navigation">
+          <button class="nav-button active" data-page="staff"><span class="nav-icon">▦</span>Live queue</button>
+          <button class="nav-button" data-page="visitor"><span class="nav-icon">↗</span>Join a queue</button>
+          <button class="nav-button" data-page="setup"><span class="nav-icon">⚙</span>Queue settings</button>
+        </nav>
+        <p class="side-label">Manage</p>
+        <nav class="nav-list" aria-label="Manage">
+          <button class="nav-button" data-page="setup"><span class="nav-icon">◇</span>Services</button>
+          <button class="nav-button" data-page="staff"><span class="nav-icon">◷</span>Activity</button>
+          <button class="nav-button" data-page="staff"><span class="nav-icon">▤</span>Reports</button>
+        </nav>
+        <div class="side-card"><strong>Need a hand?</strong><p>Get your team set up and make your first queue in minutes.</p><a href="#" data-toast="Help center is coming soon">Visit help center →</a></div>
+      </aside>
+      <main>
+        <section class="page active" id="page-staff">
+          <div class="page-heading">
+            <div><div class="eyebrow">Tuesday, October 20</div><h1>Good morning, Alex</h1><p class="subhead">Here’s how things are moving at Riverside today.</p></div>
+            <button class="primary" data-page="visitor">＋ &nbsp; Add walk-in</button>
+          </div>
+          <div class="stats">
+            <article class="stat card"><div class="stat-label">Waiting now</div><div class="stat-value">12</div><div class="stat-note"><span class="positive">3 joined</span> in the last hour</div></article>
+            <article class="stat card"><div class="stat-label">Average wait</div><div class="stat-value">18 <small style="font-size:14px;letter-spacing:0">min</small></div><div class="stat-note"><span class="positive">↓ 4 min</span> from yesterday</div></article>
+            <article class="stat card"><div class="stat-label">Served today</div><div class="stat-value">34</div><div class="stat-note">Across 2 services</div></article>
+            <article class="stat card"><div class="stat-label">Queue status</div><div class="stat-value" style="font-size:20px;margin-top:14px"><span class="online"><i class="dot"></i> Open</span></div><div class="stat-note">Visitors can join</div></article>
+          </div>
+          <section class="queue-card card">
+            <div class="queue-head">
+              <div class="queue-title">Community food support <span>Riverside · 12 people waiting</span></div>
+              <div class="queue-controls"><span class="online"><i class="dot"></i> Live</span><button class="quiet" data-page="setup">Queue settings ↗</button><button class="secondary" data-toast="Queue paused for new visitors">Pause queue</button></div>
+            </div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Ticket</th><th>Visitor</th><th>Joined</th><th>Wait</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                <tr><td class="ticket-number">#024</td><td><div class="person"><span class="person-avatar">JM</span>Jordan M.</div></td><td>9:42 AM</td><td>Now</td><td><span class="status called">Called</span></td><td><button class="table-action" data-toast="Jordan marked as serving">Start</button></td></tr>
+                <tr><td class="ticket-number">#025</td><td><div class="person"><span class="person-avatar">AT</span>Amara T.</div></td><td>9:46 AM</td><td>~ 4 min</td><td><span class="status">Waiting</span></td><td><button class="table-action" data-toast="Amara has been called">Call</button></td></tr>
+                <tr><td class="ticket-number">#026</td><td><div class="person"><span class="person-avatar">—</span>Anonymous</div></td><td>9:49 AM</td><td>~ 8 min</td><td><span class="status">Waiting</span></td><td><button class="table-action" data-toast="Visitor has been called">Call</button></td></tr>
+                <tr><td class="ticket-number">#027</td><td><div class="person"><span class="person-avatar">RW</span>Riley W.</div></td><td>9:53 AM</td><td>~ 12 min</td><td><span class="status">Waiting</span></td><td><button class="table-action" data-toast="Riley has been called">Call</button></td></tr>
+                <tr><td class="ticket-number">#028</td><td><div class="person"><span class="person-avatar">—</span>Anonymous</div></td><td>9:56 AM</td><td>~ 16 min</td><td><span class="status">Waiting</span></td><td><button class="table-action" data-toast="Visitor has been called">Call</button></td></tr>
+              </tbody>
+            </table></div>
+          </section>
+          <div class="lower-grid">
+            <section class="lower-card card"><h3>Queue activity</h3><div class="activity">
+              <div class="activity-row"><span class="activity-icon">↗</span><div><strong>Ticket #028 joined the queue</strong><time>Just now · Community food support</time></div></div>
+              <div class="activity-row"><span class="activity-icon">✓</span><div><strong>Ticket #023 completed</strong><time>4 min ago · Served by Alex</time></div></div>
+              <div class="activity-row"><span class="activity-icon">◉</span><div><strong>Jordan M. was called</strong><time>7 min ago · Community food support</time></div></div>
+            </div></section>
+            <section class="lower-card card"><h3>Visitors today <span style="float:right;color:var(--muted);font-size:10px;font-weight:500">This week</span></h3><div class="bar-area">
+              <div class="bar-col"><div class="bar" style="height:42%"></div><span class="bar-label">M</span></div><div class="bar-col"><div class="bar" style="height:63%"></div><span class="bar-label">T</span></div><div class="bar-col"><div class="bar" style="height:49%"></div><span class="bar-label">W</span></div><div class="bar-col"><div class="bar" style="height:78%"></div><span class="bar-label">T</span></div><div class="bar-col"><div class="bar" style="height:58%"></div><span class="bar-label">F</span></div><div class="bar-col"><div class="bar" style="height:31%"></div><span class="bar-label">S</span></div><div class="bar-col"><div class="bar" style="height:18%"></div><span class="bar-label">S</span></div>
+            </div></section>
+          </div>
+        </section>
+
+        <section class="page" id="page-visitor">
+          <div class="visitor-wrap">
+            <div class="visitor-copy"><div class="eyebrow">Riverside Community Hub</div><h1>Your place in line, <span style="color:var(--green)">without the wait.</span></h1><p class="subhead">Join from your phone, then take a seat or step outside. We’ll keep your place up to date.</p><div class="trust-points"><div class="trust-point"><span class="check">✓</span>No app or account needed</div><div class="trust-point"><span class="check">✓</span>See your place and estimated wait</div><div class="trust-point"><span class="check">✓</span>Your queue details stay private</div></div></div>
+            <div class="phone-card card" id="join-card">
+              <div class="business"><div class="business-mark">R</div><div><strong>Riverside Community Hub</strong><span>Open today · Closes at 5:00 PM</span></div></div>
+              <h2>What can we help with?</h2><p class="hint">Choose a service to join its queue.</p>
+              <button class="service-option selected" data-service="food"><span><strong>Community food support</strong><small>About 18 min wait · Names required</small></span><i class="radio"></i></button>
+              <button class="service-option" data-service="advice"><span><strong>Community advice</strong><small>About 8 min wait · Join anonymously</small></span><i class="radio"></i></button>
+              <div id="name-fields"><label class="field">First name<input id="first-name" placeholder="e.g. Jordan" autocomplete="given-name"></label><label class="field">Last name<input id="last-name" placeholder="e.g. Morgan" autocomplete="family-name"></label></div>
+              <button class="primary" id="join-button">Join the queue &nbsp; →</button>
+              <p class="privacy-note">By joining, you agree to share the details needed for this service.<br>Your private link is only for you.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-ticket">
+          <article class="ticket-view card">
+            <div class="ticket-check">✓</div><div class="eyebrow">You’re in the queue</div><h1 style="font-size:28px">Thanks, <span id="ticket-name">Jordan</span></h1><p class="subhead">You can stay on this page to follow your place.</p>
+            <div class="ticket-number-large" id="ticket-number">#029</div><div class="ticket-caption">Community food support · Riverside</div>
+            <div class="wait-box"><div><strong id="position">5th</strong><span>in line</span></div><div><strong>~ 18 min</strong><span>estimated wait</span></div></div>
+            <div class="progress-label"><span>People ahead of you</span><span>4 of 12</span></div><div class="progress"><i></i></div>
+            <div class="callout">🔔 &nbsp; Keep this page open. We’ll update your place as the queue moves. When it’s your turn, check in with the team using your ticket number.</div>
+            <div class="ticket-actions"><button class="secondary" data-toast="Private tracking link copied">Copy tracking link</button><button class="quiet" data-page="visitor">Leave queue</button></div>
+          </article>
+        </section>
+
+        <section class="page" id="page-setup">
+          <div class="page-heading"><div><div class="eyebrow">Queue configuration</div><h1>Make this queue yours</h1><p class="subhead">Choose what visitors see and what your team needs to serve them.</p></div><span class="status serving">Queue open</span></div>
+          <div class="setup-layout">
+            <section class="setup-card card"><h2>Community food support</h2><p>Riverside Community Hub · Visitors join from a QR code or shared link.</p>
+              <div class="form-row"><label class="field">Queue name<input value="Community food support"></label><label class="field">Service location<select><option>Riverside Community Hub</option><option>Eastside Centre</option></select></label></div>
+              <label class="field" style="margin-top:23px">Visitor information</label>
+              <label class="radio-choice selected" data-policy="named"><input type="radio" name="identity" checked><span><strong>First and last name required</strong><span>Staff can match the ticket number to a person and prepare a name tag.</span></span></label>
+              <label class="radio-choice" data-policy="anonymous"><input type="radio" name="identity"><span><strong>Anonymous ticket</strong><span>Visitors get a number without sharing their name. Useful for a simple first-come queue.</span></span></label>
+              <div class="inline-note">Visitors will only be asked for the information selected here. You can change this setting at any time.</div>
+              <div class="save-row"><button class="quiet" data-toast="No changes to discard">Cancel</button><button class="primary" data-toast="Queue settings saved">Save changes</button></div>
+            </section>
+            <aside class="preview"><div class="preview-label">Visitor preview</div><h3>Joining your queue</h3><div style="padding:14px;background:white;border:1px solid #e0e8e1;border-radius:12px"><div style="font-size:11px;font-weight:800">Community food support</div><div style="font-size:9px;color:#819087;margin-top:5px">About 18 min wait</div><div class="preview-fields" id="preview-fields"><div class="preview-input">First name</div><div class="preview-input">Last name</div></div><div class="preview-button">Join the queue →</div></div><div class="preview-foot">The form updates to match your visitor information setting. Required fields are checked before a ticket is created.</div></aside>
+          </div>
+        </section>
+      </main>
+    </div>
+    <nav class="mobile-nav" aria-label="Mobile navigation"><button class="nav-button active" data-page="staff"><span class="nav-icon">▦</span>Queue</button><button class="nav-button" data-page="visitor"><span class="nav-icon">↗</span>Join</button><button class="nav-button" data-page="setup"><span class="nav-icon">⚙</span>Settings</button></nav>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+  <script>
+    const pages = [...document.querySelectorAll('.page')];
+    function showPage(name) {
+      pages.forEach(page => page.classList.toggle('active', page.id === `page-${name}`));
+      document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === name));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    document.querySelectorAll('[data-page]').forEach(button => button.addEventListener('click', () => showPage(button.dataset.page)));
+    let toastTimer;
+    function toast(message) {
+      const node = document.getElementById('toast');
+      node.textContent = message;
+      node.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => node.classList.remove('show'), 2400);
+    }
+    document.querySelectorAll('[data-toast]').forEach(button => button.addEventListener('click', event => { event.preventDefault(); toast(button.dataset.toast); }));
+    let selectedService = 'food';
+    document.querySelectorAll('.service-option').forEach(button => button.addEventListener('click', () => {
+      selectedService = button.dataset.service;
+      document.querySelectorAll('.service-option').forEach(option => option.classList.toggle('selected', option === button));
+      document.getElementById('name-fields').hidden = selectedService === 'advice';
+      document.getElementById('join-button').textContent = selectedService === 'food' ? 'Join the queue   →' : 'Get an anonymous ticket   →';
+    }));
+    document.getElementById('join-button').addEventListener('click', () => {
+      const firstName = document.getElementById('first-name').value.trim();
+      const lastName = document.getElementById('last-name').value.trim();
+      if (selectedService === 'food' && (!firstName || !lastName)) {
+        toast('Enter your first and last name to continue');
+        document.getElementById(!firstName ? 'first-name' : 'last-name').focus();
+        return;
+      }
+      document.getElementById('ticket-name').textContent = selectedService === 'food' ? firstName : 'there';
+      document.getElementById('ticket-number').textContent = selectedService === 'food' ? '#029' : '#014';
+      document.getElementById('position').textContent = selectedService === 'food' ? '5th' : '2nd';
+      showPage('ticket');
+    });
+    document.querySelectorAll('.radio-choice').forEach(choice => choice.addEventListener('click', () => {
+      document.querySelectorAll('.radio-choice').forEach(option => {
+        const selected = option === choice;
+        option.classList.toggle('selected', selected);
+        option.querySelector('input').checked = selected;
+      });
+      const fields = document.getElementById('preview-fields');
+      fields.hidden = choice.dataset.policy === 'anonymous';
+    }));
+  </script>
+</body>
+</html>
