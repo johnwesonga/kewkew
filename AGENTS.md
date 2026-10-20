@@ -1,5 +1,19 @@
 This is a web application written using the Phoenix web framework.
 
+## Project context
+
+- The project is **Kewkew**, a virtual queue management system inspired by [qrq.app](https://qrq.app/en/).
+- The GitHub repository is [johnwesonga/kewkew](https://github.com/johnwesonga/kewkew).
+- Businesses can create queues; visitors can join from their phones without installing an app, track their position and estimated wait, and staff can manage the queue.
+- The product also supports service selection, staff routing, waiting-room displays, notifications, analytics, and multiple locations.
+
+## Product and delivery guidelines
+
+- Store all design documents in the `docs/` directory.
+- Scope every feature as one or more user stories before implementation. Each story should identify the user, their goal, and the value they receive; include acceptance criteria so the work can be reviewed and tested.
+- Keep pull requests small and incremental. Prefer focused, testable changes over large batches of unrelated work.
+- After every code change, create a git commit and push it to the configured remote repository.
+
 ## Project guidelines
 
 - Use `mix precommit` alias when you are done with all changes and fix any pending issues
