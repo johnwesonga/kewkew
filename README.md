@@ -10,6 +10,8 @@ Kewkew is being built with Phoenix, LiveView, Ash, and PostgreSQL as a modular w
 
 The repository currently contains the Phoenix/Ash application foundation. Product features are being scoped and delivered incrementally as user stories.
 
+The initial implementation focus is the [visitor flow](docs/visitor-flow-user-stories.md), from opening a queue link through joining and tracking a ticket.
+
 ## Getting started
 
 Requirements: Elixir and Erlang/OTP compatible with the versions in `mix.exs`, PostgreSQL, and the asset tooling installed by the setup task.

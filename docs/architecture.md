@@ -93,6 +93,8 @@ Keep the initial deployment as one Phoenix release with PostgreSQL. Run queue pr
 
 Each slice should be independently reviewable and tested. These are candidate user-story scopes, not a commitment to implement all features in one change.
 
+The visitor-flow stories and their acceptance criteria are detailed in [`visitor-flow-user-stories.md`](visitor-flow-user-stories.md). Visitor stories are the first implementation area; staff operations and business setup remain dependencies or later stories.
+
 1. **Business foundation** — As a business owner, I want an organization and one location so that my queue data is isolated and associated with a real operating site. Acceptance: create the first organization/location; authorized staff can access it; unrelated tenants cannot read or change it.
 2. **Service and queue setup** — As a manager, I want to define a service, open a queue at a location, and choose whether visitors join anonymously or must provide first and last name, so the queue matches how my business serves people. Acceptance: queue is tied to a location/service; its identity policy is explicit; authorized managers can configure it; public join is unavailable when closed.
 3. **Visitor joins and tracking** — As a visitor, I want to join from my phone under the queue's name policy and receive a private status page so I can wait without installing an app. Acceptance: anonymous queues accept no name and create a numbered ticket; name-required queues collect and validate first and last name; successful join creates an ordered ticket and opaque tracking token; invalid requests are rejected safely; status shows position and estimated wait.
@@ -104,7 +106,7 @@ Each slice should be independently reviewable and tested. These are candidate us
 ## Decisions to make when needed
 
 - Authentication and account onboarding approach.
-- Whether queue entries are anonymous, contact-based, or configurable per service.
+- Whether to add identity-policy options beyond the initial anonymous or first-and-last-name-required choices.
 - Initial notification channel and provider.
 - Business rules for priority, appointments, capacity, operating hours, and no-shows.
 - Production PubSub adapter and background-job mechanism once deployment requirements are known.
