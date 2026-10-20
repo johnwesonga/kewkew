@@ -1,18 +1,46 @@
 # Kewkew
 
-To start your Phoenix server:
+Kewkew is a virtual queue management system for businesses. Visitors join a queue from their phones without installing an app, follow their position and estimated wait, and receive updates while staff manage the line.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+Planned capabilities include service selection, staff routing, waiting-room displays, notifications, analytics, and support for multiple locations. Queue configuration will let businesses choose whether visitors join anonymously or provide identifying information such as first and last name.
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+Kewkew is being built with Phoenix, LiveView, Ash, and PostgreSQL as a modular web application. See the [high-level architecture](docs/architecture.md) for the proposed system boundaries and incremental delivery plan.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## Status
 
-## Learn more
+The repository currently contains the Phoenix/Ash application foundation. Product features are being scoped and delivered incrementally as user stories.
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://hexdocs.pm/phoenix/overview.html
-* Docs: https://hexdocs.pm/phoenix
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+## Getting started
+
+Requirements: Elixir and Erlang/OTP compatible with the versions in `mix.exs`, PostgreSQL, and the asset tooling installed by the setup task.
+
+1. Install dependencies and set up the database and assets:
+
+   ```sh
+   mix setup
+   ```
+
+2. Start the server:
+
+   ```sh
+   mix phx.server
+   ```
+
+   Or start an interactive shell with the server:
+
+   ```sh
+   iex -S mix phx.server
+   ```
+
+3. Visit [http://localhost:4000](http://localhost:4000).
+
+## Development
+
+- Run the test suite with `mix test`.
+- Run the project checks and formatter with `mix precommit` before committing changes.
+- Store design documents in [`docs/`](docs/).
+- Scope each feature as a user story with reviewable acceptance criteria, and keep changes small and testable.
+
+## Repository
+
+[github.com/johnwesonga/kewkew](https://github.com/johnwesonga/kewkew)
