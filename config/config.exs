@@ -56,6 +56,7 @@ config :spark,
 
 config :kewkew,
   ecto_repos: [Kewkew.Repo],
+  ash_domains: [Kewkew.Business, Kewkew.Queues],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint

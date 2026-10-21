@@ -227,11 +227,15 @@ Ticket creation must be one server-side operation with the following shape:
 
 Repeated submit handling needs an idempotency strategy. A short-lived join-attempt key can be unique per queue and request attempt, but must not be used as the tracking credential. Decide whether retries should return the already-created ticket link or ask the visitor to restart if the original response was lost.
 
-## Ash resource boundary proposal
+## Ash domain and resource boundary
 
-Implement resources incrementally in the domain module that owns queues/tickets. Candidate resources are `Queue`, `Ticket`, `TicketEvent`, and `TrackingCredential`. Expose narrow actions such as `get_public_queue`, `join`, `get_by_tracking_token`, and `cancel_by_tracking_token`; avoid public generic CRUD actions. The join action should own the transaction and event publication should happen only after commit. Authorization for staff actions belongs in policy/action boundaries; public actions accept only the public slug, allowed visitor fields, and scoped tracking credential.
+The initial resource scaffold is in place:
 
-Exact Ash domain/resource file names and action declarations should be designed in the implementation story, after confirming the installed Ash APIs and generating the initial migration.
+- `Kewkew.Business` owns `Location` and `Service`.
+- `Kewkew.Queues` owns `Queue`, `QueueSession`, `Ticket`, `TicketEvent`, and `TrackingCredential`.
+- AshPostgres persists these resources in PostgreSQL; the initial migration and resource snapshots are generated from their definitions.
+
+This first pass defines the schema and read actions only. It does not yet provide a visitor-facing join action or public tracking interface. Add narrow interfaces such as `get_public_queue`, `join`, `get_by_tracking_token`, and `cancel_by_tracking_token` in focused implementation stories; avoid public generic CRUD actions. The join action must own the transaction and event publication must happen only after commit. Authorization for staff actions belongs in policy/action boundaries; public actions should accept only the public slug, allowed visitor fields, and scoped tracking credential.
 
 ## Open decisions
 
