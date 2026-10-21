@@ -19,6 +19,10 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
 
     assert document |> LazyHTML.query_by_id("visitor-queue-status") |> LazyHTML.text() =~
              "Open now"
+
+    assert document
+           |> LazyHTML.query_by_id("visitor-join-queue")
+           |> LazyHTML.attribute("disabled") == []
   end
 
   test "shows a generic unavailable page for an unknown queue link", %{conn: conn} do
@@ -43,6 +47,46 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
 
     assert document |> LazyHTML.query_by_id("visitor-queue-status") |> LazyHTML.text() =~
              "Not accepting visitors"
+
+    assert document
+           |> LazyHTML.query_by_id("visitor-join-queue")
+           |> LazyHTML.attribute("disabled") != []
+  end
+
+  test "explains a paused queue and disables joining", %{conn: conn} do
+    queue = create_queue_fixture(session_status: :paused)
+
+    conn = get(conn, "/q/#{queue.public_slug}")
+
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert document |> LazyHTML.query_by_id("visitor-queue-status") |> LazyHTML.text() =~
+             "Temporarily paused"
+
+    assert document |> LazyHTML.query_by_id("visitor-queue-availability") |> LazyHTML.text() =~
+             "temporarily paused"
+
+    assert document
+           |> LazyHTML.query_by_id("visitor-join-queue")
+           |> LazyHTML.attribute("disabled") != []
+  end
+
+  test "explains a closed queue and disables joining", %{conn: conn} do
+    queue = create_queue_fixture(session_status: :closed)
+
+    conn = get(conn, "/q/#{queue.public_slug}")
+
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert document |> LazyHTML.query_by_id("visitor-queue-status") |> LazyHTML.text() =~
+             "Not accepting visitors"
+
+    assert document |> LazyHTML.query_by_id("visitor-queue-availability") |> LazyHTML.text() =~
+             "currently closed"
+
+    assert document
+           |> LazyHTML.query_by_id("visitor-join-queue")
+           |> LazyHTML.attribute("disabled") != []
   end
 
   defp create_queue_fixture(opts \\ []) do

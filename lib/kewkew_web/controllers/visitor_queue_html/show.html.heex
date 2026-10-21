@@ -43,7 +43,8 @@
               "inline-flex items-center gap-2 rounded-full px-3 py-2 text-[11px] font-extrabold",
               @availability.state == :open && "bg-[#e6f4ec] text-[#176b4b]",
               @availability.state == :paused && "bg-[#fff4d8] text-[#936516]",
-              @availability.state == :closed && "bg-[#eef2ef] text-[#66736b]"
+              @availability.state == :closed && "bg-[#eef2ef] text-[#66736b]",
+              @availability.state == :full && "bg-[#fff0e8] text-[#9b4c25]"
             ]}
             id="visitor-queue-status"
           >
@@ -51,7 +52,8 @@
               "size-2 rounded-full",
               @availability.state == :open && "bg-[#45ac73]",
               @availability.state == :paused && "bg-[#d3a23d]",
-              @availability.state == :closed && "bg-[#98a39b]"
+              @availability.state == :closed && "bg-[#98a39b]",
+              @availability.state == :full && "bg-[#d8794b]"
             ]}>
             </span>
             {@availability.label}
@@ -65,6 +67,23 @@
           {@service.name}
         </h2>
         <p class="mt-2 text-sm font-semibold text-[#5f6d64]">{@queue.name}</p>
+
+        <p id="visitor-queue-availability" class="mt-4 text-sm leading-6 text-[#5f6d64]">
+          {@availability.message}
+        </p>
+
+        <button
+          id="visitor-join-queue"
+          type="button"
+          disabled={@availability.state != :open}
+          class={[
+            "mt-6 w-full rounded-xl px-5 py-3.5 text-sm font-extrabold transition",
+            @availability.state == :open && "bg-[#176b4b] text-white hover:bg-[#10523a]",
+            @availability.state != :open && "cursor-not-allowed bg-[#e9eeea] text-[#87948b]"
+          ]}
+        >
+          Continue to join
+        </button>
 
         <div class="my-6 h-px bg-[#e9eeea]"></div>
 
