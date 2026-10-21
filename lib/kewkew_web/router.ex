@@ -23,7 +23,12 @@ defmodule KewkewWeb.Router do
     post "/q/:slug/join", VisitorQueueController, :create_join
     get "/locations/:location_id/services", VisitorQueueController, :services
     get "/t/:token", VisitorQueueController, :track
-    get "/t/:token/status", VisitorQueueController, :track_status
+  end
+
+  scope "/t", KewkewWeb do
+    pipe_through :api
+
+    get "/:token/status", VisitorQueueController, :track_status
   end
 
   # Other scopes may use custom stacks.

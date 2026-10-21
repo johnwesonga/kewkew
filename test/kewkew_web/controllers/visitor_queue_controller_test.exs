@@ -232,7 +232,11 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
     |> Ecto.Changeset.change(status: :called)
     |> Kewkew.Repo.update!()
 
-    conn = get(conn, "/t/#{second_token}/status")
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> get("/t/#{second_token}/status")
+
     response = json_response(conn, 200)
 
     assert response["status"] == "called"
