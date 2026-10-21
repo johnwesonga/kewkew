@@ -18,6 +18,10 @@ defmodule Kewkew.Queues.TrackingCredential do
 
   actions do
     defaults [:read]
+
+    create :create_for_ticket do
+      accept [:token_digest, :ticket_id]
+    end
   end
 
   attributes do

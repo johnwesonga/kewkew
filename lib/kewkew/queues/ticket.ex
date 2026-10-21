@@ -19,6 +19,10 @@ defmodule Kewkew.Queues.Ticket do
 
   actions do
     defaults [:read]
+
+    create :join_anonymous do
+      accept [:queue_session_id, :ticket_number, :queue_sequence]
+    end
   end
 
   attributes do

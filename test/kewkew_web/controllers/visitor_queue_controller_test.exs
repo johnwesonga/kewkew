@@ -1,6 +1,8 @@
 defmodule KewkewWeb.VisitorQueueControllerTest do
   use KewkewWeb.ConnCase
 
+  require Ash.Query
+
   test "shows the queue, service, location, and open state for a valid public link", %{conn: conn} do
     queue = create_queue_fixture()
 
@@ -133,6 +135,107 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
     refute LazyHTML.text(document) =~ "Riverside Community Hub"
   end
 
+  test "anonymous queue join asks for no personal details", %{conn: conn} do
+    queue = create_queue_fixture()
+
+    conn = get(conn, "/q/#{queue.public_slug}/join")
+
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(document, "visitor-join-form")
+    assert LazyHTML.query_by_id(document, "visitor-confirm-join")
+    assert LazyHTML.text(document) =~ "No name or contact details are needed"
+
+    assert LazyHTML.query(document, "input[name='join[first_name]']")
+           |> LazyHTML.attribute("name") == []
+
+    assert LazyHTML.query(document, "input[name='join[last_name]']")
+           |> LazyHTML.attribute("name") == []
+  end
+
+  test "anonymous join creates one ticket and returns its private tracking page", %{conn: conn} do
+    queue = create_queue_fixture()
+    attempt_token = new_attempt_token()
+
+    assert {:ok, first_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, attempt_token)
+
+    assert {:ok, repeated_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, attempt_token)
+
+    assert first_join.ticket.id == repeated_join.ticket.id
+    assert first_join.ticket.ticket_number == 1
+
+    tracking_path = "/t/#{attempt_token}"
+    conn = get(conn, tracking_path)
+
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(document, "visitor-ticket")
+    assert LazyHTML.query_by_id(document, "visitor-ticket-number") |> LazyHTML.text() =~ "1"
+    assert LazyHTML.text(document) =~ "Food support"
+    assert LazyHTML.text(document) =~ "Riverside Community Hub"
+    assert get_resp_header(conn, "cache-control") == ["no-store"]
+    assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
+  end
+
+  test "submitting the visitor form redirects to the private ticket page", %{conn: conn} do
+    queue = create_queue_fixture()
+    conn = get(conn, "/q/#{queue.public_slug}/join")
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    [attempt_token] =
+      document
+      |> LazyHTML.query("#visitor-join-form input[name='join[attempt_token]']")
+      |> LazyHTML.attribute("value")
+
+    conn =
+      post(conn, "/q/#{queue.public_slug}/join", %{
+        "join" => %{"attempt_token" => attempt_token}
+      })
+
+    assert redirected_to(conn) == "/t/#{attempt_token}"
+  end
+
+  test "join rejects name-required, paused, and full queues" do
+    name_required_queue = create_queue_fixture(identity_policy: :name_required)
+
+    assert {:error, :name_required} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(
+               name_required_queue.public_slug,
+               new_attempt_token()
+             )
+
+    paused_queue = create_queue_fixture(session_status: :paused)
+
+    assert {:error, :unavailable} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(
+               paused_queue.public_slug,
+               new_attempt_token()
+             )
+
+    full_queue = create_queue_fixture(max_active_tickets: 1)
+
+    assert {:ok, _join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(full_queue.public_slug, new_attempt_token())
+
+    assert {:error, :full} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(full_queue.public_slug, new_attempt_token())
+  end
+
+  test "name-required queue does not show anonymous join controls", %{conn: conn} do
+    queue = create_queue_fixture(identity_policy: :name_required)
+
+    conn = get(conn, "/q/#{queue.public_slug}/join")
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(document, "visitor-join-name-required")
+    assert LazyHTML.query_by_id(document, "visitor-join-message")
+
+    assert LazyHTML.query(document, "form#visitor-join-form")
+           |> LazyHTML.attribute("id") == []
+  end
+
   defp create_queue_fixture(opts \\ []) do
     location =
       Ash.create!(
@@ -155,7 +258,9 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
           name: "Community food support",
           public_slug: "riverside-food-#{System.unique_integer([:positive])}",
           location_id: location.id,
-          service_id: service.id
+          service_id: service.id,
+          identity_policy: Keyword.get(opts, :identity_policy, :anonymous),
+          max_active_tickets: Keyword.get(opts, :max_active_tickets)
         },
         domain: Kewkew.Queues
       )
@@ -198,5 +303,9 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
     )
 
     queue
+  end
+
+  defp new_attempt_token do
+    :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
   end
 end

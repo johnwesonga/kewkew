@@ -63,4 +63,47 @@ if is_nil(latest_session) or latest_session.status == :closed do
   Ash.create!(QueueSession, %{queue_id: queue.id}, domain: Queues)
 end
 
-IO.puts("Development queue is available at /q/#{queue.public_slug}")
+anonymous_service =
+  Ash.read_one!(
+    Ash.Query.filter(Service, location_id == ^location.id and name == ^"General enquiries"),
+    domain: Business
+  ) ||
+    Ash.create!(
+      Service,
+      %{
+        name: "General enquiries",
+        description: "Get help with general questions",
+        location_id: location.id
+      },
+      domain: Business
+    )
+
+anonymous_queue =
+  Ash.read_one!(
+    Ash.Query.filter(Queue, public_slug == ^"riverside-general-enquiries"),
+    domain: Queues
+  ) ||
+    Ash.create!(
+      Queue,
+      %{
+        name: "General enquiries",
+        public_slug: "riverside-general-enquiries",
+        identity_policy: :anonymous,
+        location_id: location.id,
+        service_id: anonymous_service.id
+      },
+      domain: Queues
+    )
+
+anonymous_latest_session =
+  Ash.read_one!(
+    Ash.Query.for_read(QueueSession, :latest_for_queue, %{queue_id: anonymous_queue.id}),
+    domain: Queues
+  )
+
+if is_nil(anonymous_latest_session) or anonymous_latest_session.status == :closed do
+  Ash.create!(QueueSession, %{queue_id: anonymous_queue.id}, domain: Queues)
+end
+
+IO.puts("Name-required demo queue: /q/#{queue.public_slug}")
+IO.puts("Anonymous demo queue: /q/#{anonymous_queue.public_slug}")

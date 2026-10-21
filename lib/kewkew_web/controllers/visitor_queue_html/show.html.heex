@@ -72,18 +72,24 @@
           {@availability.message}
         </p>
 
-        <button
-          id="visitor-join-queue"
-          type="button"
-          disabled={@availability.state != :open}
-          class={[
-            "mt-6 w-full rounded-xl px-5 py-3.5 text-sm font-extrabold transition",
-            @availability.state == :open && "bg-[#176b4b] text-white hover:bg-[#10523a]",
-            @availability.state != :open && "cursor-not-allowed bg-[#e9eeea] text-[#87948b]"
-          ]}
-        >
-          Continue to join
-        </button>
+        <%= if @availability.state == :open do %>
+          <a
+            id="visitor-join-queue"
+            href={"/q/#{@queue.public_slug}/join"}
+            class="mt-6 block w-full rounded-xl bg-[#176b4b] px-5 py-3.5 text-center text-sm font-extrabold text-white transition hover:bg-[#10523a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#176b4b]"
+          >
+            Continue to join
+          </a>
+        <% else %>
+          <button
+            id="visitor-join-queue"
+            type="button"
+            disabled
+            class="mt-6 w-full cursor-not-allowed rounded-xl bg-[#e9eeea] px-5 py-3.5 text-sm font-extrabold text-[#87948b]"
+          >
+            Joining unavailable
+          </button>
+        <% end %>
 
         <div class="my-6 h-px bg-[#e9eeea]"></div>
 

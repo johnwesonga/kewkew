@@ -17,6 +17,10 @@ defmodule Kewkew.Queues.TicketEvent do
 
   actions do
     defaults [:read]
+
+    create :record_transition do
+      accept [:ticket_id, :from_status, :to_status, :actor_type, :occurred_at]
+    end
   end
 
   attributes do
