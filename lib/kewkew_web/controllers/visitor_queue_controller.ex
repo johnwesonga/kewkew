@@ -1,6 +1,9 @@
 defmodule KewkewWeb.VisitorQueueController do
+  @moduledoc "Public controller actions for visitor queue discovery, joining, and ticket tracking."
+
   use KewkewWeb, :controller
 
+  @doc "Displays a public queue's details and current visitor availability."
   def show(conn, %{"slug" => slug}) do
     case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
       {:ok, nil} ->
@@ -28,6 +31,7 @@ defmodule KewkewWeb.VisitorQueueController do
     end
   end
 
+  @doc "Displays the anonymous join confirmation page for a public queue."
   def join(conn, %{"slug" => slug}) do
     case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
       {:ok, %{queue: queue, session: session, active_ticket_count: active_ticket_count}} ->
@@ -40,6 +44,7 @@ defmodule KewkewWeb.VisitorQueueController do
     end
   end
 
+  @doc "Handles an anonymous join submission, creating a ticket or returning a useful form error."
   def create_join(conn, %{"slug" => slug, "join" => %{"attempt_token" => attempt_token}}) do
     case Kewkew.Queues.VisitorJoin.join_anonymous(slug, attempt_token) do
       {:ok, %{tracking_token: token}} ->
@@ -78,6 +83,7 @@ defmodule KewkewWeb.VisitorQueueController do
     end
   end
 
+  @doc "Displays the private ticket page authorized by its tracking token."
   def track(conn, %{"token" => token}) do
     case Kewkew.Queues.PublicLookup.fetch_tracking_ticket(token) do
       {:ok, nil} ->
@@ -143,6 +149,7 @@ defmodule KewkewWeb.VisitorQueueController do
 
   defp join_error_message(_reason), do: "We could not add you to the queue. Please try again."
 
+  @doc "Lists the visitor-facing services and their availability for a location."
   def services(conn, %{"location_id" => location_id}) do
     case Kewkew.Queues.PublicLookup.list_location_queues(location_id) do
       {:ok, nil} ->
