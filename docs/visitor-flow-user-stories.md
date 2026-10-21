@@ -146,7 +146,7 @@ flowchart LR
 - Repeating the action is safe and does not create inconsistent state.
 - A ticket already called or being served follows the configured policy and explains when self-cancellation is unavailable.
 
-**Dependencies** — Ticket state transitions and a business decision on cancellation after call/while serving.
+**Dependencies** — Ticket state transitions. Initial policy permits visitor cancellation only while waiting; a later policy change can allow cancellation after call or while serving.
 
 ### VF-9: Understand when I am called
 
@@ -175,7 +175,7 @@ Each implementation slice should have focused domain and LiveView tests for its 
 ## Decisions to resolve before the relevant story
 
 - Tracking-link token lifetime, revocation, and behavior after a ticket is completed.
-- Whether visitors may cancel after they have been called or service has started.
+- Whether to allow visitor cancellation after a ticket has been called or service has started.
 - Whether the first release supports only direct queue links or also a location landing page with service selection.
 - Whether to add estimated wait after the initial release, and its fallback when there is too little completed-service history.
 - Exact service instructions shown in the called state.

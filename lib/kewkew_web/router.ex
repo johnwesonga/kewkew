@@ -21,6 +21,7 @@ defmodule KewkewWeb.Router do
     get "/q/:slug", VisitorQueueController, :show
     get "/q/:slug/join", VisitorQueueController, :join
     post "/q/:slug/join", VisitorQueueController, :create_join
+    post "/t/:token/cancel", VisitorQueueController, :cancel_ticket
     get "/locations/:location_id/services", VisitorQueueController, :services
     get "/t/:token", VisitorQueueController, :track
   end

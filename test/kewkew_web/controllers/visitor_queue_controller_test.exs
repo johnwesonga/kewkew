@@ -215,6 +215,69 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
              "2 in line"
   end
 
+  test "visitor can cancel a waiting ticket and repeat the request safely", %{conn: conn} do
+    queue = create_queue_fixture()
+    token = new_attempt_token()
+    assert {:ok, join} = Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, token)
+    second_token = new_attempt_token()
+
+    assert {:ok, _second_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, second_token)
+
+    page = get(conn, "/t/#{token}")
+    page_document = page |> html_response(200) |> LazyHTML.from_document()
+    assert LazyHTML.query_by_id(page_document, "visitor-cancel-ticket")
+
+    cancel_conn = post(recycle(page), "/t/#{token}/cancel")
+    assert redirected_to(cancel_conn) == "/t/#{token}"
+
+    cancelled_page = get(recycle(cancel_conn), "/t/#{token}")
+    cancelled_document = cancelled_page |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(cancelled_document, "visitor-cancel-ticket")
+           |> LazyHTML.attribute("id") == []
+
+    assert LazyHTML.query_by_id(cancelled_document, "visitor-ticket-status")
+           |> LazyHTML.text() =~ "You left this queue"
+
+    ticket = Kewkew.Repo.get!(Kewkew.Queues.Ticket, join.ticket.id)
+    assert ticket.status == :cancelled
+    assert ticket.cancelled_at
+    assert ticket_event_count(ticket.id, :cancelled) == 1
+
+    second_page = get(recycle(cancelled_page), "/t/#{second_token}")
+    second_document = second_page |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(second_document, "visitor-ticket-position")
+           |> LazyHTML.text() =~ "1 in line"
+
+    repeated_conn = post(recycle(cancelled_page), "/t/#{token}/cancel")
+    assert redirected_to(repeated_conn) == "/t/#{token}"
+    assert ticket_event_count(ticket.id, :cancelled) == 1
+  end
+
+  test "visitor cannot cancel after being called and gets the policy explanation", %{conn: conn} do
+    queue = create_queue_fixture()
+    token = new_attempt_token()
+    assert {:ok, join} = Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, token)
+
+    join.ticket
+    |> Ecto.Changeset.change(status: :called)
+    |> Kewkew.Repo.update!()
+
+    page = get(conn, "/t/#{token}")
+    document = page |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(document, "visitor-cancel-ticket")
+           |> LazyHTML.attribute("id") == []
+
+    assert LazyHTML.query_by_id(document, "visitor-cancellation-policy")
+
+    response = post(recycle(page), "/t/#{token}/cancel")
+    assert redirected_to(response) == "/t/#{token}"
+    assert Kewkew.Repo.get!(Kewkew.Queues.Ticket, join.ticket.id).status == :called
+  end
+
   test "ticket status endpoint returns only the visitor's current status and position", %{
     conn: conn
   } do
@@ -522,5 +585,11 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
       Ash.Query.filter(Kewkew.Queues.TrackingCredential, token_digest == ^digest),
       domain: Kewkew.Queues
     )
+  end
+
+  defp ticket_event_count(ticket_id, to_status) do
+    Kewkew.Queues.TicketEvent
+    |> Ash.Query.filter(ticket_id == ^ticket_id and to_status == ^to_status)
+    |> Ash.count!(domain: Kewkew.Queues)
   end
 end

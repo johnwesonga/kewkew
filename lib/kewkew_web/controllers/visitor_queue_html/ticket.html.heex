@@ -36,6 +36,29 @@
       </p>
     </div>
 
+    <%= if @ticket.status == :waiting do %>
+      <form
+        action={"/t/#{@tracking_token}/cancel"}
+        method="post"
+        data-confirm="Leave this queue? Your place in line will be cancelled."
+      >
+        <input type="hidden" name="_csrf_token" value={@csrf_token} />
+        <button
+          id="visitor-cancel-ticket"
+          type="submit"
+          class="mt-5 w-full rounded-xl border border-[#e8c8c4] px-4 py-3 text-sm font-extrabold text-[#9b3f35] hover:bg-[#fff7f5]"
+        >
+          Leave queue
+        </button>
+      </form>
+    <% end %>
+
+    <%= if @ticket.status in [:called, :serving] do %>
+      <p id="visitor-cancellation-policy" class="mt-5 text-sm text-[#718078]">
+        Your number has been called. Please speak to staff if you need to leave.
+      </p>
+    <% end %>
+
     <p class="mt-6 text-sm leading-6 text-[#718078]">
       Your ticket number identifies your place in line. The private link below is what lets you return to this page.
     </p>
