@@ -10,6 +10,19 @@ defmodule Kewkew.Queues.VisitorJoin do
   alias Kewkew.Repo
 
   def join_anonymous(slug, attempt_token) when is_binary(slug) and is_binary(attempt_token) do
+    perform_join(slug, attempt_token, %{}, :anonymous)
+  end
+
+  def join_anonymous(_slug, _attempt_token), do: {:error, :invalid_attempt}
+
+  def join_visitor(slug, attempt_token, params)
+      when is_binary(slug) and is_binary(attempt_token) and is_map(params) do
+    perform_join(slug, attempt_token, params, :any)
+  end
+
+  def join_visitor(_slug, _attempt_token, _params), do: {:error, :invalid_attempt}
+
+  defp perform_join(slug, attempt_token, params, expected_policy) do
     with :ok <- validate_attempt_token(attempt_token) do
       token_digest = digest(attempt_token)
 
@@ -19,7 +32,7 @@ defmodule Kewkew.Queues.VisitorJoin do
                  %{ticket: ticket, tracking_token: attempt_token}
 
                nil ->
-                 create_ticket(slug, attempt_token, token_digest)
+                 create_ticket(slug, attempt_token, token_digest, params, expected_policy)
              end
            end) do
         {:ok, result} -> {:ok, result}
@@ -28,9 +41,7 @@ defmodule Kewkew.Queues.VisitorJoin do
     end
   end
 
-  def join_anonymous(_slug, _attempt_token), do: {:error, :invalid_attempt}
-
-  defp create_ticket(slug, tracking_token, token_digest) do
+  defp create_ticket(slug, tracking_token, token_digest, params, expected_policy) do
     queue =
       Queue
       |> Ash.Query.for_read(:by_public_slug, %{slug: slug})
@@ -40,9 +51,10 @@ defmodule Kewkew.Queues.VisitorJoin do
       Repo.rollback(:unavailable)
     end
 
-    if queue.identity_policy != :anonymous do
-      Repo.rollback(:name_required)
-    end
+    if expected_policy == :anonymous and queue.identity_policy != :anonymous,
+      do: Repo.rollback(:name_required)
+
+    names = names_for_policy(queue.identity_policy, params)
 
     session =
       Repo.one(
@@ -67,7 +79,7 @@ defmodule Kewkew.Queues.VisitorJoin do
         Repo.rollback(:full)
 
       true ->
-        create_ticket_records(session, tracking_token, token_digest)
+        create_ticket_records(session, tracking_token, token_digest, names)
     end
   end
 
@@ -84,7 +96,7 @@ defmodule Kewkew.Queues.VisitorJoin do
     active_count >= queue.max_active_tickets
   end
 
-  defp create_ticket_records(session, tracking_token, token_digest) do
+  defp create_ticket_records(session, tracking_token, token_digest, names) do
     ticket_number = session.next_ticket_number
     queue_sequence = session.next_queue_sequence
 
@@ -101,9 +113,11 @@ defmodule Kewkew.Queues.VisitorJoin do
         %{
           queue_session_id: session.id,
           ticket_number: ticket_number,
-          queue_sequence: queue_sequence
+          queue_sequence: queue_sequence,
+          first_name: names.first_name,
+          last_name: names.last_name
         },
-        action: :join_anonymous,
+        action: :join_visitor,
         domain: Queues
       )
 
@@ -127,6 +141,33 @@ defmodule Kewkew.Queues.VisitorJoin do
 
     %{ticket: ticket, tracking_token: tracking_token}
   end
+
+  defp names_for_policy(:anonymous, _params), do: %{first_name: nil, last_name: nil}
+
+  defp names_for_policy(:name_required, params) do
+    first_name = normalize_name(Map.get(params, "first_name"))
+    last_name = normalize_name(Map.get(params, "last_name"))
+
+    cond do
+      first_name == :missing -> Repo.rollback(:first_name_required)
+      last_name == :missing -> Repo.rollback(:last_name_required)
+      first_name == :too_long -> Repo.rollback(:first_name_too_long)
+      last_name == :too_long -> Repo.rollback(:last_name_too_long)
+      true -> %{first_name: first_name, last_name: last_name}
+    end
+  end
+
+  defp normalize_name(value) when is_binary(value) do
+    value = String.trim(value)
+
+    cond do
+      value == "" -> :missing
+      String.length(value) > 100 -> :too_long
+      true -> value
+    end
+  end
+
+  defp normalize_name(_value), do: :missing
 
   defp existing_ticket(token_digest) do
     case TrackingCredential

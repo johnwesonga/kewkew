@@ -223,17 +223,87 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
              Kewkew.Queues.VisitorJoin.join_anonymous(full_queue.public_slug, new_attempt_token())
   end
 
-  test "name-required queue does not show anonymous join controls", %{conn: conn} do
+  test "name-required queue displays first and last name fields", %{conn: conn} do
     queue = create_queue_fixture(identity_policy: :name_required)
 
     conn = get(conn, "/q/#{queue.public_slug}/join")
     document = conn |> html_response(200) |> LazyHTML.from_document()
 
     assert LazyHTML.query_by_id(document, "visitor-join-name-required")
-    assert LazyHTML.query_by_id(document, "visitor-join-message")
 
-    assert LazyHTML.query(document, "form#visitor-join-form")
-           |> LazyHTML.attribute("id") == []
+    assert LazyHTML.query(document, "#visitor-join-form input[name='join[first_name]']")
+           |> LazyHTML.attribute("name") == ["join[first_name]"]
+
+    assert LazyHTML.query(document, "#visitor-join-form input[name='join[last_name]']")
+           |> LazyHTML.attribute("name") == ["join[last_name]"]
+  end
+
+  test "name-required join trims names and does not repeat them on the ticket page", %{conn: conn} do
+    queue = create_queue_fixture(identity_policy: :name_required)
+    attempt_token = new_attempt_token()
+
+    assert {:ok, join} =
+             Kewkew.Queues.VisitorJoin.join_visitor(queue.public_slug, attempt_token, %{
+               "first_name" => "  Ada ",
+               "last_name" => " Lovelace  "
+             })
+
+    assert join.ticket.first_name == "Ada"
+    assert join.ticket.last_name == "Lovelace"
+
+    conn = get(conn, "/t/#{attempt_token}")
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+    text = LazyHTML.text(document)
+
+    assert text =~ "Your ticket number"
+    refute text =~ "Ada"
+    refute text =~ "Lovelace"
+  end
+
+  test "name-required join rejects missing first or last names without a ticket" do
+    queue = create_queue_fixture(identity_policy: :name_required)
+
+    assert {:error, :first_name_required} =
+             Kewkew.Queues.VisitorJoin.join_visitor(queue.public_slug, new_attempt_token(), %{
+               "first_name" => "  ",
+               "last_name" => "Lovelace"
+             })
+
+    assert {:error, :last_name_required} =
+             Kewkew.Queues.VisitorJoin.join_visitor(queue.public_slug, new_attempt_token(), %{
+               "first_name" => "Ada",
+               "last_name" => ""
+             })
+
+    session = latest_session(queue)
+    assert count_tickets(session.id) == 0
+  end
+
+  test "name-required form keeps valid input and identifies a missing field", %{conn: conn} do
+    queue = create_queue_fixture(identity_policy: :name_required)
+    conn = get(conn, "/q/#{queue.public_slug}/join")
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    [attempt_token] =
+      document
+      |> LazyHTML.query("#visitor-join-form input[name='join[attempt_token]']")
+      |> LazyHTML.attribute("value")
+
+    conn =
+      post(conn, "/q/#{queue.public_slug}/join", %{
+        "join" => %{
+          "attempt_token" => attempt_token,
+          "first_name" => "",
+          "last_name" => "Lovelace"
+        }
+      })
+
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(document, "visitor-first-name-error")
+
+    assert LazyHTML.query(document, "#visitor-join-form input[name='join[last_name]']")
+           |> LazyHTML.attribute("value") == ["Lovelace"]
   end
 
   defp create_queue_fixture(opts \\ []) do
@@ -307,5 +377,18 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
 
   defp new_attempt_token do
     :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+  end
+
+  defp latest_session(queue) do
+    Ash.read_one!(
+      Ash.Query.for_read(Kewkew.Queues.QueueSession, :latest_for_queue, %{queue_id: queue.id}),
+      domain: Kewkew.Queues
+    )
+  end
+
+  defp count_tickets(session_id) do
+    Kewkew.Queues.Ticket
+    |> Ash.Query.filter(queue_session_id == ^session_id)
+    |> Ash.count!(domain: Kewkew.Queues)
   end
 end

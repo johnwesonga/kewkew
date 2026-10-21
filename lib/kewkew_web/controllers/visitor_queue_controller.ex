@@ -31,11 +31,11 @@ defmodule KewkewWeb.VisitorQueueController do
     end
   end
 
-  @doc "Displays the anonymous join confirmation page for a public queue."
+  @doc "Displays the queue's join form based on its configured identity policy."
   def join(conn, %{"slug" => slug}) do
     case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
       {:ok, %{queue: queue, session: session, active_ticket_count: active_ticket_count}} ->
-        render_join(conn, queue, session, active_ticket_count, nil, nil)
+        render_join(conn, queue, session, active_ticket_count, nil, %{})
 
       _ ->
         conn
@@ -44,17 +44,18 @@ defmodule KewkewWeb.VisitorQueueController do
     end
   end
 
-  @doc "Handles an anonymous join submission, creating a ticket or returning a useful form error."
-  def create_join(conn, %{"slug" => slug, "join" => %{"attempt_token" => attempt_token}}) do
-    case Kewkew.Queues.VisitorJoin.join_anonymous(slug, attempt_token) do
+  @doc "Handles a visitor join submission according to the queue's persisted identity policy."
+  def create_join(conn, %{"slug" => slug, "join" => params}) when is_map(params) do
+    attempt_token = Map.get(params, "attempt_token")
+
+    case Kewkew.Queues.VisitorJoin.join_visitor(slug, attempt_token, params) do
       {:ok, %{tracking_token: token}} ->
         redirect(conn, to: "/t/#{token}")
 
       {:error, reason} ->
         case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
           {:ok, %{queue: queue, session: session, active_ticket_count: active_ticket_count}} ->
-            message = join_error_message(reason)
-            render_join(conn, queue, session, active_ticket_count, message, attempt_token)
+            render_join(conn, queue, session, active_ticket_count, reason, params)
 
           _ ->
             conn
@@ -72,8 +73,8 @@ defmodule KewkewWeb.VisitorQueueController do
           queue,
           session,
           active_ticket_count,
-          "Please try joining again.",
-          nil
+          :invalid_attempt,
+          %{}
         )
 
       _ ->
@@ -105,9 +106,15 @@ defmodule KewkewWeb.VisitorQueueController do
     end
   end
 
-  defp render_join(conn, queue, session, active_ticket_count, error_message, attempt_token) do
+  defp render_join(conn, queue, session, active_ticket_count, error_reason, params) do
     availability = availability(session, active_ticket_count, queue.max_active_tickets)
-    can_join? = availability.state == :open and queue.identity_policy == :anonymous
+    can_join? = availability.state == :open
+
+    attempt_token =
+      if error_reason == :invalid_attempt,
+        do: nil,
+        else: Map.get(params, "attempt_token")
+
     attempt_token = attempt_token || random_attempt_token()
 
     message =
@@ -115,12 +122,15 @@ defmodule KewkewWeb.VisitorQueueController do
         availability.state != :open ->
           availability.message
 
-        queue.identity_policy != :anonymous ->
-          "This queue requires a first and last name before you can join."
-
         true ->
-          error_message
+          error_message(error_reason)
       end
+
+    form_params = %{
+      "attempt_token" => attempt_token,
+      "first_name" => Map.get(params, "first_name", ""),
+      "last_name" => Map.get(params, "last_name", "")
+    }
 
     render(conn, :join,
       page_title: "Join #{queue.name}",
@@ -130,7 +140,11 @@ defmodule KewkewWeb.VisitorQueueController do
       availability: availability,
       can_join?: can_join?,
       message: message,
-      form: Phoenix.Component.to_form(%{"attempt_token" => attempt_token}, as: :join)
+      field_errors: %{
+        first_name: field_error(error_reason, :first_name),
+        last_name: field_error(error_reason, :last_name)
+      },
+      form: Phoenix.Component.to_form(form_params, as: :join)
     )
   end
 
@@ -138,16 +152,26 @@ defmodule KewkewWeb.VisitorQueueController do
     :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
   end
 
-  defp join_error_message(:full),
+  defp error_message(:full),
     do: "This queue has reached capacity. Please ask staff for help."
 
-  defp join_error_message(:name_required),
-    do: "This queue needs your name. Please use the name entry flow."
+  defp error_message(:invalid_attempt), do: "Please try joining again."
 
-  defp join_error_message(:unavailable),
+  defp error_message(:unavailable),
     do: "This queue is no longer accepting visitors. Please check its availability."
 
-  defp join_error_message(_reason), do: "We could not add you to the queue. Please try again."
+  defp error_message(:first_name_required), do: nil
+  defp error_message(:last_name_required), do: nil
+  defp error_message(:first_name_too_long), do: nil
+  defp error_message(:last_name_too_long), do: nil
+  defp error_message(nil), do: nil
+  defp error_message(_reason), do: "We could not add you to the queue. Please try again."
+
+  defp field_error(:first_name_required, :first_name), do: "Enter your first name."
+  defp field_error(:last_name_required, :last_name), do: "Enter your last name."
+  defp field_error(:first_name_too_long, :first_name), do: "Use 100 characters or fewer."
+  defp field_error(:last_name_too_long, :last_name), do: "Use 100 characters or fewer."
+  defp field_error(_reason, _field), do: nil
 
   @doc "Lists the visitor-facing services and their availability for a location."
   def services(conn, %{"location_id" => location_id}) do

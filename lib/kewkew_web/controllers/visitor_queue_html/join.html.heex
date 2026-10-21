@@ -26,7 +26,7 @@
       class="mt-7 rounded-2xl bg-[#f4f7f4] p-5"
     >
       <p class="text-sm leading-6 text-[#5f6d64]">
-        This queue asks for your first and last name before you join.
+        Share your first and last name so staff can match your number to you.
       </p>
     </div>
 
@@ -48,12 +48,52 @@
       class="mt-6"
     >
       <input type="hidden" name="join[attempt_token]" value={@form[:attempt_token].value} />
+
+      <div :if={@queue.identity_policy == :name_required} class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <.input
+            field={@form[:first_name]}
+            type="text"
+            label="First name"
+            autocomplete="given-name"
+            maxlength="100"
+            required
+          />
+          <p
+            :if={@field_errors.first_name}
+            id="visitor-first-name-error"
+            role="alert"
+            class="mt-1 text-sm text-[#a23b32]"
+          >
+            {@field_errors.first_name}
+          </p>
+        </div>
+        <div>
+          <.input
+            field={@form[:last_name]}
+            type="text"
+            label="Last name"
+            autocomplete="family-name"
+            maxlength="100"
+            required
+          />
+          <p
+            :if={@field_errors.last_name}
+            id="visitor-last-name-error"
+            role="alert"
+            class="mt-1 text-sm text-[#a23b32]"
+          >
+            {@field_errors.last_name}
+          </p>
+        </div>
+      </div>
+
       <button
         id="visitor-confirm-join"
         type="submit"
         class="w-full rounded-xl bg-[#176b4b] px-5 py-4 text-sm font-extrabold text-white transition hover:bg-[#10523a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#176b4b]"
       >
-        Get my queue number
+        Join the queue
       </button>
     </.form>
 
