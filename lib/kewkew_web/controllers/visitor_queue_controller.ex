@@ -101,7 +101,10 @@ defmodule KewkewWeb.VisitorQueueController do
           ticket: ticket_data.ticket,
           queue: ticket_data.queue,
           location: ticket_data.location,
-          service: ticket_data.service
+          service: ticket_data.service,
+          position: ticket_data.position,
+          status_label: ticket_status_label(ticket_data.ticket.status),
+          tracking_url: unverified_url(conn, "/t/#{token}")
         )
     end
   end
@@ -166,6 +169,13 @@ defmodule KewkewWeb.VisitorQueueController do
   defp error_message(:last_name_too_long), do: nil
   defp error_message(nil), do: nil
   defp error_message(_reason), do: "We could not add you to the queue. Please try again."
+
+  defp ticket_status_label(:waiting), do: "Waiting"
+  defp ticket_status_label(:called), do: "Your number has been called"
+  defp ticket_status_label(:serving), do: "Being served"
+  defp ticket_status_label(:completed), do: "Service complete"
+  defp ticket_status_label(:cancelled), do: "You left this queue"
+  defp ticket_status_label(:no_show), do: "Marked as not present"
 
   defp field_error(:first_name_required, :first_name), do: "Enter your first name."
   defp field_error(:last_name_required, :last_name), do: "Enter your last name."

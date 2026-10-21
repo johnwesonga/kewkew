@@ -25,6 +25,30 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/kewkew"
 import topbar from "../vendor/topbar"
 
+document.addEventListener("click", async event => {
+  const button = event.target.closest("[data-copy-target]")
+  if (!button) return
+
+  const input = document.getElementById(button.dataset.copyTarget)
+  const status = document.getElementById("visitor-tracking-link-status")
+  if (!input || !status) return
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(input.value)
+      status.textContent = "Private link copied."
+    } else {
+      input.focus()
+      input.select()
+      status.textContent = "Select and copy your private link."
+    }
+  } catch (_error) {
+    input.focus()
+    input.select()
+    status.textContent = "Select and copy your private link."
+  }
+})
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,

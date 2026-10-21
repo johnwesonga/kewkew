@@ -33,7 +33,7 @@ flowchart LR
 - A queue's configured identity policy is authoritative. The page only asks for the information required by that policy, and the server enforces the same policy.
 - Each successful join creates one ticket with a visitor-facing number and a separate unguessable tracking credential. The public tracking URL must not expose a database ID or allow access to another visitor's ticket.
 - Ticket numbers start at 1 for each new queue session. Pausing and resuming the same session does not reset numbering; closing it and starting a new session does.
-- The ticket's current state and queue order come from persisted server data. Position and wait time are estimates and must be labeled as such.
+- The ticket's current state and queue order come from persisted server data. Queue position is included in the initial release. Estimated wait is a nice-to-have and is out of scope for the initial release.
 - Collect only the information required for the selected queue. Do not add phone number, email, or notification consent to the initial join form unless a separate story establishes the need.
 - If a queue becomes unavailable during the join flow, preserve entered data where safe and explain that the visitor could not join; do not show a success ticket unless creation succeeded.
 
@@ -71,7 +71,7 @@ flowchart LR
 
 **Acceptance criteria**
 
-- Given multiple joinable services, then each option shows a plain-language service name and useful queue information such as estimated wait, if available.
+- Given multiple joinable services, then each option shows a plain-language service name and useful queue information, such as queue position where available. Estimated wait is a nice-to-have and is out of scope for the initial release.
 - I can select exactly one service before joining.
 - Given a link for a single specific queue, then service selection can be skipped and that queue is shown directly.
 - A service that is closed or unavailable cannot be selected for joining.
@@ -112,7 +112,7 @@ flowchart LR
 
 **Acceptance criteria**
 
-- After successful creation, I see my ticket number, service/location, current status, queue position, and estimated wait when an estimate can be calculated.
+- After successful creation, I see my ticket number, service/location, current status, and queue position.
 - The page clearly distinguishes the ticket number from the private tracking link/token.
 - Refreshing or reopening the private link shows the same ticket from persisted data.
 - A malformed, expired, or revoked token shows an unavailable state without revealing whether other tickets exist.
@@ -127,7 +127,7 @@ flowchart LR
 **Acceptance criteria**
 
 - The page shows the latest persisted ticket status and position among eligible tickets ahead of me.
-- Any wait estimate is labeled as an estimate; if there is not enough data, the page says it is unavailable instead of displaying a misleading number.
+- Estimated wait is a nice-to-have and is out of scope for the initial release. If added later, it must be labeled as an estimate and say when data is insufficient rather than display a misleading number.
 - When staff call, begin serving, or complete my ticket, the visitor view updates promptly while connected.
 - If I lose connection or refresh, the page recovers by loading current persisted state.
 - Updates for another visitor never expose their name, contact details, or private tracking credential.
@@ -177,6 +177,6 @@ Each implementation slice should have focused domain and LiveView tests for its 
 - Tracking-link token lifetime, revocation, and behavior after a ticket is completed.
 - Whether visitors may cancel after they have been called or service has started.
 - Whether the first release supports only direct queue links or also a location landing page with service selection.
-- Initial wait-estimate fallback when there is too little completed-service history.
+- Whether to add estimated wait after the initial release, and its fallback when there is too little completed-service history.
 - Exact service instructions shown in the called state.
 - Data retention period for names and completed/cancelled tickets.

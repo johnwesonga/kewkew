@@ -193,7 +193,7 @@ Do not persist values that can be calculated reliably from current tickets:
 
 - **Position**: count eligible active tickets in the same queue session with an earlier `queue_sequence`, applying the defined status rules.
 - **Waiting count**: count tickets in position-bearing states.
-- **Estimated wait**: estimate based on active tickets ahead and available completed-service duration history. Return “estimate unavailable” until there is sufficient input; if computed on demand becomes expensive, cache it only with a clear invalidation rule.
+- **Estimated wait (future nice-to-have)**: out of scope for the initial release. If added later, estimate from active tickets ahead and completed-service duration history; return “estimate unavailable” until there is sufficient input. If computed on demand becomes expensive, cache it only with a clear invalidation rule.
 - **Queue availability**: derive joinability from current session status and active-ticket count versus optional capacity within the join transaction.
 
 Define the position-bearing states explicitly alongside the queue transition implementation. At minimum, cancelled, completed, and no-show tickets no longer count. Whether `called` and `serving` count as ahead of another visitor depends on the service model and must be consistent in the staff and visitor views.
@@ -244,7 +244,7 @@ This first pass defines the schema and read actions only. It does not yet provid
 - Should a visitor retry receive the existing ticket or create a new one after an ambiguous network failure?
 - Which statuses count as ahead in position and active capacity?
 - Can visitors cancel after being called or after service begins?
-- How many completed durations are required before showing a wait estimate, and what is the fallback?
+- If estimated wait is added after the initial release, how many completed durations are required before showing it, and what is the fallback?
 - What retention period applies to names and ticket/event records?
 - Can a service be offered at multiple locations, or does each location own its own service definitions?
 

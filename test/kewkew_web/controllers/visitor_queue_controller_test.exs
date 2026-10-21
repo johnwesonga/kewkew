@@ -173,10 +173,84 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
 
     assert LazyHTML.query_by_id(document, "visitor-ticket")
     assert LazyHTML.query_by_id(document, "visitor-ticket-number") |> LazyHTML.text() =~ "1"
+    assert LazyHTML.query_by_id(document, "visitor-ticket-status") |> LazyHTML.text() =~ "Waiting"
+
+    assert LazyHTML.query_by_id(document, "visitor-ticket-position") |> LazyHTML.text() =~
+             "1 in line"
+
     assert LazyHTML.text(document) =~ "Food support"
     assert LazyHTML.text(document) =~ "Riverside Community Hub"
+    assert LazyHTML.query_by_id(document, "copy-visitor-tracking-link")
+
+    [tracking_url] =
+      LazyHTML.query_by_id(document, "visitor-tracking-link") |> LazyHTML.attribute("value")
+
+    assert String.ends_with?(tracking_url, tracking_path)
+
     assert get_resp_header(conn, "cache-control") == ["no-store"]
     assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
+
+    refreshed_conn = get(recycle(conn), tracking_path)
+    refreshed_document = refreshed_conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(refreshed_document, "visitor-ticket-number") |> LazyHTML.text() =~
+             "1"
+  end
+
+  test "ticket page shows persisted position among active tickets", %{conn: conn} do
+    queue = create_queue_fixture()
+    first_token = new_attempt_token()
+    second_token = new_attempt_token()
+
+    assert {:ok, _first_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, first_token)
+
+    assert {:ok, _second_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, second_token)
+
+    conn = get(conn, "/t/#{second_token}")
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(document, "visitor-ticket-position") |> LazyHTML.text() =~
+             "2 in line"
+  end
+
+  test "malformed or unknown tracking tokens show a generic unavailable page", %{conn: conn} do
+    conn = get(conn, "/t/not-a-valid-token")
+    response = html_response(conn, 404)
+    text = response |> LazyHTML.from_document() |> LazyHTML.text()
+
+    assert text =~ "This queue link isn’t available"
+    refute text =~ "Your ticket number"
+    refute text =~ "Riverside Community Hub"
+  end
+
+  test "revoked tracking tokens show the same generic unavailable page", %{conn: conn} do
+    queue = create_queue_fixture()
+    token = new_attempt_token()
+    assert {:ok, _join} = Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, token)
+    revoke_tracking_token(token)
+
+    conn = get(conn, "/t/#{token}")
+    response = html_response(conn, 404)
+    text = response |> LazyHTML.from_document() |> LazyHTML.text()
+
+    assert text =~ "This queue link isn’t available"
+    refute text =~ "Your ticket number"
+  end
+
+  test "expired tracking tokens show the same generic unavailable page", %{conn: conn} do
+    queue = create_queue_fixture()
+    token = new_attempt_token()
+    assert {:ok, _join} = Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, token)
+    expire_tracking_token(token)
+
+    conn = get(conn, "/t/#{token}")
+    response = html_response(conn, 404)
+    text = response |> LazyHTML.from_document() |> LazyHTML.text()
+
+    assert text =~ "This queue link isn’t available"
+    refute text =~ "Your ticket number"
   end
 
   test "submitting the visitor form redirects to the private ticket page", %{conn: conn} do
@@ -390,5 +464,30 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
     Kewkew.Queues.Ticket
     |> Ash.Query.filter(queue_session_id == ^session_id)
     |> Ash.count!(domain: Kewkew.Queues)
+  end
+
+  defp revoke_tracking_token(token) do
+    credential = tracking_credential(token)
+
+    credential
+    |> Ecto.Changeset.change(revoked_at: DateTime.utc_now())
+    |> Kewkew.Repo.update!()
+  end
+
+  defp expire_tracking_token(token) do
+    credential = tracking_credential(token)
+
+    credential
+    |> Ecto.Changeset.change(expires_at: DateTime.add(DateTime.utc_now(), -1, :second))
+    |> Kewkew.Repo.update!()
+  end
+
+  defp tracking_credential(token) do
+    digest = :crypto.hash(:sha256, token) |> Base.encode16(case: :lower)
+
+    Ash.read_one!(
+      Ash.Query.filter(Kewkew.Queues.TrackingCredential, token_digest == ^digest),
+      domain: Kewkew.Queues
+    )
   end
 end

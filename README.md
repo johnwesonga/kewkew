@@ -1,6 +1,6 @@
 # Kewkew
 
-Kewkew is a virtual queue management system for businesses. Visitors join a queue from their phones without installing an app, follow their position and estimated wait, and receive updates while staff manage the line.
+Kewkew is a virtual queue management system for businesses. Visitors join a queue from their phones without installing an app, follow their position, and receive updates while staff manage the line. Estimated wait is planned as a nice-to-have for a later release.
 
 Planned capabilities include service selection, staff routing, waiting-room displays, notifications, analytics, and support for multiple locations. Queue configuration will let businesses choose whether visitors join anonymously or provide identifying information such as first and last name.
 

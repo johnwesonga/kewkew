@@ -66,6 +66,7 @@ defmodule Kewkew.Queues.PublicLookup do
          ticket: ticket,
          session: session,
          queue: queue,
+         position: ticket_position(ticket),
          location: queue.location,
          service: queue.service
        }}
@@ -148,6 +149,18 @@ defmodule Kewkew.Queues.PublicLookup do
     |> Ash.Query.load([:location, :service])
     |> Ash.read_one(domain: Kewkew.Queues)
   end
+
+  defp ticket_position(%Ticket{status: status} = ticket)
+       when status in [:waiting, :called, :serving] do
+    Ticket
+    |> Ash.Query.filter(
+      queue_session_id == ^ticket.queue_session_id and
+        status in [:waiting, :called, :serving] and queue_sequence <= ^ticket.queue_sequence
+    )
+    |> Ash.count!(domain: Kewkew.Queues)
+  end
+
+  defp ticket_position(_ticket), do: nil
 
   defp credential_is_valid(%TrackingCredential{revoked_at: revoked_at})
        when not is_nil(revoked_at),

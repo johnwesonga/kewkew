@@ -18,11 +18,51 @@
     </p>
     <p class="mt-5 text-sm font-bold">{@service.name}</p>
     <p class="mt-1 text-sm text-[#718078]">{@location.name}</p>
-    <p class="mt-6 inline-flex rounded-full bg-[#e6f4ec] px-4 py-2 text-xs font-extrabold text-[#176b4b]">
-      Waiting
+    <p
+      id="visitor-ticket-status"
+      class="mt-6 inline-flex rounded-full bg-[#e6f4ec] px-4 py-2 text-xs font-extrabold text-[#176b4b]"
+    >
+      {@status_label}
     </p>
+
+    <div class="mt-7 rounded-2xl bg-[#f4f7f4] p-4 text-left">
+      <p class="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#87948b]">
+        Position
+      </p>
+      <p id="visitor-ticket-position" class="mt-2 text-lg font-extrabold">
+        {if(@position, do: "#{@position} in line", else: "No longer waiting")}
+      </p>
+    </div>
+
     <p class="mt-6 text-sm leading-6 text-[#718078]">
-      Keep this private page link to check your ticket. Your ticket number alone does not grant access.
+      Your ticket number identifies your place in line. The private link below is what lets you return to this page.
     </p>
+
+    <div class="mt-6 text-left">
+      <label for="visitor-tracking-link" class="text-xs font-extrabold text-[#5f6d64]">
+        Your private tracking link
+      </label>
+      <input
+        id="visitor-tracking-link"
+        type="text"
+        readonly
+        value={@tracking_url}
+        class="mt-2 w-full rounded-xl border border-[#dce5dd] bg-white px-3 py-3 text-xs text-[#5f6d64]"
+      />
+      <button
+        id="copy-visitor-tracking-link"
+        type="button"
+        data-copy-target="visitor-tracking-link"
+        class="mt-3 w-full rounded-xl border border-[#b8d2c1] px-4 py-3 text-sm font-extrabold text-[#176b4b] hover:bg-[#f4f7f4]"
+      >
+        Copy private link
+      </button>
+      <p
+        id="visitor-tracking-link-status"
+        class="mt-2 min-h-5 text-xs text-[#176b4b]"
+        aria-live="polite"
+      >
+      </p>
+    </div>
   </section>
 </main>

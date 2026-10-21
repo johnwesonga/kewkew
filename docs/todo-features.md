@@ -2,6 +2,24 @@
 
 Features below are product requirements that are intentionally not part of the current implementation slice.
 
+## TODO-VF-2: Estimated wait
+
+**Status** — Nice-to-have; out of scope for the initial release.
+
+**User story** — As a visitor, I want to see an estimated wait so I can decide how to spend my time while waiting.
+
+### Scope
+
+- Estimate wait using queue position and completed-service duration history.
+- Clearly label the result as an estimate and display an unavailable state until there is enough data.
+- Keep the estimation policy replaceable as real operating data becomes available.
+- Add the estimate to service discovery and the private ticket page only when a trustworthy estimate can be calculated.
+
+### Dependencies and decisions
+
+- Depends on reliable queue position and recorded service durations.
+- Decide how much completed-service history is required and how estimates respond to changing queue state.
+
 ## TODO-VF-1: Prevent repeat signups from the same browser
 
 **Status** — TODO
