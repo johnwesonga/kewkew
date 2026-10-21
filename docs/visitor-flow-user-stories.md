@@ -31,6 +31,7 @@ flowchart LR
 - The visitor experience is mobile-first and works in a modern browser without an account or app installation.
 - A queue's configured identity policy is authoritative. The page only asks for the information required by that policy, and the server enforces the same policy.
 - Each successful join creates one ticket with a visitor-facing number and a separate unguessable tracking credential. The public tracking URL must not expose a database ID or allow access to another visitor's ticket.
+- Ticket numbers start at 1 for each new queue session. Pausing and resuming the same session does not reset numbering; closing it and starting a new session does.
 - The ticket's current state and queue order come from persisted server data. Position and wait time are estimates and must be labeled as such.
 - Collect only the information required for the selected queue. Do not add phone number, email, or notification consent to the initial join form unless a separate story establishes the need.
 - If a queue becomes unavailable during the join flow, preserve entered data where safe and explain that the visitor could not join; do not show a success ticket unless creation succeeded.

@@ -38,13 +38,13 @@ Start with these logical domains. They can live in the same application and data
 - **Organizations**: business-level settings and tenancy boundary.
 - **Locations**: physical branches and their operating settings.
 - **Services**: bookable/queueable service definitions and optional routing rules.
-- **Queues**: queue configuration and lifecycle for a location/service, including open/closed state and capacity rules.
+- **Queues and queue sessions**: reusable configuration for a location/service plus operating sessions. Ticket numbers start at 1 for each new session; pausing a session preserves its sequence, and closing it ends that run.
 - **Tickets (queue entries)**: a visitor's place in a queue and lifecycle (`waiting`, `called`, `serving`, `completed`, `cancelled`, or `no_show`). A ticket is the domain record; its public ticket number/code and private tracking link are visitor-facing identifiers, not separate queue entries.
 - **Queue operations**: staff actions such as call next, start service, complete, skip, and restore. These are explicit commands with authorization and validation, not arbitrary field editing.
 - **Notifications**: requested messages, delivery attempts, and provider outcomes.
 - **Reporting**: read-oriented metrics derived from queue history; defer complex reporting until operational data exists.
 
-An organization owns its locations, services, staff membership, and queues. A ticket belongs to one queue and has a visitor-facing ticket number/code plus a separate high-entropy tracking credential, stored as a digest. Avoid exposing sequential database IDs in public URLs. Tenant scoping must be enforced in domain actions and queries, not only hidden in the UI. The initial visitor-flow schema is in [`visitor-flow-data-model.md`](visitor-flow-data-model.md).
+An organization owns its locations, services, staff membership, and reusable queues. Each queue has operating sessions, and tickets belong to a session. Ticket numbers restart at 1 for each new session. A ticket has a visitor-facing number/code plus a separate high-entropy tracking credential, stored as a digest. Avoid exposing sequential database IDs in public URLs. Tenant scoping must be enforced in domain actions and queries, not only hidden in the UI. The initial visitor-flow schema is in [`visitor-flow-data-model.md`](visitor-flow-data-model.md).
 
 ### Per-queue visitor identity policy
 
