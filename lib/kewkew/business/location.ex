@@ -13,6 +13,11 @@ defmodule Kewkew.Business.Location do
 
   actions do
     defaults [:read]
+
+    create :create do
+      primary? true
+      accept [:name, :timezone, :active?]
+    end
   end
 
   attributes do

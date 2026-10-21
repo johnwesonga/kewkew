@@ -17,6 +17,21 @@ defmodule Kewkew.Queues.QueueSession do
 
   actions do
     defaults [:read]
+
+    create :create do
+      primary? true
+      accept [:status, :opened_at, :queue_id]
+    end
+
+    read :latest_for_queue do
+      argument :queue_id, :uuid do
+        allow_nil? false
+      end
+
+      filter expr(queue_id == ^arg(:queue_id))
+      prepare build(sort: [opened_at: :desc], limit: 1)
+      get? true
+    end
   end
 
   attributes do

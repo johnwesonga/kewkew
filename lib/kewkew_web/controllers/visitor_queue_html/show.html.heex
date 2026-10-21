@@ -1,0 +1,92 @@
+<main class="min-h-screen bg-[#f4f7f4] px-4 py-8 text-[#17251f] sm:px-6 sm:py-12">
+  <div class="mx-auto max-w-5xl">
+    <header class="mb-12 flex items-center gap-3">
+      <div class="grid size-10 place-items-center rounded-2xl bg-[#176b4b] text-xl font-extrabold text-white">
+        k
+      </div>
+      <div>
+        <p class="text-lg font-extrabold tracking-tight">Kewkew</p>
+        <p class="text-[10px] font-bold uppercase tracking-[.16em] text-[#718078]">
+          Queue, without the wait
+        </p>
+      </div>
+    </header>
+
+    <div class="grid items-center gap-10 lg:grid-cols-[1fr_390px] lg:gap-20">
+      <section>
+        <p class="mb-3 text-xs font-extrabold uppercase tracking-[.15em] text-[#176b4b]">
+          {@location.name}
+        </p>
+        <h1 class="max-w-xl text-4xl font-extrabold leading-[1.08] tracking-[-.055em] sm:text-5xl">
+          Your place in line, <span class="text-[#176b4b]">without the wait.</span>
+        </h1>
+        <p class="mt-5 max-w-lg text-base leading-7 text-[#718078]">
+          Check the details for this queue before you join. No app or account is needed.
+        </p>
+
+        <div class="mt-8 flex flex-wrap gap-3 text-xs font-semibold text-[#5f6d64]">
+          <span class="rounded-full bg-white px-4 py-2.5 shadow-sm">No app required</span>
+          <span class="rounded-full bg-white px-4 py-2.5 shadow-sm">Private ticket tracking</span>
+        </div>
+      </section>
+
+      <section
+        id="visitor-queue-details"
+        class="rounded-3xl border border-[#e4eae5] bg-white p-6 shadow-[0_18px_50px_rgba(26,52,39,.09)] sm:p-8"
+      >
+        <div class="mb-7 flex items-center justify-between gap-3">
+          <div class="grid size-12 place-items-center rounded-2xl bg-[#e6f4ec] text-lg font-extrabold text-[#10523a]">
+            {String.first(@location.name)}
+          </div>
+          <span
+            class={[
+              "inline-flex items-center gap-2 rounded-full px-3 py-2 text-[11px] font-extrabold",
+              @availability.state == :open && "bg-[#e6f4ec] text-[#176b4b]",
+              @availability.state == :paused && "bg-[#fff4d8] text-[#936516]",
+              @availability.state == :closed && "bg-[#eef2ef] text-[#66736b]"
+            ]}
+            id="visitor-queue-status"
+          >
+            <span class={[
+              "size-2 rounded-full",
+              @availability.state == :open && "bg-[#45ac73]",
+              @availability.state == :paused && "bg-[#d3a23d]",
+              @availability.state == :closed && "bg-[#98a39b]"
+            ]}>
+            </span>
+            {@availability.label}
+          </span>
+        </div>
+
+        <p class="text-[10px] font-extrabold uppercase tracking-[.13em] text-[#87948b]">
+          Service
+        </p>
+        <h2 id="visitor-service-name" class="mt-2 text-2xl font-extrabold tracking-[-.04em]">
+          {@service.name}
+        </h2>
+        <p class="mt-2 text-sm font-semibold text-[#5f6d64]">{@queue.name}</p>
+
+        <div class="my-6 h-px bg-[#e9eeea]"></div>
+
+        <div class="flex items-start gap-3">
+          <.icon name="hero-map-pin" class="mt-0.5 size-5 text-[#718078]" />
+          <div>
+            <p class="text-xs font-bold">{@location.name}</p>
+            <p class="mt-1 text-xs text-[#87948b]">Service location</p>
+          </div>
+        </div>
+
+        <p
+          :if={@service.description not in [nil, ""]}
+          class="mt-5 text-xs leading-5 text-[#718078]"
+        >
+          {@service.description}
+        </p>
+      </section>
+    </div>
+
+    <footer class="mt-16 border-t border-[#e1e8e2] pt-5 text-center text-[10px] text-[#87948b]">
+      Powered by Kewkew · Queue information is provided by {@location.name}
+    </footer>
+  </div>
+</main>

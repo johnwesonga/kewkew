@@ -13,6 +13,11 @@ defmodule Kewkew.Business.Service do
 
   actions do
     defaults [:read]
+
+    create :create do
+      primary? true
+      accept [:name, :description, :active?, :location_id]
+    end
   end
 
   attributes do

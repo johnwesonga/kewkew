@@ -13,6 +13,29 @@ defmodule Kewkew.Queues.Queue do
 
   actions do
     defaults [:read]
+
+    create :create do
+      primary? true
+
+      accept [
+        :name,
+        :public_slug,
+        :identity_policy,
+        :max_active_tickets,
+        :location_id,
+        :service_id
+      ]
+    end
+
+    read :by_public_slug do
+      argument :slug, :string do
+        allow_nil? false
+      end
+
+      filter expr(public_slug == ^arg(:slug))
+      prepare build(load: [:location, :service])
+      get? true
+    end
   end
 
   attributes do
