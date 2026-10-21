@@ -19,6 +19,7 @@ defmodule KewkewWeb.Router do
 
     get "/", PageController, :home
     get "/q/:slug", VisitorQueueController, :show
+    get "/locations/:location_id/services", VisitorQueueController, :services
   end
 
   # Other scopes may use custom stacks.

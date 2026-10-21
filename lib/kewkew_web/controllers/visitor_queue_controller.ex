@@ -25,6 +25,37 @@ defmodule KewkewWeb.VisitorQueueController do
     end
   end
 
+  def services(conn, %{"location_id" => location_id}) do
+    case Kewkew.Queues.PublicLookup.list_location_queues(location_id) do
+      {:ok, nil} ->
+        conn
+        |> put_status(:not_found)
+        |> render(:unavailable, page_title: "Services unavailable")
+
+      {:ok, %{location: location, queues: queues}} ->
+        services =
+          Enum.map(queues, fn %{queue: queue, session: session, active_ticket_count: count} ->
+            %{
+              queue: queue,
+              service: queue.service,
+              availability: availability(session, count, queue.max_active_tickets)
+            }
+          end)
+
+        conn
+        |> render(:services,
+          page_title: "Choose a service",
+          location: location,
+          services: services
+        )
+
+      {:error, _error} ->
+        conn
+        |> put_status(:not_found)
+        |> render(:unavailable, page_title: "Services unavailable")
+    end
+  end
+
   defp availability(%{status: :open}, count, max) do
     if max && count >= max do
       %{
