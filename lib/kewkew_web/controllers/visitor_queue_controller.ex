@@ -104,8 +104,31 @@ defmodule KewkewWeb.VisitorQueueController do
           service: ticket_data.service,
           position: ticket_data.position,
           status_label: ticket_status_label(ticket_data.ticket.status),
+          tracking_token: token,
           tracking_url: unverified_url(conn, "/t/#{token}")
         )
+    end
+  end
+
+  @doc "Returns only the authorized visitor's current ticket status and position for polling."
+  def track_status(conn, %{"token" => token}) do
+    case Kewkew.Queues.PublicLookup.fetch_tracking_ticket(token) do
+      {:ok, nil} ->
+        conn
+        |> put_resp_header("cache-control", "no-store")
+        |> put_resp_header("referrer-policy", "no-referrer")
+        |> put_status(:not_found)
+        |> json(%{error: "unavailable"})
+
+      {:ok, ticket_data} ->
+        conn
+        |> put_resp_header("cache-control", "no-store")
+        |> put_resp_header("referrer-policy", "no-referrer")
+        |> json(%{
+          status: Atom.to_string(ticket_data.ticket.status),
+          status_label: ticket_status_label(ticket_data.ticket.status),
+          position: ticket_data.position
+        })
     end
   end
 

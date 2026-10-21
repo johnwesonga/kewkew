@@ -215,6 +215,35 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
              "2 in line"
   end
 
+  test "ticket status endpoint returns only the visitor's current status and position", %{
+    conn: conn
+  } do
+    queue = create_queue_fixture()
+    first_token = new_attempt_token()
+    second_token = new_attempt_token()
+
+    assert {:ok, _first_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, first_token)
+
+    assert {:ok, second_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, second_token)
+
+    second_join.ticket
+    |> Ecto.Changeset.change(status: :called)
+    |> Kewkew.Repo.update!()
+
+    conn = get(conn, "/t/#{second_token}/status")
+    response = json_response(conn, 200)
+
+    assert response["status"] == "called"
+    assert response["status_label"] == "Your number has been called"
+    assert response["position"] == 2
+    refute Map.has_key?(response, "first_name")
+    refute Map.has_key?(response, "tracking_token")
+    assert get_resp_header(conn, "cache-control") == ["no-store"]
+    assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
+  end
+
   test "malformed or unknown tracking tokens show a generic unavailable page", %{conn: conn} do
     conn = get(conn, "/t/not-a-valid-token")
     response = html_response(conn, 404)

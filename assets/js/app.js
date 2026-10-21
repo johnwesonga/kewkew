@@ -49,6 +49,43 @@ document.addEventListener("click", async event => {
   }
 })
 
+const visitorTicket = document.getElementById("visitor-ticket")
+
+if (visitorTicket) {
+  const status = document.getElementById("visitor-ticket-status")
+  const position = document.getElementById("visitor-ticket-position")
+  const statusUrl = visitorTicket.dataset.statusUrl
+
+  const refreshTicketStatus = async () => {
+    if (document.hidden) return
+
+    try {
+      const response = await fetch(statusUrl, {
+        headers: {Accept: "application/json"},
+        cache: "no-store",
+      })
+
+      if (response.status === 404) {
+        window.location.reload()
+        return
+      }
+
+      if (!response.ok) return
+
+      const ticket = await response.json()
+      const positionLabel = ticket.position ? `${ticket.position} in line` : "No longer waiting"
+
+      if (status.textContent !== ticket.status_label) status.textContent = ticket.status_label
+      if (position.textContent.trim() !== positionLabel) position.textContent = positionLabel
+    } catch (_error) {
+      // Keep the last persisted state on screen and retry on the next interval.
+    }
+  }
+
+  window.setInterval(refreshTicketStatus, 10000)
+  document.addEventListener("visibilitychange", refreshTicketStatus)
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
