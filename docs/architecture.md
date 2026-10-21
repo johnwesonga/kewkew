@@ -44,7 +44,7 @@ Start with these logical domains. They can live in the same application and data
 - **Notifications**: requested messages, delivery attempts, and provider outcomes.
 - **Reporting**: read-oriented metrics derived from queue history; defer complex reporting until operational data exists.
 
-An organization owns its locations, services, staff membership, and queues. A ticket belongs to one queue and has a visitor-facing ticket number/code plus a separate high-entropy tracking token. Avoid exposing sequential database IDs in public URLs. Tenant scoping must be enforced in domain actions and queries, not only hidden in the UI.
+An organization owns its locations, services, staff membership, and queues. A ticket belongs to one queue and has a visitor-facing ticket number/code plus a separate high-entropy tracking credential, stored as a digest. Avoid exposing sequential database IDs in public URLs. Tenant scoping must be enforced in domain actions and queries, not only hidden in the UI. The initial visitor-flow schema is in [`visitor-flow-data-model.md`](visitor-flow-data-model.md).
 
 ### Per-queue visitor identity policy
 
@@ -80,7 +80,7 @@ Phoenix LiveView is a good fit for staff and visitor views that update in place.
 
 - Every business-owned record is scoped through its organization and location.
 - Staff actions check membership and role at the action boundary.
-- Public entry tokens are high-entropy, unguessable, revocable, and distinct from internal IDs.
+- Public tracking credentials are high-entropy, unguessable, revocable, stored as digests, and distinct from internal IDs and ticket numbers.
 - Rate-limit and validate public join/cancel actions to reduce abuse; add bot challenges if observed abuse warrants them.
 - Minimize visitor data, define retention/deletion expectations, and avoid broadcasting personal data over broad PubSub topics.
 - Keep credentials and notification provider secrets in runtime secrets, never in source or database snapshots.

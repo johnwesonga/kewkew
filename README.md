@@ -10,7 +10,7 @@ Kewkew is being built with Phoenix, LiveView, Ash, and PostgreSQL as a modular w
 
 The repository currently contains the Phoenix/Ash application foundation. Product features are being scoped and delivered incrementally as user stories.
 
-The initial implementation focus is the [visitor flow](docs/visitor-flow-user-stories.md), from opening a queue link through joining and tracking a ticket.
+The initial implementation focus is the [visitor flow](docs/visitor-flow-user-stories.md), from opening a queue link through joining and tracking a ticket. Its proposed [data model](docs/visitor-flow-data-model.md) is documented alongside the stories.
 
 ## Getting started
 
