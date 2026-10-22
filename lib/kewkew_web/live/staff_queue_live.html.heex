@@ -96,11 +96,24 @@
                 {ticket.first_name} {ticket.last_name}
               </strong>
               <strong :if={!@show_names? or is_nil(ticket.first_name)}>Visitor</strong>
-              <small>Waiting in line</small>
+              <small>{ticket_status_description(ticket.status)}</small>
             </span>
           </span>
-          <span class={["staff-status-pill", ticket_status_class(ticket.status)]}>
-            {ticket_status_label(ticket.status)}
+          <span class="staff-ticket-actions">
+            <button
+              :if={ticket.status == :called}
+              type="button"
+              class="staff-row-action"
+              phx-click="start_serving"
+              phx-value-ticket-id={ticket.id}
+              aria-label={"Start serving ticket ##{ticket.ticket_number}"}
+              title="Start serving"
+            >
+              <.icon name="hero-play" class="size-4" />
+            </button>
+            <span class={["staff-status-pill", ticket_status_class(ticket.status)]}>
+              {ticket_status_label(ticket.status)}
+            </span>
           </span>
         </article>
       </div>

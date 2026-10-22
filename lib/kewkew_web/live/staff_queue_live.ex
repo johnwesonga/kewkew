@@ -3,7 +3,7 @@ defmodule KewkewWeb.StaffQueueLive do
 
   use KewkewWeb, :live_view
 
-  alias Kewkew.Queues.{StaffBoard, StaffCallNext, Updates}
+  alias Kewkew.Queues.{StaffBoard, StaffCallNext, StaffStartServing, Updates}
 
   @impl true
   def mount(%{"queue_id" => queue_id}, _session, socket) do
@@ -52,6 +52,34 @@ defmodule KewkewWeb.StaffQueueLive do
 
       {:error, _reason} ->
         {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Unable to call the next visitor.")}
+    end
+  end
+
+  @impl true
+  def handle_event("start_serving", %{"ticket_id" => ticket_id}, socket) do
+    case StaffStartServing.start_serving(
+           socket.assigns.current_user.id,
+           socket.assigns.queue.id,
+           ticket_id
+         ) do
+      {:ok, ticket} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(
+           :info,
+           "Ticket ##{ticket.ticket_number} is now being served."
+         )}
+
+      {:error, :not_called} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(:info, "That ticket is no longer waiting to be served.")}
+
+      {:error, _reason} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(socket, :error, "Unable to start service for that ticket.")}
     end
   end
 
@@ -125,4 +153,8 @@ defmodule KewkewWeb.StaffQueueLive do
   defp ticket_status_label(:waiting), do: "Waiting"
   defp ticket_status_label(:called), do: "Called"
   defp ticket_status_label(:serving), do: "Being served"
+
+  defp ticket_status_description(:waiting), do: "Waiting in line"
+  defp ticket_status_description(:called), do: "Waiting to be seen"
+  defp ticket_status_description(:serving), do: "Being helped by staff"
 end

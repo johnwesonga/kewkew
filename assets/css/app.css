@@ -209,6 +209,9 @@
 .staff-status-pill { justify-self: start; padding: 6px 9px; border-radius: 99px; color: #68756d; background: #eef3ef; font-size: 9px; font-weight: 750; white-space: nowrap; }
 .staff-status-pill.called { color: #936516; background: #fff4d8; }
 .staff-status-pill.serving { color: #176b4b; background: #e6f4ec; }
+.staff-ticket-actions { display: flex; align-items: center; justify-self: end; gap: 7px; }
+.staff-row-action { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: 9px; color: #10523a; background: #e6f4ec; cursor: pointer; }
+.staff-row-action:hover { color: #fff; background: #176b4b; }
 
 @media (max-width: 900px) {
   .staff-workspace { grid-template-columns: 180px minmax(0, 1fr); }
@@ -233,8 +236,9 @@
   .staff-open-queue { font-size: 0; }
   .staff-open-queue .icon { width: 18px; height: 18px; }
   .staff-ticket-list { padding: 0 14px; }
-  .staff-ticket-row { grid-template-columns: 58px minmax(0, 1fr) auto; gap: 7px; min-height: 68px; }
+  .staff-ticket-row { grid-template-columns: 52px minmax(0, 1fr) auto; gap: 6px; min-height: 68px; }
   .staff-ticket-number { font-size: 12px; }
   .staff-status-pill { padding: 5px 7px; font-size: 8px; }
+  .staff-ticket-actions { flex-direction: column-reverse; gap: 4px; }
   .staff-card-heading { padding: 17px; }
 }
