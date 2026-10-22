@@ -3,7 +3,7 @@ defmodule KewkewWeb.StaffQueueLive do
 
   use KewkewWeb, :live_view
 
-  alias Kewkew.Queues.{StaffBoard, Updates}
+  alias Kewkew.Queues.{StaffBoard, StaffCallNext, Updates}
 
   @impl true
   def mount(%{"queue_id" => queue_id}, _session, socket) do
@@ -34,6 +34,27 @@ defmodule KewkewWeb.StaffQueueLive do
   @impl true
   def handle_event("refresh", _params, socket), do: refresh_board(socket)
 
+  @impl true
+  def handle_event("call_next", _params, socket) do
+    case StaffCallNext.call_next(socket.assigns.current_user.id, socket.assigns.queue.id) do
+      {:ok, ticket} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(:info, "Ticket ##{ticket.ticket_number} has been called.")}
+
+      {:error, :no_waiting} ->
+        {:noreply, Phoenix.LiveView.put_flash(socket, :info, "No visitors are waiting.")}
+
+      {:error, :no_session} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(socket, :error, "This queue has no active session.")}
+
+      {:error, _reason} ->
+        {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Unable to call the next visitor.")}
+    end
+  end
+
   defp refresh_board(socket) do
     case StaffBoard.fetch_queue(socket.assigns.current_user.id, socket.assigns.queue.id) do
       {:ok, board} ->
@@ -46,6 +67,13 @@ defmodule KewkewWeb.StaffQueueLive do
 
       {:error, :not_found} ->
         {:noreply, Phoenix.LiveView.redirect(socket, to: "/")}
+    end
+  end
+
+  defp assign_board_from_refresh(socket) do
+    case StaffBoard.fetch_queue(socket.assigns.current_user.id, socket.assigns.queue.id) do
+      {:ok, board} -> assign_board(socket, board)
+      {:error, :not_found} -> Phoenix.LiveView.redirect(socket, to: "/staff")
     end
   end
 
@@ -65,9 +93,7 @@ defmodule KewkewWeb.StaffQueueLive do
       serving_count: length(Map.get(tickets_by_status, :serving, [])),
       active_count: length(board.tickets)
     )
-    |> stream(:waiting_tickets, Map.get(tickets_by_status, :waiting, []), reset: true)
-    |> stream(:called_tickets, Map.get(tickets_by_status, :called, []), reset: true)
-    |> stream(:serving_tickets, Map.get(tickets_by_status, :serving, []), reset: true)
+    |> stream(:tickets, board.tickets, reset: true)
   end
 
   defp session_status(nil), do: "No queue session"
@@ -91,4 +117,12 @@ defmodule KewkewWeb.StaffQueueLive do
     |> Enum.map_join(&String.first/1)
     |> String.upcase()
   end
+
+  defp ticket_status_class(:waiting), do: "waiting"
+  defp ticket_status_class(:called), do: "called"
+  defp ticket_status_class(:serving), do: "serving"
+
+  defp ticket_status_label(:waiting), do: "Waiting"
+  defp ticket_status_label(:called), do: "Called"
+  defp ticket_status_label(:serving), do: "Being served"
 end

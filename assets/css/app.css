@@ -183,6 +183,9 @@
 .staff-session-status.open .staff-status-dot { box-shadow: 0 0 0 3px #d4ecdd; }
 .staff-secondary-button { display: inline-flex; align-items: center; gap: 7px; padding: 9px 12px; border: 1px solid #e4eae5; border-radius: 11px; color: #526158; background: #fff; font-size: 11px; font-weight: 700; cursor: pointer; }
 .staff-secondary-button:hover { background: #f8fbf8; }
+.staff-primary-button { display: inline-flex; align-items: center; gap: 7px; padding: 10px 13px; border: 0; border-radius: 11px; color: #fff; background: #176b4b; box-shadow: 0 5px 12px rgba(23, 107, 75, .17); font-size: 11px; font-weight: 750; cursor: pointer; }
+.staff-primary-button:hover:not(:disabled) { background: #10523a; }
+.staff-primary-button:disabled { opacity: .48; cursor: not-allowed; box-shadow: none; }
 .staff-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .staff-stat-card { position: relative; min-height: 145px; padding: 18px 20px; }
 .staff-stat-icon { position: absolute; top: 16px; right: 17px; display: grid; width: 35px; height: 35px; place-items: center; border-radius: 11px; }
@@ -196,6 +199,7 @@
 .staff-ticket-list { padding: 0 20px; }
 .staff-ticket-row { display: grid; grid-template-columns: 90px minmax(0, 1fr) 120px; align-items: center; gap: 12px; min-height: 72px; border-bottom: 1px solid #eff2ef; }
 .staff-ticket-row:last-child { border-bottom: 0; }
+.staff-no-waiting { margin: 0; padding: 14px 0; border-bottom: 1px solid #eff2ef; color: #718078; font-size: 11px; }
 .staff-ticket-number { color: #10523a; font-size: 14px; font-weight: 850; }
 .staff-ticket-person { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .staff-person-avatar { display: grid; flex: 0 0 31px; width: 31px; height: 31px; place-items: center; border-radius: 50%; color: #718078; background: #eef3ef; font-size: 9px; font-weight: 800; }
@@ -220,6 +224,8 @@
   .staff-main { padding: 27px 16px 50px; }
   .staff-page-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
   .staff-heading-actions { width: 100%; justify-content: space-between; }
+  .staff-heading-actions form { flex: 1; }
+  .staff-primary-button { width: 100%; justify-content: center; }
   .staff-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
   .staff-stat-card { min-height: 130px; padding: 15px; }
   .staff-stat-value { font-size: 24px; }

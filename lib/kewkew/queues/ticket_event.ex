@@ -19,7 +19,7 @@ defmodule Kewkew.Queues.TicketEvent do
     defaults [:read]
 
     create :record_transition do
-      accept [:ticket_id, :from_status, :to_status, :actor_type, :occurred_at]
+      accept [:ticket_id, :from_status, :to_status, :actor_type, :actor_id, :occurred_at]
     end
   end
 

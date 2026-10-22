@@ -15,6 +15,15 @@
         <p class="staff-subhead">Monitor visitors as they move through this queue.</p>
       </div>
       <div class="staff-heading-actions">
+        <button
+          id="staff-call-next"
+          type="button"
+          class="staff-primary-button"
+          phx-click="call_next"
+          disabled={@waiting_count == 0}
+        >
+          <.icon name="hero-megaphone" class="size-4" /> Call next visitor
+        </button>
         <span
           id="staff-queue-session-status"
           class={["staff-session-status", session_status_class(@session)]}
@@ -69,13 +78,16 @@
         </span>
       </div>
 
-      <div id="waiting-tickets" phx-update="stream" class="staff-ticket-list">
+      <p :if={@waiting_count == 0 and @active_count > 0} class="staff-no-waiting">
+        Nobody is waiting for a call right now.
+      </p>
+      <div id="staff-tickets" phx-update="stream" class="staff-ticket-list">
         <p class="staff-empty-state hidden only:flex">
           <span class="staff-empty-icon"><.icon name="hero-user-group" class="size-6" /></span>
           <strong>No active visitors</strong>
           <span>Visitors will appear here when they join the queue.</span>
         </p>
-        <article :for={{id, ticket} <- @streams.waiting_tickets} id={id} class="staff-ticket-row">
+        <article :for={{id, ticket} <- @streams.tickets} id={id} class="staff-ticket-row">
           <span class="staff-ticket-number">#{ticket.ticket_number}</span>
           <span class="staff-ticket-person">
             <span class="staff-person-avatar">{person_initials(ticket, @show_names?)}</span>
@@ -87,35 +99,9 @@
               <small>Waiting in line</small>
             </span>
           </span>
-          <span class="staff-status-pill waiting">Waiting</span>
-        </article>
-        <article :for={{id, ticket} <- @streams.called_tickets} id={id} class="staff-ticket-row">
-          <span class="staff-ticket-number">#{ticket.ticket_number}</span>
-          <span class="staff-ticket-person">
-            <span class="staff-person-avatar">{person_initials(ticket, @show_names?)}</span>
-            <span>
-              <strong :if={@show_names? and ticket.first_name}>
-                {ticket.first_name} {ticket.last_name}
-              </strong>
-              <strong :if={!@show_names? or is_nil(ticket.first_name)}>Visitor</strong>
-              <small>Waiting to be seen</small>
-            </span>
+          <span class={["staff-status-pill", ticket_status_class(ticket.status)]}>
+            {ticket_status_label(ticket.status)}
           </span>
-          <span class="staff-status-pill called">Called</span>
-        </article>
-        <article :for={{id, ticket} <- @streams.serving_tickets} id={id} class="staff-ticket-row">
-          <span class="staff-ticket-number">#{ticket.ticket_number}</span>
-          <span class="staff-ticket-person">
-            <span class="staff-person-avatar">{person_initials(ticket, @show_names?)}</span>
-            <span>
-              <strong :if={@show_names? and ticket.first_name}>
-                {ticket.first_name} {ticket.last_name}
-              </strong>
-              <strong :if={!@show_names? or is_nil(ticket.first_name)}>Visitor</strong>
-              <small>Being helped by staff</small>
-            </span>
-          </span>
-          <span class="staff-status-pill serving">Being served</span>
         </article>
       </div>
     </section>
