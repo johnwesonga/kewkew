@@ -313,6 +313,22 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
     assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
   end
 
+  test "ticket status endpoint shows a skipped ticket as inactive", %{conn: conn} do
+    queue = create_queue_fixture()
+    token = new_attempt_token()
+    assert {:ok, join} = Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, token)
+
+    join.ticket
+    |> Ecto.Changeset.change(status: :no_show)
+    |> Kewkew.Repo.update!()
+
+    response = get(conn, "/t/#{token}/status") |> json_response(200)
+
+    assert response["status"] == "no_show"
+    assert response["status_label"] == "Marked as not present"
+    assert is_nil(response["position"])
+  end
+
   test "malformed or unknown tracking tokens show a generic unavailable page", %{conn: conn} do
     conn = get(conn, "/t/not-a-valid-token")
     response = html_response(conn, 404)

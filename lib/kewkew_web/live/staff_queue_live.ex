@@ -7,6 +7,7 @@ defmodule KewkewWeb.StaffQueueLive do
     StaffBoard,
     StaffCallNext,
     StaffCompleteService,
+    StaffSkipVisitor,
     StaffStartServing,
     Updates
   }
@@ -113,6 +114,31 @@ defmodule KewkewWeb.StaffQueueLive do
     end
   end
 
+  @impl true
+  def handle_event("skip_visitor", params, socket) do
+    ticket_id = Map.get(params, "ticket_id") || Map.get(params, "ticket-id")
+
+    case skip_visitor(socket, ticket_id) do
+      {:ok, ticket} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(
+           :info,
+           "Ticket ##{ticket.ticket_number} was marked as a no-show."
+         )}
+
+      {:error, :not_called} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(:info, "That ticket is no longer eligible to skip.")}
+
+      {:error, _reason} ->
+        {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Unable to skip that visitor.")}
+    end
+  end
+
   defp start_serving(_socket, nil), do: {:error, :missing_ticket_id}
 
   defp start_serving(socket, ticket_id) do
@@ -127,6 +153,16 @@ defmodule KewkewWeb.StaffQueueLive do
 
   defp complete_service(socket, ticket_id) do
     StaffCompleteService.complete_service(
+      socket.assigns.current_user.id,
+      socket.assigns.queue.id,
+      ticket_id
+    )
+  end
+
+  defp skip_visitor(_socket, nil), do: {:error, :missing_ticket_id}
+
+  defp skip_visitor(socket, ticket_id) do
+    StaffSkipVisitor.skip_visitor(
       socket.assigns.current_user.id,
       socket.assigns.queue.id,
       ticket_id
@@ -199,12 +235,15 @@ defmodule KewkewWeb.StaffQueueLive do
   defp ticket_status_class(:waiting), do: "waiting"
   defp ticket_status_class(:called), do: "called"
   defp ticket_status_class(:serving), do: "serving"
+  defp ticket_status_class(:no_show), do: "no-show"
 
   defp ticket_status_label(:waiting), do: "Waiting"
   defp ticket_status_label(:called), do: "Called"
   defp ticket_status_label(:serving), do: "Being served"
+  defp ticket_status_label(:no_show), do: "No-show"
 
   defp ticket_status_description(:waiting), do: "Waiting in line"
   defp ticket_status_description(:called), do: "Waiting to be seen"
   defp ticket_status_description(:serving), do: "Being helped by staff"
+  defp ticket_status_description(:no_show), do: "Not present when called"
 end

@@ -212,6 +212,9 @@
 .staff-ticket-actions { display: flex; align-items: center; justify-self: end; gap: 7px; }
 .staff-row-action { display: grid; width: 30px; height: 30px; place-items: center; border: 0; border-radius: 9px; color: #10523a; background: #e6f4ec; cursor: pointer; }
 .staff-row-action:hover { color: #fff; background: #176b4b; }
+.staff-row-action.skip { color: #936516; background: #fff4d8; }
+.staff-row-action.skip:hover { color: #fff; background: #936516; }
+.staff-status-pill.no-show { color: #936516; background: #fff4d8; }
 
 @media (max-width: 900px) {
   .staff-workspace { grid-template-columns: 180px minmax(0, 1fr); }
