@@ -5,6 +5,7 @@ defmodule KewkewWeb.StaffController do
 
   alias Kewkew.Business.StaffAccess
   alias Kewkew.Queues.StaffCreateQueue
+  alias Kewkew.Queues.StaffUpdateQueue
 
   @doc "Shows the locations and queues available to the authenticated staff member."
   def index(conn, _params) do
@@ -88,6 +89,63 @@ defmodule KewkewWeb.StaffController do
     |> redirect(to: ~p"/staff")
   end
 
+  @doc "Shows an administrator the editable configuration for a queue."
+  def edit(conn, %{"queue_id" => queue_id}) do
+    case StaffUpdateQueue.fetch_queue(conn.assigns.current_user.id, queue_id) do
+      {:ok, context} ->
+        params = %{
+          "name" => context.queue.name,
+          "identity_policy" => Atom.to_string(context.queue.identity_policy),
+          "max_active_tickets" => capacity_value(context.queue.max_active_tickets)
+        }
+
+        render_edit_form(conn, context, params, [])
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to edit that queue.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def edit(conn, _params) do
+    conn
+    |> put_flash(:error, "Choose a queue to edit.")
+    |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Updates the editable settings for an authorized administrator's queue."
+  def update(conn, %{"queue_id" => queue_id, "queue" => params}) do
+    case StaffUpdateQueue.update_queue(conn.assigns.current_user.id, queue_id, params) do
+      {:ok, queue} ->
+        conn
+        |> put_flash(
+          :info,
+          "Settings for #{queue.name} were saved. Existing tickets are unchanged."
+        )
+        |> redirect(to: ~p"/staff")
+
+      {:error, :invalid_params, errors} ->
+        render_edit_error(conn, queue_id, params, errors)
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to edit that queue.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, _reason} ->
+        render_edit_error(conn, queue_id, params, [
+          {:queue, "The queue settings could not be saved. Check the details and try again."}
+        ])
+    end
+  end
+
+  def update(conn, _params) do
+    conn
+    |> put_flash(:error, "The queue details were incomplete.")
+    |> redirect(to: ~p"/staff")
+  end
+
   defp render_create_error(conn, user_id, location_id, params, errors) do
     case StaffCreateQueue.services_for_location(user_id, location_id) do
       {:ok, %{location: location, services: services}} ->
@@ -113,4 +171,30 @@ defmodule KewkewWeb.StaffController do
       status: Keyword.get(opts, :status, :ok)
     )
   end
+
+  defp render_edit_error(conn, queue_id, params, errors) do
+    case StaffUpdateQueue.fetch_queue(conn.assigns.current_user.id, queue_id) do
+      {:ok, context} ->
+        render_edit_form(conn, context, params, errors, status: :unprocessable_entity)
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to edit that queue.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  defp render_edit_form(conn, context, params, errors, opts \\ []) do
+    render(conn, :edit,
+      page_title: "Edit queue",
+      staff_email: to_string(conn.assigns.current_user.email),
+      context: context,
+      form: Phoenix.Component.to_form(params, as: :queue),
+      errors: errors,
+      status: Keyword.get(opts, :status, :ok)
+    )
+  end
+
+  defp capacity_value(nil), do: ""
+  defp capacity_value(value), do: to_string(value)
 end

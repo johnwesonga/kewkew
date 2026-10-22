@@ -70,8 +70,40 @@ defmodule Kewkew.Queues.StaffCreateQueue do
   def create_queue(_user_id, _location_id, _params), do: {:error, :not_found}
 
   defp validate_params(params) do
-    name = params |> Map.get("name", "") |> normalize_name()
     service_id = Map.get(params, "service_id", "")
+    service_id = Ecto.UUID.cast(service_id)
+
+    case {validate_configuration(params), service_id} do
+      {{:ok, configuration}, {:ok, service_id}} ->
+        {:ok, Map.put(configuration, :service_id, service_id)}
+
+      {configuration_result, service_id_result} ->
+        errors =
+          case configuration_result do
+            {:error, :invalid_params, errors} -> errors
+            {:ok, _configuration} -> []
+          end
+
+        service_id_invalid? =
+          case service_id_result do
+            {:ok, _service_id} -> false
+            :error -> true
+          end
+
+        errors =
+          if service_id_invalid? do
+            [{:service_id, "Choose a service at this location."} | errors]
+          else
+            errors
+          end
+
+        {:error, :invalid_params, errors}
+    end
+  end
+
+  @doc "Validates editable queue configuration shared by create and update flows."
+  def validate_configuration(params) when is_map(params) do
+    name = params |> Map.get("name", "") |> normalize_name()
     identity_policy = identity_policy(Map.get(params, "identity_policy"))
     capacity = capacity(Map.get(params, "max_active_tickets", ""))
 
@@ -90,17 +122,12 @@ defmodule Kewkew.Queues.StaffCreateQueue do
         capacity == :invalid,
         {:max_active_tickets, "Enter a positive whole number or leave capacity blank."}
       )
-      |> maybe_add_error(
-        not match?({:ok, _}, Ecto.UUID.cast(service_id)),
-        {:service_id, "Choose a service at this location."}
-      )
 
     case errors do
       [] ->
         {:ok,
          %{
            name: name,
-           service_id: elem(Ecto.UUID.cast(service_id), 1),
            identity_policy: identity_policy,
            max_active_tickets: if(capacity == :unlimited, do: nil, else: capacity)
          }}
@@ -109,6 +136,9 @@ defmodule Kewkew.Queues.StaffCreateQueue do
         {:error, :invalid_params, errors}
     end
   end
+
+  def validate_configuration(_params),
+    do: {:error, :invalid_params, [{:queue, "Invalid queue details."}]}
 
   defp normalize_name(name) when is_binary(name) do
     name = String.trim(name)

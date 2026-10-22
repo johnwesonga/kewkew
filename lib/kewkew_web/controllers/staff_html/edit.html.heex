@@ -1,0 +1,85 @@
+<Layouts.app flash={@flash} staff?={true} staff_email={@staff_email}>
+  <section id="staff-edit-queue" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> All queues
+        </.link>
+        <p class="staff-eyebrow">Queue setup</p>
+        <h1>Edit queue</h1>
+        <p class="staff-subhead">Update settings for {@context.queue.name}.</p>
+      </div>
+    </header>
+
+    <section class="staff-card staff-create-queue-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2>Queue details</h2>
+          <p>Location and service are fixed for this queue.</p>
+        </div>
+      </div>
+
+      <div
+        :if={@errors != []}
+        id="staff-edit-queue-errors"
+        class="staff-form-errors"
+        role="alert"
+      >
+        <p>Review the queue details below:</p>
+        <ul>
+          <li :for={{_field, message} <- @errors}>{message}</li>
+        </ul>
+      </div>
+
+      <.form
+        for={@form}
+        id="staff-edit-queue-form"
+        action={~p"/staff/queues/#{@context.queue.id}"}
+        method="put"
+        class="staff-create-queue-form"
+      >
+        <div class="staff-form-location">
+          <span class="staff-form-label">Location</span>
+          <strong>{@context.location.name}</strong>
+        </div>
+
+        <div class="staff-form-location">
+          <span class="staff-form-label">Service</span>
+          <strong>{@context.service.name}</strong>
+        </div>
+
+        <.input field={@form[:name]} label="Queue name" autocomplete="off" />
+
+        <.input
+          field={@form[:identity_policy]}
+          type="select"
+          label="Visitor identity"
+          options={[
+            {"Anonymous ticket", "anonymous"},
+            {"First and last name required", "name_required"}
+          ]}
+        />
+
+        <.input
+          field={@form[:max_active_tickets]}
+          type="number"
+          label="Maximum active visitors (optional)"
+          min="1"
+          step="1"
+          placeholder="No limit"
+        />
+
+        <p class="staff-form-note">
+          Changes apply to future joins. Existing tickets are unchanged. Lowering capacity below the current active count blocks new joins until the count drops under the limit.
+        </p>
+
+        <div class="staff-form-actions">
+          <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
+          <button id="staff-save-queue-settings" type="submit" class="staff-primary-button">
+            Save changes
+          </button>
+        </div>
+      </.form>
+    </section>
+  </section>
+</Layouts.app>

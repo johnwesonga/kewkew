@@ -35,29 +35,39 @@
         <ul>
           <li :for={entry <- queues} id={"staff-queue-#{entry.queue.id}"}>
             <% {status, status_class} = queue_status(entry) %>
-            <.link navigate={~p"/staff/queues/#{entry.queue.id}"} class="staff-queue-link">
-              <span class="staff-queue-symbol">
-                <.icon name="hero-queue-list" class="size-5" />
-              </span>
-              <span class="staff-queue-details">
-                <strong>{entry.queue.name}</strong>
-                <span id={"staff-queue-service-#{entry.queue.id}"}>{entry.service.name}</span>
-                <span>
-                  {identity_policy_label(entry.queue)} · {capacity_label(entry.queue)}
+            <div class="staff-queue-row">
+              <.link navigate={~p"/staff/queues/#{entry.queue.id}"} class="staff-queue-link">
+                <span class="staff-queue-symbol">
+                  <.icon name="hero-queue-list" class="size-5" />
                 </span>
-              </span>
-              <span class="staff-queue-state">
-                <span
-                  id={"staff-queue-status-#{entry.queue.id}"}
-                  class={["staff-queue-status", status_class]}
-                >
-                  {status}
+                <span class="staff-queue-details">
+                  <strong>{entry.queue.name}</strong>
+                  <span id={"staff-queue-service-#{entry.queue.id}"}>{entry.service.name}</span>
+                  <span>
+                    {identity_policy_label(entry.queue)} · {capacity_label(entry.queue)}
+                  </span>
                 </span>
-                <span class="staff-open-queue">
-                  Open queue <.icon name="hero-arrow-right" class="size-4" />
+                <span class="staff-queue-state">
+                  <span
+                    id={"staff-queue-status-#{entry.queue.id}"}
+                    class={["staff-queue-status", status_class]}
+                  >
+                    {status}
+                  </span>
+                  <span class="staff-open-queue">
+                    Open queue <.icon name="hero-arrow-right" class="size-4" />
+                  </span>
                 </span>
-              </span>
-            </.link>
+              </.link>
+              <.link
+                :if={can_manage?}
+                id={"staff-edit-queue-#{entry.queue.id}"}
+                navigate={~p"/staff/queues/#{entry.queue.id}/edit"}
+                class="staff-edit-queue-link"
+              >
+                <.icon name="hero-pencil-square" class="size-4" /> Edit
+              </.link>
+            </div>
           </li>
           <li :if={queues == []} id={"staff-location-no-queues-#{location.id}"}>
             <p class="staff-location-empty">No queues are configured for this location yet.</p>
