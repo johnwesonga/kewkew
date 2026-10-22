@@ -4,7 +4,7 @@
 
 Let authorized staff see the active queue and move tickets through service in a reliable order. Queue changes are persisted with an audit event and appear promptly on connected staff and visitor screens.
 
-These stories cover day-to-day queue operations. Organization setup, staff invitations, and queue configuration are prerequisites and will be scoped separately. Admins can manage staff access; queue operators can perform the queue actions granted to them.
+These stories cover day-to-day queue operations. Queue configuration and operating-session management are specified in [admin-queue-configuration-user-stories.md](admin-queue-configuration-user-stories.md). Organization setup and staff invitations remain separate prerequisites. Admins can manage staff access; queue operators can perform the queue actions granted to them.
 
 Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs.pm/readme.html) and its [Phoenix integration](https://ash-authentication-phoenix.hexdocs.pm/) with email and password sign-in. Public self-registration is disabled. The first organization administrator is provisioned by a one-time bootstrap task; administrators provision subsequent staff accounts. AshAuthentication establishes the identity and sign-in session; Kewkew's active membership and location assignments determine which business data that identity can access. Authentication alone does not grant access to business data.
 
