@@ -152,5 +152,48 @@
         </article>
       </div>
     </section>
+
+    <section
+      :if={@no_show_count > 0}
+      aria-labelledby="no-show-visitors-heading"
+      class="staff-card staff-visitors-card"
+    >
+      <div class="staff-card-heading">
+        <div>
+          <h2 id="no-show-visitors-heading">No-show visitors</h2>
+          <p>Return a visitor to the end of the line if they come back.</p>
+        </div>
+      </div>
+      <div id="staff-no-show-tickets" phx-update="stream" class="staff-ticket-list">
+        <article :for={{id, ticket} <- @streams.no_show_tickets} id={id} class="staff-ticket-row">
+          <span class="staff-ticket-number">#{ticket.ticket_number}</span>
+          <span class="staff-ticket-person">
+            <span class="staff-person-avatar">{person_initials(ticket, @show_names?)}</span>
+            <span>
+              <strong :if={@show_names? and ticket.first_name}>
+                {ticket.first_name} {ticket.last_name}
+              </strong>
+              <strong :if={!@show_names? or is_nil(ticket.first_name)}>Visitor</strong>
+              <small>Not present when called</small>
+            </span>
+          </span>
+          <span class="staff-ticket-actions">
+            <button
+              type="button"
+              class="staff-row-action"
+              phx-click="recall_no_show"
+              phx-value-ticket-id={ticket.id}
+              aria-label={"Requeue ticket ##{ticket.ticket_number}"}
+              title="Return to end of line"
+            >
+              <.icon name="hero-arrow-path" class="size-4" />
+            </button>
+            <span class={["staff-status-pill", ticket_status_class(:no_show)]}>
+              {ticket_status_label(:no_show)}
+            </span>
+          </span>
+        </article>
+      </div>
+    </section>
   </section>
 </Layouts.app>

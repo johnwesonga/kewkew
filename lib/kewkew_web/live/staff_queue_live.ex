@@ -8,6 +8,7 @@ defmodule KewkewWeb.StaffQueueLive do
     StaffCallNext,
     StaffCancelTicket,
     StaffCompleteService,
+    StaffRecallNoShow,
     StaffSkipVisitor,
     StaffStartServing,
     Updates
@@ -141,6 +142,31 @@ defmodule KewkewWeb.StaffQueueLive do
   end
 
   @impl true
+  def handle_event("recall_no_show", params, socket) do
+    ticket_id = Map.get(params, "ticket_id") || Map.get(params, "ticket-id")
+
+    case recall_no_show(socket, ticket_id) do
+      {:ok, ticket} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(
+           :info,
+           "Ticket ##{ticket.ticket_number} returned to the end of the line."
+         )}
+
+      {:error, :not_no_show} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(:info, "That ticket is no longer eligible for recall.")}
+
+      {:error, _reason} ->
+        {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Unable to requeue that visitor.")}
+    end
+  end
+
+  @impl true
   def handle_event("cancel_ticket", params, socket) do
     ticket_id = Map.get(params, "ticket_id") || Map.get(params, "ticket-id")
 
@@ -186,6 +212,16 @@ defmodule KewkewWeb.StaffQueueLive do
 
   defp skip_visitor(socket, ticket_id) do
     StaffSkipVisitor.skip_visitor(
+      socket.assigns.current_user.id,
+      socket.assigns.queue.id,
+      ticket_id
+    )
+  end
+
+  defp recall_no_show(_socket, nil), do: {:error, :missing_ticket_id}
+
+  defp recall_no_show(socket, ticket_id) do
+    StaffRecallNoShow.recall_no_show(
       socket.assigns.current_user.id,
       socket.assigns.queue.id,
       ticket_id
@@ -238,9 +274,14 @@ defmodule KewkewWeb.StaffQueueLive do
       waiting_count: length(Map.get(tickets_by_status, :waiting, [])),
       called_count: length(Map.get(tickets_by_status, :called, [])),
       serving_count: length(Map.get(tickets_by_status, :serving, [])),
-      active_count: length(board.tickets)
+      no_show_count: length(board.no_show_tickets),
+      active_count:
+        length(Map.get(tickets_by_status, :waiting, [])) +
+          length(Map.get(tickets_by_status, :called, [])) +
+          length(Map.get(tickets_by_status, :serving, []))
     )
     |> stream(:tickets, board.tickets, reset: true)
+    |> stream(:no_show_tickets, board.no_show_tickets, reset: true)
   end
 
   defp session_status(nil), do: "No queue session"

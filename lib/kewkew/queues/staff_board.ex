@@ -9,7 +9,7 @@ defmodule Kewkew.Queues.StaffBoard do
 
   @active_ticket_statuses [:waiting, :called, :serving]
 
-  @doc "Loads a queue, its latest session, and active tickets for an authorized staff member."
+  @doc "Loads active tickets and no-shows separately for an authorized staff member."
   def fetch_queue(user_id, queue_id) when is_binary(user_id) and is_binary(queue_id) do
     case StaffAccess.queue_for_user(user_id, queue_id) do
       nil ->
@@ -24,22 +24,33 @@ defmodule Kewkew.Queues.StaffBoard do
               limit: 1
           )
 
-        tickets =
+        {tickets, no_show_tickets} =
           case session do
             nil ->
-              []
+              {[], []}
 
             session ->
-              Repo.all(
-                from ticket in Ticket,
-                  where:
-                    ticket.queue_session_id == ^session.id and
-                      ticket.status in ^@active_ticket_statuses,
-                  order_by: [asc: ticket.queue_sequence]
-              )
+              active_tickets =
+                Repo.all(
+                  from ticket in Ticket,
+                    where:
+                      ticket.queue_session_id == ^session.id and
+                        ticket.status in ^@active_ticket_statuses,
+                    order_by: [asc: ticket.queue_sequence]
+                )
+
+              no_show_tickets =
+                Repo.all(
+                  from ticket in Ticket,
+                    where: ticket.queue_session_id == ^session.id and ticket.status == :no_show,
+                    order_by: [asc: ticket.queue_sequence]
+                )
+
+              {active_tickets, no_show_tickets}
           end
 
-        {:ok, Map.merge(data, %{session: session, tickets: tickets})}
+        {:ok,
+         Map.merge(data, %{session: session, tickets: tickets, no_show_tickets: no_show_tickets})}
     end
   end
 
