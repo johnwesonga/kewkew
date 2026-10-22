@@ -31,22 +31,37 @@ document.addEventListener("click", async event => {
   if (!button) return
 
   const input = document.getElementById(button.dataset.copyTarget)
+  const value = button.dataset.copyValue || input?.value
   const status = document.getElementById(button.dataset.copyStatus || "visitor-tracking-link-status")
-  if (!input || !status) return
+  if (!value || !status) return
+
+  const fallbackCopy = () => {
+    const textArea = document.createElement("textarea")
+    textArea.value = value
+    textArea.setAttribute("readonly", "")
+    textArea.style.position = "fixed"
+    textArea.style.opacity = "0"
+    document.body.appendChild(textArea)
+    textArea.select()
+
+    const copied = document.execCommand("copy")
+    textArea.remove()
+    return copied
+  }
 
   try {
     if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(input.value)
+      await navigator.clipboard.writeText(value)
       status.textContent = button.dataset.copyMessage || "Private link copied."
     } else {
-      input.focus()
-      input.select()
-      status.textContent = button.dataset.copyFallback || "Select and copy your private link."
+      status.textContent = fallbackCopy()
+        ? button.dataset.copyMessage || "Private link copied."
+        : button.dataset.copyFallback || "Select and copy your private link."
     }
   } catch (_error) {
-    input.focus()
-    input.select()
-    status.textContent = button.dataset.copyFallback || "Select and copy your private link."
+    status.textContent = fallbackCopy()
+      ? button.dataset.copyMessage || "Private link copied."
+      : button.dataset.copyFallback || "Select and copy your private link."
   }
 })
 
