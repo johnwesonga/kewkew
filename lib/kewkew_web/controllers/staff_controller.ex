@@ -99,7 +99,8 @@ defmodule KewkewWeb.StaffController do
           "max_active_tickets" => capacity_value(context.queue.max_active_tickets)
         }
 
-        render_edit_form(conn, context, params, [])
+        public_url = unverified_url(conn, "/q/#{context.queue.public_slug}")
+        render_edit_form(conn, context, params, public_url, [])
 
       {:error, :not_found} ->
         conn
@@ -175,7 +176,9 @@ defmodule KewkewWeb.StaffController do
   defp render_edit_error(conn, queue_id, params, errors) do
     case StaffUpdateQueue.fetch_queue(conn.assigns.current_user.id, queue_id) do
       {:ok, context} ->
-        render_edit_form(conn, context, params, errors, status: :unprocessable_entity)
+        public_url = unverified_url(conn, "/q/#{context.queue.public_slug}")
+
+        render_edit_form(conn, context, params, public_url, errors, status: :unprocessable_entity)
 
       {:error, :not_found} ->
         conn
@@ -184,12 +187,14 @@ defmodule KewkewWeb.StaffController do
     end
   end
 
-  defp render_edit_form(conn, context, params, errors, opts \\ []) do
+  defp render_edit_form(conn, context, params, public_url, errors, opts \\ []) do
     render(conn, :edit,
       page_title: "Edit queue",
       staff_email: to_string(conn.assigns.current_user.email),
       context: context,
       form: Phoenix.Component.to_form(params, as: :queue),
+      public_url_form: Phoenix.Component.to_form(%{"url" => public_url}, as: :public),
+      public_url: public_url,
       errors: errors,
       status: Keyword.get(opts, :status, :ok)
     )

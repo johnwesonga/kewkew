@@ -242,6 +242,18 @@
 .staff-row-action.cancel { color: #a64338; background: #fff0ed; }
 .staff-row-action.cancel:hover { color: #fff; background: #a64338; }
 .staff-status-pill.no-show { color: #936516; background: #fff4d8; }
+.staff-queue-access-card { margin-top: 18px; }
+.staff-queue-access-content { display: grid; grid-template-columns: minmax(0, 1fr) 260px; align-items: center; gap: 28px; padding: 24px; }
+.staff-public-link { display: grid; justify-items: start; gap: 12px; min-width: 0; }
+.staff-public-link .input { width: 100%; }
+.staff-public-link input { width: 100%; }
+.staff-public-link .staff-secondary-button { min-height: 37px; }
+.staff-queue-qr-panel { display: grid; justify-items: center; gap: 13px; }
+.staff-queue-qr-panel > div:first-child { width: 100%; }
+.staff-queue-qr-panel svg { display: block; width: min(100%, 240px); height: auto; margin: 0 auto; }
+.staff-queue-qr-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.staff-queue-qr-actions [hidden] { display: none; }
+.staff-queue-print-heading { display: none; }
 
 @media (max-width: 900px) {
   .staff-workspace { grid-template-columns: 180px minmax(0, 1fr); }
@@ -275,4 +287,17 @@
   .staff-status-pill { padding: 5px 7px; font-size: 8px; }
   .staff-ticket-actions { flex-direction: column-reverse; gap: 4px; }
   .staff-card-heading { padding: 17px; }
+  .staff-queue-access-content { grid-template-columns: 1fr; gap: 22px; padding: 18px; }
+}
+
+@media print {
+  body * { visibility: hidden !important; }
+  #staff-queue-qr-print, #staff-queue-qr-print * { visibility: visible !important; }
+  #staff-queue-qr-print { position: fixed; inset: 0; display: grid; grid-template-columns: 1fr; align-content: center; justify-items: center; gap: 20px; padding: 32px; background: #fff; }
+  .staff-queue-print-heading { display: block; text-align: center; }
+  .staff-queue-print-heading h2 { margin: 5px 0; color: #17251f; font-size: 24px; }
+  .staff-queue-print-heading p { margin: 0; color: #526158; font-size: 13px; }
+  .staff-public-link, .staff-queue-qr-actions { display: none !important; }
+  .staff-queue-qr-panel { width: 320px; }
+  .staff-queue-qr-panel svg { width: 300px; }
 }

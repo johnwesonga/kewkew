@@ -24,29 +24,108 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/kewkew"
 import topbar from "../vendor/topbar"
+import QRCode from "../vendor/QRCode"
+import QRErrorCorrectLevel from "../vendor/QRCode/QRErrorCorrectLevel"
 
 document.addEventListener("click", async event => {
   const button = event.target.closest("[data-copy-target]")
   if (!button) return
 
   const input = document.getElementById(button.dataset.copyTarget)
-  const status = document.getElementById("visitor-tracking-link-status")
+  const status = document.getElementById(button.dataset.copyStatus || "visitor-tracking-link-status")
   if (!input || !status) return
 
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(input.value)
-      status.textContent = "Private link copied."
+      status.textContent = button.dataset.copyMessage || "Private link copied."
     } else {
       input.focus()
       input.select()
-      status.textContent = "Select and copy your private link."
+      status.textContent = button.dataset.copyFallback || "Select and copy your private link."
     }
   } catch (_error) {
     input.focus()
     input.select()
-    status.textContent = "Select and copy your private link."
+    status.textContent = button.dataset.copyFallback || "Select and copy your private link."
   }
+})
+
+const queueQr = document.getElementById("staff-queue-qr")
+
+if (queueQr) {
+  try {
+    const qrCode = new QRCode(0, QRErrorCorrectLevel.M)
+    qrCode.addData(queueQr.dataset.queueUrl)
+    qrCode.make()
+
+    const moduleCount = qrCode.getModuleCount()
+    const quietZone = 4
+    const viewSize = moduleCount + quietZone * 2
+    let darkModules = ""
+
+    for (let row = 0; row < moduleCount; row++) {
+      for (let column = 0; column < moduleCount; column++) {
+        if (qrCode.isDark(row, column)) {
+          darkModules += `M${column + quietZone} ${row + quietZone}h1v1h-1z`
+        }
+      }
+    }
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+    svg.setAttribute("viewBox", `0 0 ${viewSize} ${viewSize}`)
+    svg.setAttribute("role", "img")
+    svg.setAttribute("aria-label", `QR code for ${queueQr.dataset.queueUrl}`)
+    svg.setAttribute("shape-rendering", "crispEdges")
+
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+    background.setAttribute("width", String(viewSize))
+    background.setAttribute("height", String(viewSize))
+    background.setAttribute("fill", "#ffffff")
+
+    const modules = document.createElementNS("http://www.w3.org/2000/svg", "path")
+    modules.setAttribute("d", darkModules)
+    modules.setAttribute("fill", "#17251f")
+
+    svg.append(background, modules)
+    queueQr.replaceChildren(svg)
+
+    const qrFallback = document.getElementById("staff-queue-qr-fallback")
+    if (qrFallback) qrFallback.hidden = true
+
+    const downloadButton = document.getElementById("staff-download-queue-qr")
+    if (downloadButton) downloadButton.hidden = false
+
+    const printButton = document.getElementById("staff-print-queue-qr")
+    if (printButton) printButton.hidden = false
+  } catch (_error) {
+    const qrFallback = document.getElementById("staff-queue-qr-fallback")
+    if (qrFallback) qrFallback.textContent = "The QR code could not be generated. Use the public link instead."
+  }
+}
+
+document.addEventListener("click", event => {
+  const downloadButton = event.target.closest("[data-download-queue-qr]")
+  if (downloadButton) {
+    const queueQr = document.getElementById("staff-queue-qr")
+    const svg = queueQr?.querySelector("svg")
+    if (!svg) return
+
+    const svgBlob = new Blob([new XMLSerializer().serializeToString(svg)], {
+      type: "image/svg+xml;charset=utf-8",
+    })
+    const downloadUrl = URL.createObjectURL(svgBlob)
+    const downloadLink = document.createElement("a")
+    downloadLink.href = downloadUrl
+    downloadLink.download = `${queueQr.dataset.queueSlug}-qr.svg`
+    downloadLink.click()
+    URL.revokeObjectURL(downloadUrl)
+    return
+  }
+
+  const printButton = event.target.closest("[data-print-queue-qr]")
+  if (printButton) window.print()
 })
 
 document.addEventListener("submit", event => {

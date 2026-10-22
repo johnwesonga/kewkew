@@ -81,5 +81,82 @@
         </div>
       </.form>
     </section>
+
+    <section id="staff-queue-access" class="staff-card staff-queue-access-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2>Visitor access</h2>
+          <p>This reusable queue link continues to work for future sessions.</p>
+        </div>
+      </div>
+
+      <div id="staff-queue-qr-print" class="staff-queue-access-content">
+        <div class="staff-queue-print-heading">
+          <p>Kewkew · {@context.location.name}</p>
+          <h2>{@context.queue.name}</h2>
+          <p>Scan to join this queue</p>
+        </div>
+
+        <div class="staff-public-link">
+          <.input
+            field={@public_url_form[:url]}
+            type="url"
+            label="Public join link"
+            readonly
+            id="staff-public-queue-url"
+          />
+          <button
+            id="staff-copy-public-queue-url"
+            type="button"
+            class="staff-secondary-button"
+            data-copy-target="staff-public-queue-url"
+            data-copy-status="staff-public-queue-url-status"
+            data-copy-message="Public queue link copied."
+            data-copy-fallback="Select and copy the public queue link."
+          >
+            <.icon name="hero-clipboard-document" class="size-4" /> Copy link
+          </button>
+          <p
+            id="staff-public-queue-url-status"
+            class="staff-form-note"
+            role="status"
+            aria-live="polite"
+          >
+          </p>
+        </div>
+
+        <div class="staff-queue-qr-panel">
+          <div
+            id="staff-queue-qr"
+            data-queue-url={@public_url}
+            data-queue-slug={@context.queue.public_slug}
+          >
+            <p id="staff-queue-qr-fallback" class="staff-form-note">
+              The QR code will appear here when JavaScript is available.
+            </p>
+          </div>
+          <div class="staff-queue-qr-actions">
+            <button
+              id="staff-download-queue-qr"
+              type="button"
+              class="staff-secondary-button"
+              data-download-queue-qr
+              hidden
+            >
+              <.icon name="hero-arrow-down-tray" class="size-4" /> Download SVG
+            </button>
+            <button
+              id="staff-print-queue-qr"
+              type="button"
+              class="staff-secondary-button"
+              data-print-queue-qr
+              hidden
+            >
+              <.icon name="hero-printer" class="size-4" /> Print QR code
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   </section>
 </Layouts.app>
