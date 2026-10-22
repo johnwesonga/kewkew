@@ -22,7 +22,19 @@ Requirements: Elixir and Erlang/OTP compatible with the versions in `mix.exs`, P
    mix setup
    ```
 
-2. Start the server:
+2. Create the first staff administrator once (the password must be at least 12 characters):
+
+   ```sh
+   export KEWKEW_ADMIN_EMAIL="admin@example.com"
+   export KEWKEW_ADMIN_PASSWORD="use-a-long-local-password"
+   export KEWKEW_ORGANIZATION_NAME="Example Business"
+   export KEWKEW_LOCATION_NAME="Main Location"
+   mix kewkew.bootstrap_admin
+   ```
+
+   The bootstrap task stops working once an organization or user exists. Sign in at `/sign-in`; the staff landing page is at `/staff`.
+
+3. Start the server:
 
    ```sh
    mix phx.server

@@ -34,6 +34,9 @@ config :spark,
     remove_parens?: true,
     "Ash.Resource": [
       section_order: [
+        :authentication,
+        :token,
+        :user_identity,
         :postgres,
         :resource,
         :code_interface,
@@ -56,7 +59,7 @@ config :spark,
 
 config :kewkew,
   ecto_repos: [Kewkew.Repo],
-  ash_domains: [Kewkew.Business, Kewkew.Queues],
+  ash_domains: [Kewkew.Accounts, Kewkew.Business, Kewkew.Queues],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint

@@ -92,10 +92,12 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
   end
 
   test "lists location services and lets visitors choose only joinable queues", %{conn: conn} do
+    organization = create_organization_fixture()
+
     location =
       Ash.create!(
         Kewkew.Business.Location,
-        %{name: "Riverside Community Hub"},
+        %{name: "Riverside Community Hub", organization_id: organization.id},
         domain: Kewkew.Business
       )
 
@@ -477,10 +479,12 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
   end
 
   defp create_queue_fixture(opts \\ []) do
+    organization = create_organization_fixture()
+
     location =
       Ash.create!(
         Kewkew.Business.Location,
-        %{name: "Riverside Community Hub"},
+        %{name: "Riverside Community Hub", organization_id: organization.id},
         domain: Kewkew.Business
       )
 
@@ -543,6 +547,15 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
     )
 
     queue
+  end
+
+  defp create_organization_fixture do
+    Ash.create!(
+      Kewkew.Business.Organization,
+      %{name: "Test organization"},
+      domain: Kewkew.Business,
+      authorize?: false
+    )
   end
 
   defp new_attempt_token do

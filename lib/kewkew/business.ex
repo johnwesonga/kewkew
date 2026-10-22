@@ -1,15 +1,15 @@
 defmodule Kewkew.Business do
   @moduledoc """
-  Business context resources needed to describe a visitor-facing queue.
-
-  Organization ownership and staff membership will be added with the business
-  foundation stories.
+  Business organizations, locations, services, and staff authorization.
   """
 
   use Ash.Domain
 
   resources do
+    resource Kewkew.Business.Organization
     resource Kewkew.Business.Location
     resource Kewkew.Business.Service
+    resource Kewkew.Business.StaffMembership
+    resource Kewkew.Business.StaffLocationAccess
   end
 end

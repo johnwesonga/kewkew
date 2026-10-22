@@ -6,15 +6,37 @@ require Ash.Query
 
 alias Kewkew.Business
 alias Kewkew.Business.Location
+alias Kewkew.Business.Organization
 alias Kewkew.Business.Service
 alias Kewkew.Queues
 alias Kewkew.Queues.{Queue, QueueSession}
 
+organization =
+  Ash.read_one!(
+    Ash.Query.filter(Organization, name == ^"Kewkew Organization"),
+    domain: Business,
+    authorize?: false
+  ) ||
+    Ash.create!(Organization, %{name: "Kewkew Organization"},
+      domain: Business,
+      authorize?: false
+    )
+
 location =
-  Ash.read_one!(Ash.Query.filter(Location, name == ^"Riverside Community Hub"),
+  Ash.read_one!(
+    Ash.Query.filter(
+      Location,
+      name == ^"Riverside Community Hub" and organization_id == ^organization.id
+    ),
     domain: Business
   ) ||
-    Ash.create!(Location, %{name: "Riverside Community Hub", timezone: "Africa/Nairobi"},
+    Ash.create!(
+      Location,
+      %{
+        name: "Riverside Community Hub",
+        timezone: "Africa/Nairobi",
+        organization_id: organization.id
+      },
       domain: Business
     )
 

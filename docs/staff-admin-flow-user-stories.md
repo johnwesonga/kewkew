@@ -6,7 +6,7 @@ Let authorized staff see the active queue and move tickets through service in a 
 
 These stories cover day-to-day queue operations. Organization setup, staff invitations, and queue configuration are prerequisites and will be scoped separately. Admins can manage staff access; queue operators can perform the queue actions granted to them.
 
-Staff authentication is planned with [AshAuthentication](https://ash-authentication.hexdocs.pm/readme.html) and its [Phoenix integration](https://ash-authentication-phoenix.hexdocs.pm/). AshAuthentication will establish the staff identity and sign-in session; Kewkew's staff membership and authorization rules will determine which organizations, locations, queues, and actions that identity can access. Authentication alone does not grant access to business data.
+Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs.pm/readme.html) and its [Phoenix integration](https://ash-authentication-phoenix.hexdocs.pm/) with email and password sign-in. Public self-registration is disabled. The first organization administrator is provisioned by a one-time bootstrap task; administrators provision subsequent staff accounts. AshAuthentication establishes the identity and sign-in session; Kewkew's active membership and location assignments determine which business data that identity can access. Authentication alone does not grant access to business data.
 
 ## Roles and shared rules
 
@@ -27,13 +27,14 @@ Staff authentication is planned with [AshAuthentication](https://ash-authenticat
 **Acceptance criteria**
 
 - A staff member must sign in through the AshAuthentication-based staff flow before opening staff queue screens or invoking queue actions.
-- Staff account creation is invitation or administrator controlled; public self-registration is not part of the initial staff flow.
+- Staff account creation is administrator controlled; public self-registration is disabled.
 - A successfully authenticated identity with no active Kewkew staff membership cannot access organization or queue data.
 - Staff can access only organizations and locations granted to their membership.
-- An administrator can grant and revoke staff membership and location access; operators cannot change access unless explicitly granted an admin role.
+- The staff landing page lists queues only at locations the staff member can access.
+- An administrator can grant and revoke staff membership and location access; operators cannot change access unless explicitly granted an admin role. The last active organization administrator cannot be revoked.
 - Unauthorized or cross-organization requests reveal no queue or visitor data and cannot change ticket state.
 
-**Dependencies** — Organization/location ownership, staff membership, AshAuthentication plus its Phoenix integration, and role policy. Choose the initial sign-in strategy (for example, password or magic link) before implementation.
+**Dependencies** — Organization/location ownership, staff membership, AshAuthentication plus its Phoenix integration, and role policy. The initial sign-in strategy is email and password; account bootstrap and administrator provisioning are controlled server-side workflows.
 
 ### SF-2: Monitor a queue
 

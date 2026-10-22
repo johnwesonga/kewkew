@@ -16,7 +16,7 @@ defmodule Kewkew.Business.Location do
 
     create :create do
       primary? true
-      accept [:name, :timezone, :active?]
+      accept [:name, :timezone, :active?, :organization_id]
     end
   end
 
@@ -42,5 +42,12 @@ defmodule Kewkew.Business.Location do
 
     create_timestamp :inserted_at
     update_timestamp :updated_at
+  end
+
+  relationships do
+    belongs_to :organization, Kewkew.Business.Organization do
+      allow_nil? false
+      public? true
+    end
   end
 end

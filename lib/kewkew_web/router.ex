@@ -1,6 +1,10 @@
 defmodule KewkewWeb.Router do
   use KewkewWeb, :router
 
+  use AshAuthentication.Phoenix.Router
+
+  import AshAuthentication.Plug.Helpers
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,10 +12,34 @@ defmodule KewkewWeb.Router do
     plug :put_root_layout, html: {KewkewWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :load_from_session
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :load_from_bearer
+    plug :set_actor, :user
+  end
+
+  pipeline :staff_members_only do
+    plug KewkewWeb.Plugs.RequireStaffMembership
+  end
+
+  scope "/", KewkewWeb do
+    pipe_through :browser
+
+    ash_authentication_live_session :authenticated_routes do
+      # in each liveview, add one of the following at the top of the module:
+      #
+      # If an authenticated user must be present:
+      # on_mount {KewkewWeb.LiveUserAuth, :live_user_required}
+      #
+      # If an authenticated user *may* be present:
+      # on_mount {KewkewWeb.LiveUserAuth, :live_user_optional}
+      #
+      # If an authenticated user must *not* be present:
+      # on_mount {KewkewWeb.LiveUserAuth, :live_no_user}
+    end
   end
 
   scope "/", KewkewWeb do
@@ -24,6 +52,23 @@ defmodule KewkewWeb.Router do
     post "/t/:token/cancel", VisitorQueueController, :cancel_ticket
     get "/locations/:location_id/services", VisitorQueueController, :services
     get "/t/:token", VisitorQueueController, :track
+    auth_routes AuthController, Kewkew.Accounts.User, path: "/auth"
+
+    sign_out_route AuthController, "/sign-out",
+      overrides: [KewkewWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
+
+    sign_in_route auth_routes_prefix: "/auth",
+                  on_mount: [{KewkewWeb.LiveUserAuth, :live_no_user}],
+                  overrides: [
+                    KewkewWeb.AuthOverrides,
+                    AshAuthentication.Phoenix.Overrides.DaisyUI
+                  ]
+  end
+
+  scope "/staff", KewkewWeb do
+    pipe_through [:browser, :staff_members_only]
+
+    get "/", StaffController, :index
   end
 
   scope "/t", KewkewWeb do

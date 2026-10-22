@@ -12,6 +12,7 @@ defmodule Kewkew.Application do
       Kewkew.Repo,
       {DNSCluster, query: Application.get_env(:kewkew, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Kewkew.PubSub},
+      {AshAuthentication.Supervisor, [otp_app: :kewkew]},
       # Start a worker by calling: Kewkew.Worker.start_link(arg)
       # {Kewkew.Worker, arg},
       # Start to serve requests, typically the last entry

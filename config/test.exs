@@ -1,4 +1,6 @@
 import Config
+config :kewkew, token_signing_secret: "D5R83veel7MdoMYSe1CO0fdZ2HpRjiZn"
+config :bcrypt_elixir, log_rounds: 1
 config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 
 # Configure your database
