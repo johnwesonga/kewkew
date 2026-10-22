@@ -54,6 +54,14 @@ document.addEventListener("submit", event => {
   if (form && !window.confirm(form.dataset.confirm)) event.preventDefault()
 })
 
+document.addEventListener("click", event => {
+  const target = event.target.closest("button[data-confirm], a[data-confirm]")
+  if (target && !window.confirm(target.dataset.confirm)) {
+    event.preventDefault()
+    event.stopImmediatePropagation()
+  }
+}, true)
+
 const visitorTicket = document.getElementById("visitor-ticket")
 
 if (visitorTicket) {

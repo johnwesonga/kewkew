@@ -123,6 +123,18 @@
               <.icon name="hero-forward" class="size-4" />
             </button>
             <button
+              :if={ticket.status in [:waiting, :called]}
+              type="button"
+              class="staff-row-action cancel"
+              phx-click="cancel_ticket"
+              phx-value-ticket-id={ticket.id}
+              data-confirm={"Cancel ticket ##{ticket.ticket_number}? This cannot be undone."}
+              aria-label={"Cancel ticket ##{ticket.ticket_number}"}
+              title="Cancel ticket"
+            >
+              <.icon name="hero-x-mark" class="size-4" />
+            </button>
+            <button
               :if={ticket.status == :serving}
               type="button"
               class="staff-row-action"

@@ -214,6 +214,8 @@
 .staff-row-action:hover { color: #fff; background: #176b4b; }
 .staff-row-action.skip { color: #936516; background: #fff4d8; }
 .staff-row-action.skip:hover { color: #fff; background: #936516; }
+.staff-row-action.cancel { color: #a64338; background: #fff0ed; }
+.staff-row-action.cancel:hover { color: #fff; background: #a64338; }
 .staff-status-pill.no-show { color: #936516; background: #fff4d8; }
 
 @media (max-width: 900px) {

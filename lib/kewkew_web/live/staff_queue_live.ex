@@ -6,6 +6,7 @@ defmodule KewkewWeb.StaffQueueLive do
   alias Kewkew.Queues.{
     StaffBoard,
     StaffCallNext,
+    StaffCancelTicket,
     StaffCompleteService,
     StaffSkipVisitor,
     StaffStartServing,
@@ -139,6 +140,28 @@ defmodule KewkewWeb.StaffQueueLive do
     end
   end
 
+  @impl true
+  def handle_event("cancel_ticket", params, socket) do
+    ticket_id = Map.get(params, "ticket_id") || Map.get(params, "ticket-id")
+
+    case cancel_ticket(socket, ticket_id) do
+      {:ok, ticket} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(:info, "Ticket ##{ticket.ticket_number} was cancelled.")}
+
+      {:error, :not_cancellable} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(:info, "That ticket can no longer be cancelled.")}
+
+      {:error, _reason} ->
+        {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Unable to cancel that ticket.")}
+    end
+  end
+
   defp start_serving(_socket, nil), do: {:error, :missing_ticket_id}
 
   defp start_serving(socket, ticket_id) do
@@ -163,6 +186,16 @@ defmodule KewkewWeb.StaffQueueLive do
 
   defp skip_visitor(socket, ticket_id) do
     StaffSkipVisitor.skip_visitor(
+      socket.assigns.current_user.id,
+      socket.assigns.queue.id,
+      ticket_id
+    )
+  end
+
+  defp cancel_ticket(_socket, nil), do: {:error, :missing_ticket_id}
+
+  defp cancel_ticket(socket, ticket_id) do
+    StaffCancelTicket.cancel_ticket(
       socket.assigns.current_user.id,
       socket.assigns.queue.id,
       ticket_id
