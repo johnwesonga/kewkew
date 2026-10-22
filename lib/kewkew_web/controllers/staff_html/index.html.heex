@@ -1,39 +1,60 @@
-<Layouts.app flash={@flash}>
-  <main id="staff-home" class="space-y-8">
-    <header class="space-y-2">
-      <p class="text-sm text-base-content/70">Signed in as {@staff_email}</p>
-      <h1 class="text-3xl font-bold">Staff queues</h1>
-      <p class="text-base-content/70">Choose a queue to see its current visitors.</p>
+<Layouts.app flash={@flash} staff?={true} staff_email={@staff_email}>
+  <section id="staff-home" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <p class="staff-eyebrow">Your workspace</p>
+        <h1>Live queues</h1>
+        <p class="staff-subhead">Choose a queue to see its current visitors.</p>
+      </div>
+      <span class="staff-assignment-count">
+        {length(@queues)} {if length(@queues) == 1, do: "queue", else: "queues"}
+      </span>
     </header>
 
-    <section aria-labelledby="staff-locations-heading" class="space-y-3">
-      <h2 id="staff-locations-heading" class="text-xl font-semibold">Assigned locations</h2>
-      <ul id="staff-locations" class="space-y-2">
-        <li :for={location <- @locations} id={"staff-location-#{location.id}"}>
-          <div class="rounded-lg border border-base-300 p-3">{location.name}</div>
+    <section aria-labelledby="staff-queues-heading" class="staff-card staff-queue-list">
+      <div class="staff-card-heading">
+        <div>
+          <h2 id="staff-queues-heading">Queues you can access</h2>
+          <p>Assigned locations and services</p>
+        </div>
+      </div>
+      <ul id="staff-queues">
+        <li :for={%{queue: queue, location: location} <- @queues} id={"staff-queue-#{queue.id}"}>
+          <.link navigate={~p"/staff/queues/#{queue.id}"} class="staff-queue-link">
+            <span class="staff-queue-symbol">
+              <.icon name="hero-queue-list" class="size-5" />
+            </span>
+            <span class="staff-queue-details">
+              <strong>{queue.name}</strong>
+              <span>{location.name}</span>
+            </span>
+            <span class="staff-open-queue">
+              Open queue <.icon name="hero-arrow-right" class="size-4" />
+            </span>
+          </.link>
         </li>
-        <li :if={@locations == []} id="staff-no-locations" class="text-base-content/70">
-          No locations are assigned to this account.
+        <li :if={@queues == []} id="staff-no-queues" class="staff-empty-state">
+          <span class="staff-empty-icon"><.icon name="hero-queue-list" class="size-6" /></span>
+          <strong>No queues assigned yet</strong>
+          <span>There are no queues at your assigned locations.</span>
         </li>
       </ul>
     </section>
 
-    <section aria-labelledby="staff-queues-heading" class="space-y-3">
-      <h2 id="staff-queues-heading" class="text-xl font-semibold">Queues you can access</h2>
-      <ul id="staff-queues" class="space-y-2">
-        <li :for={%{queue: queue, location: location} <- @queues} id={"staff-queue-#{queue.id}"}>
-          <.link
-            navigate={~p"/staff/queues/#{queue.id}"}
-            class="flex items-center justify-between rounded-lg border border-base-300 p-4 hover:bg-base-200"
-          >
-            <span class="font-semibold">{queue.name}</span>
-            <span class="text-sm text-base-content/70">{location.name}</span>
-          </.link>
-        </li>
-        <li :if={@queues == []} id="staff-no-queues" class="text-base-content/70">
-          There are no queues at your assigned locations.
-        </li>
-      </ul>
+    <section aria-labelledby="staff-locations-heading" class="staff-location-section">
+      <h2 id="staff-locations-heading">Assigned locations</h2>
+      <div id="staff-locations" class="staff-location-list">
+        <span
+          :for={location <- @locations}
+          id={"staff-location-#{location.id}"}
+          class="staff-location-tag"
+        >
+          <.icon name="hero-map-pin" class="size-4" /> {location.name}
+        </span>
+        <p :if={@locations == []} id="staff-no-locations" class="staff-muted">
+          No locations are assigned to this account.
+        </p>
+      </div>
     </section>
-  </main>
+  </section>
 </Layouts.app>

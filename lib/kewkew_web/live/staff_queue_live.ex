@@ -62,7 +62,8 @@ defmodule KewkewWeb.StaffQueueLive do
       show_names?: board.queue.identity_policy == :name_required,
       waiting_count: length(Map.get(tickets_by_status, :waiting, [])),
       called_count: length(Map.get(tickets_by_status, :called, [])),
-      serving_count: length(Map.get(tickets_by_status, :serving, []))
+      serving_count: length(Map.get(tickets_by_status, :serving, [])),
+      active_count: length(board.tickets)
     )
     |> stream(:waiting_tickets, Map.get(tickets_by_status, :waiting, []), reset: true)
     |> stream(:called_tickets, Map.get(tickets_by_status, :called, []), reset: true)
@@ -75,4 +76,19 @@ defmodule KewkewWeb.StaffQueueLive do
   defp session_status(%{status: :closed}), do: "Closed"
 
   defp session_status(_session), do: "Unavailable"
+
+  defp session_status_class(%{status: :open}), do: "open"
+  defp session_status_class(%{status: :paused}), do: "paused"
+  defp session_status_class(%{status: :closed}), do: "closed"
+  defp session_status_class(_session), do: "closed"
+
+  defp person_initials(_ticket, false), do: "—"
+  defp person_initials(%{first_name: nil}, true), do: "—"
+
+  defp person_initials(ticket, true) do
+    [ticket.first_name, ticket.last_name]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.map_join(&String.first/1)
+    |> String.upcase()
+  end
 end

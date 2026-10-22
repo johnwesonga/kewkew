@@ -1,107 +1,123 @@
-<Layouts.app flash={@flash}>
-  <main id="staff-queue-board" class="mx-auto w-full max-w-4xl space-y-6">
-    <header class="space-y-2">
-      <.link navigate={~p"/staff"} class="text-sm font-semibold text-primary">
-        &larr; All queues
-      </.link>
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p class="text-sm text-base-content/70">{@location.name} · {@service.name}</p>
-          <h1 id="staff-queue-name" class="text-3xl font-bold">{@queue.name}</h1>
-        </div>
-        <div class="flex items-center gap-3">
-          <span id="staff-queue-session-status" class="badge badge-lg">{@session_status}</span>
-          <button
-            id="staff-queue-refresh"
-            type="button"
-            class="btn btn-outline"
-            phx-click="refresh"
-          >
-            <.icon name="hero-arrow-path" class="size-4" /> Refresh
-          </button>
-        </div>
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={to_string(@current_user.email)}
+  location_name={@location.name}
+>
+  <section id="staff-queue-board" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> All queues
+        </.link>
+        <p class="staff-eyebrow">{@location.name} · {@service.name}</p>
+        <h1 id="staff-queue-name">{@queue.name}</h1>
+        <p class="staff-subhead">Monitor visitors as they move through this queue.</p>
+      </div>
+      <div class="staff-heading-actions">
+        <span
+          id="staff-queue-session-status"
+          class={["staff-session-status", session_status_class(@session)]}
+        >
+          <span class="staff-status-dot"></span>{@session_status}
+        </span>
+        <button
+          id="staff-queue-refresh"
+          type="button"
+          class="staff-secondary-button"
+          phx-click="refresh"
+        >
+          <.icon name="hero-arrow-path" class="size-4" /> Refresh
+        </button>
       </div>
     </header>
 
-    <section aria-label="Queue counts" class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <div class="rounded-xl border border-base-300 p-4">
-        <p class="text-sm text-base-content/70">Waiting</p>
-        <p id="staff-waiting-count" class="text-3xl font-bold">{@waiting_count}</p>
-      </div>
-      <div class="rounded-xl border border-base-300 p-4">
-        <p class="text-sm text-base-content/70">Called</p>
-        <p id="staff-called-count" class="text-3xl font-bold">{@called_count}</p>
-      </div>
-      <div class="rounded-xl border border-base-300 p-4">
-        <p class="text-sm text-base-content/70">Being served</p>
-        <p id="staff-serving-count" class="text-3xl font-bold">{@serving_count}</p>
-      </div>
+    <section aria-label="Queue counts" class="staff-stats">
+      <article class="staff-card staff-stat-card">
+        <span class="staff-stat-icon mint"><.icon name="hero-user-group" class="size-5" /></span>
+        <p class="staff-stat-label">Waiting</p>
+        <p id="staff-waiting-count" class="staff-stat-value">{@waiting_count}</p>
+        <p class="staff-stat-note">Visitors in line</p>
+      </article>
+      <article class="staff-card staff-stat-card">
+        <span class="staff-stat-icon amber"><.icon name="hero-megaphone" class="size-5" /></span>
+        <p class="staff-stat-label">Called</p>
+        <p id="staff-called-count" class="staff-stat-value">{@called_count}</p>
+        <p class="staff-stat-note">Ready to be served</p>
+      </article>
+      <article class="staff-card staff-stat-card">
+        <span class="staff-stat-icon mint"><.icon name="hero-hand-raised" class="size-5" /></span>
+        <p class="staff-stat-label">Being served</p>
+        <p id="staff-serving-count" class="staff-stat-value">{@serving_count}</p>
+        <p class="staff-stat-note">Currently with staff</p>
+      </article>
     </section>
 
-    <section aria-labelledby="waiting-heading" class="space-y-3">
-      <h2 id="waiting-heading" class="text-xl font-semibold">Waiting</h2>
-      <div id="waiting-tickets" phx-update="stream" class="space-y-2">
-        <p class="hidden rounded-lg bg-base-200 p-4 text-base-content/70 only:block">
-          No visitors are waiting.
+    <section aria-labelledby="queue-visitors-heading" class="staff-card staff-visitors-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2 id="queue-visitors-heading">Queue visitors</h2>
+          <p>Current visitors, updated automatically</p>
+        </div>
+        <span class="staff-total-visitors">{@active_count} active</span>
+      </div>
+
+      <div :if={@session_status != "Open"} class="staff-queue-notice">
+        <.icon name="hero-information-circle" class="size-5" />
+        <span>
+          This queue is {@session_status |> String.downcase()}. Visitor activity may be limited.
+        </span>
+      </div>
+
+      <div id="waiting-tickets" phx-update="stream" class="staff-ticket-list">
+        <p class="staff-empty-state hidden only:flex">
+          <span class="staff-empty-icon"><.icon name="hero-user-group" class="size-6" /></span>
+          <strong>No active visitors</strong>
+          <span>Visitors will appear here when they join the queue.</span>
         </p>
-        <article
-          :for={{id, ticket} <- @streams.waiting_tickets}
-          id={id}
-          class="flex items-center justify-between rounded-lg border border-base-300 p-4"
-        >
-          <div>
-            <h3 class="text-lg font-bold">Ticket #{ticket.ticket_number}</h3>
-            <p :if={@show_names? and ticket.first_name} class="text-sm text-base-content/70">
-              {ticket.first_name} {ticket.last_name}
-            </p>
-          </div>
-          <span class="badge">Waiting</span>
+        <article :for={{id, ticket} <- @streams.waiting_tickets} id={id} class="staff-ticket-row">
+          <span class="staff-ticket-number">#{ticket.ticket_number}</span>
+          <span class="staff-ticket-person">
+            <span class="staff-person-avatar">{person_initials(ticket, @show_names?)}</span>
+            <span>
+              <strong :if={@show_names? and ticket.first_name}>
+                {ticket.first_name} {ticket.last_name}
+              </strong>
+              <strong :if={!@show_names? or is_nil(ticket.first_name)}>Visitor</strong>
+              <small>Waiting in line</small>
+            </span>
+          </span>
+          <span class="staff-status-pill waiting">Waiting</span>
+        </article>
+        <article :for={{id, ticket} <- @streams.called_tickets} id={id} class="staff-ticket-row">
+          <span class="staff-ticket-number">#{ticket.ticket_number}</span>
+          <span class="staff-ticket-person">
+            <span class="staff-person-avatar">{person_initials(ticket, @show_names?)}</span>
+            <span>
+              <strong :if={@show_names? and ticket.first_name}>
+                {ticket.first_name} {ticket.last_name}
+              </strong>
+              <strong :if={!@show_names? or is_nil(ticket.first_name)}>Visitor</strong>
+              <small>Waiting to be seen</small>
+            </span>
+          </span>
+          <span class="staff-status-pill called">Called</span>
+        </article>
+        <article :for={{id, ticket} <- @streams.serving_tickets} id={id} class="staff-ticket-row">
+          <span class="staff-ticket-number">#{ticket.ticket_number}</span>
+          <span class="staff-ticket-person">
+            <span class="staff-person-avatar">{person_initials(ticket, @show_names?)}</span>
+            <span>
+              <strong :if={@show_names? and ticket.first_name}>
+                {ticket.first_name} {ticket.last_name}
+              </strong>
+              <strong :if={!@show_names? or is_nil(ticket.first_name)}>Visitor</strong>
+              <small>Being helped by staff</small>
+            </span>
+          </span>
+          <span class="staff-status-pill serving">Being served</span>
         </article>
       </div>
     </section>
-
-    <section aria-labelledby="called-heading" class="space-y-3">
-      <h2 id="called-heading" class="text-xl font-semibold">Called</h2>
-      <div id="called-tickets" phx-update="stream" class="space-y-2">
-        <p class="hidden rounded-lg bg-base-200 p-4 text-base-content/70 only:block">
-          No visitors have been called.
-        </p>
-        <article
-          :for={{id, ticket} <- @streams.called_tickets}
-          id={id}
-          class="flex items-center justify-between rounded-lg border border-base-300 p-4"
-        >
-          <div>
-            <h3 class="text-lg font-bold">Ticket #{ticket.ticket_number}</h3>
-            <p :if={@show_names? and ticket.first_name} class="text-sm text-base-content/70">
-              {ticket.first_name} {ticket.last_name}
-            </p>
-          </div>
-          <span class="badge badge-warning">Called</span>
-        </article>
-      </div>
-    </section>
-
-    <section aria-labelledby="serving-heading" class="space-y-3">
-      <h2 id="serving-heading" class="text-xl font-semibold">Being served</h2>
-      <div id="serving-tickets" phx-update="stream" class="space-y-2">
-        <p class="hidden rounded-lg bg-base-200 p-4 text-base-content/70 only:block">
-          No visitors are being served.
-        </p>
-        <article
-          :for={{id, ticket} <- @streams.serving_tickets}
-          id={id}
-          class="flex items-center justify-between rounded-lg border border-base-300 p-4"
-        >
-          <div>
-            <h3 class="text-lg font-bold">Ticket #{ticket.ticket_number}</h3>
-            <p :if={@show_names? and ticket.first_name} class="text-sm text-base-content/70">
-              {ticket.first_name} {ticket.last_name}
-            </p>
-          </div>
-          <span class="badge badge-success">Being served</span>
-        </article>
-      </div>
-    </section>
-  </main>
+  </section>
 </Layouts.app>
