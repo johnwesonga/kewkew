@@ -154,6 +154,7 @@
 .staff-card-heading h2 { margin: 0; color: #17251f; font-size: 15px; font-weight: 800; }
 .staff-card-heading p { margin: 5px 0 0; color: #718078; font-size: 11px; }
 .staff-queue-list { overflow: hidden; }
+.staff-queue-groups { display: grid; gap: 16px; }
 .staff-queue-list ul { margin: 0; padding: 0; list-style: none; }
 .staff-queue-link { display: flex; align-items: center; gap: 14px; padding: 17px 22px; color: inherit; text-decoration: none; transition: background .15s ease; }
 .staff-queue-list li + li .staff-queue-link { border-top: 1px solid #eff2ef; }
@@ -162,6 +163,13 @@
 .staff-queue-details { display: grid; flex: 1; gap: 4px; }
 .staff-queue-details strong { color: #17251f; font-size: 13px; font-weight: 750; }
 .staff-queue-details > span { color: #718078; font-size: 11px; }
+.staff-queue-state { display: grid; justify-items: end; gap: 7px; }
+.staff-queue-status { padding: 5px 9px; border-radius: 99px; font-size: 10px; font-weight: 750; white-space: nowrap; }
+.staff-queue-status.open { color: #176b4b; background: #e6f4ec; }
+.staff-queue-status.paused { color: #936516; background: #fff4d8; }
+.staff-queue-status.closed, .staff-queue-status.no-session { color: #647168; background: #eff2ef; }
+.staff-queue-status.unavailable { color: #9d3939; background: #fff0ef; }
+.staff-location-empty { margin: 0; padding: 17px 22px; color: #718078; font-size: 11px; }
 .staff-open-queue { display: flex; align-items: center; gap: 7px; color: #176b4b; font-size: 11px; font-weight: 750; }
 .staff-empty-state { display: flex; min-height: 190px; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 28px; color: #718078; text-align: center; }
 .staff-empty-state .staff-empty-icon { flex: none; margin-bottom: 4px; }

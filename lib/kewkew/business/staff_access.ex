@@ -4,7 +4,7 @@ defmodule Kewkew.Business.StaffAccess do
   import Ecto.Query
 
   alias Kewkew.Business.{Location, Organization, Service, StaffLocationAccess, StaffMembership}
-  alias Kewkew.Queues.Queue
+  alias Kewkew.Queues.{Queue, QueueSession}
   alias Kewkew.Repo
 
   def has_active_membership?(user_id) do
@@ -56,25 +56,49 @@ defmodule Kewkew.Business.StaffAccess do
   end
 
   def queues_for_user(user_id) do
-    Repo.all(
-      from queue in Queue,
-        join: service in Service,
-        on: service.id == queue.service_id,
-        join: location in Location,
-        on: location.id == queue.location_id and service.location_id == location.id,
-        join: membership in StaffMembership,
-        on: membership.organization_id == location.organization_id,
-        left_join: assignment in StaffLocationAccess,
-        on:
-          assignment.staff_membership_id == membership.id and
-            assignment.location_id == location.id,
-        where:
-          membership.user_id == ^user_id and membership.active? and
-            (membership.role == :admin or not is_nil(assignment.id)),
-        order_by: [asc: location.name, asc: queue.name],
-        distinct: true,
-        select: %{queue: queue, location: location}
+    queues =
+      Repo.all(
+        from queue in Queue,
+          join: service in Service,
+          on: service.id == queue.service_id,
+          join: location in Location,
+          on: location.id == queue.location_id and service.location_id == location.id,
+          join: membership in StaffMembership,
+          on: membership.organization_id == location.organization_id,
+          left_join: assignment in StaffLocationAccess,
+          on:
+            assignment.staff_membership_id == membership.id and
+              assignment.location_id == location.id,
+          where:
+            membership.user_id == ^user_id and membership.active? and
+              (membership.role == :admin or not is_nil(assignment.id)),
+          order_by: [asc: location.name, asc: queue.name],
+          distinct: true,
+          select: %{queue: queue, location: location, service: service}
+      )
+
+    sessions_by_queue = latest_sessions_by_queue(queues)
+
+    Enum.map(queues, fn entry ->
+      Map.put(entry, :session, Map.get(sessions_by_queue, entry.queue.id))
+    end)
+  end
+
+  defp latest_sessions_by_queue([]), do: %{}
+
+  defp latest_sessions_by_queue(queues) do
+    queue_ids = Enum.map(queues, & &1.queue.id)
+
+    QueueSession
+    |> where([session], session.queue_id in ^queue_ids)
+    |> distinct([session], session.queue_id)
+    |> order_by([session],
+      asc: session.queue_id,
+      desc: session.opened_at,
+      desc: session.inserted_at
     )
+    |> Repo.all()
+    |> Map.new(&{&1.queue_id, &1})
   end
 
   def queue_for_user(user_id, queue_id) do

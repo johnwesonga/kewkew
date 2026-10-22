@@ -6,55 +6,63 @@
         <h1>Live queues</h1>
         <p class="staff-subhead">Choose a queue to see its current visitors.</p>
       </div>
-      <span class="staff-assignment-count">
-        {length(@queues)} {if length(@queues) == 1, do: "queue", else: "queues"}
+      <span id="staff-queue-count" class="staff-assignment-count">
+        {@queue_count} {if @queue_count == 1, do: "queue", else: "queues"}
       </span>
     </header>
 
-    <section aria-labelledby="staff-queues-heading" class="staff-card staff-queue-list">
-      <div class="staff-card-heading">
-        <div>
-          <h2 id="staff-queues-heading">Queues you can access</h2>
-          <p>Assigned locations and services</p>
+    <div id="staff-queue-groups" class="staff-queue-groups">
+      <section
+        :for={%{location: location, queues: queues} <- @queue_groups}
+        id={"staff-location-#{location.id}"}
+        aria-labelledby={"staff-location-heading-#{location.id}"}
+        class="staff-card staff-queue-list"
+      >
+        <div class="staff-card-heading">
+          <div>
+            <h2 id={"staff-location-heading-#{location.id}"}>{location.name}</h2>
+            <p>{length(queues)} {if length(queues) == 1, do: "queue", else: "queues"}</p>
+          </div>
         </div>
-      </div>
-      <ul id="staff-queues">
-        <li :for={%{queue: queue, location: location} <- @queues} id={"staff-queue-#{queue.id}"}>
-          <.link navigate={~p"/staff/queues/#{queue.id}"} class="staff-queue-link">
-            <span class="staff-queue-symbol">
-              <.icon name="hero-queue-list" class="size-5" />
-            </span>
-            <span class="staff-queue-details">
-              <strong>{queue.name}</strong>
-              <span>{location.name}</span>
-            </span>
-            <span class="staff-open-queue">
-              Open queue <.icon name="hero-arrow-right" class="size-4" />
-            </span>
-          </.link>
-        </li>
-        <li :if={@queues == []} id="staff-no-queues" class="staff-empty-state">
-          <span class="staff-empty-icon"><.icon name="hero-queue-list" class="size-6" /></span>
-          <strong>No queues assigned yet</strong>
-          <span>There are no queues at your assigned locations.</span>
-        </li>
-      </ul>
-    </section>
-
-    <section aria-labelledby="staff-locations-heading" class="staff-location-section">
-      <h2 id="staff-locations-heading">Assigned locations</h2>
-      <div id="staff-locations" class="staff-location-list">
-        <span
-          :for={location <- @locations}
-          id={"staff-location-#{location.id}"}
-          class="staff-location-tag"
-        >
-          <.icon name="hero-map-pin" class="size-4" /> {location.name}
-        </span>
-        <p :if={@locations == []} id="staff-no-locations" class="staff-muted">
-          No locations are assigned to this account.
+        <ul>
+          <li :for={entry <- queues} id={"staff-queue-#{entry.queue.id}"}>
+            <% {status, status_class} = queue_status(entry) %>
+            <.link navigate={~p"/staff/queues/#{entry.queue.id}"} class="staff-queue-link">
+              <span class="staff-queue-symbol">
+                <.icon name="hero-queue-list" class="size-5" />
+              </span>
+              <span class="staff-queue-details">
+                <strong>{entry.queue.name}</strong>
+                <span id={"staff-queue-service-#{entry.queue.id}"}>{entry.service.name}</span>
+                <span>
+                  {identity_policy_label(entry.queue)} · {capacity_label(entry.queue)}
+                </span>
+              </span>
+              <span class="staff-queue-state">
+                <span
+                  id={"staff-queue-status-#{entry.queue.id}"}
+                  class={["staff-queue-status", status_class]}
+                >
+                  {status}
+                </span>
+                <span class="staff-open-queue">
+                  Open queue <.icon name="hero-arrow-right" class="size-4" />
+                </span>
+              </span>
+            </.link>
+          </li>
+          <li :if={queues == []} id={"staff-location-no-queues-#{location.id}"}>
+            <p class="staff-location-empty">No queues are configured for this location yet.</p>
+          </li>
+        </ul>
+      </section>
+      <section :if={@queue_groups == []} id="staff-no-locations" class="staff-card">
+        <p class="staff-empty-state">
+          <span class="staff-empty-icon"><.icon name="hero-map-pin" class="size-6" /></span>
+          <strong>No locations assigned</strong>
+          <span>There are no locations available to this account.</span>
         </p>
-      </div>
-    </section>
+      </section>
+    </div>
   </section>
 </Layouts.app>
