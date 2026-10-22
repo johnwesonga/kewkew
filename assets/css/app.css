@@ -162,6 +162,7 @@
 .staff-queue-link:hover { background: #f8fbf8; }
 .staff-edit-queue-link { display: inline-flex; align-items: center; gap: 5px; margin-right: 18px; padding: 7px 9px; border: 1px solid #e4eae5; border-radius: 9px; color: #526158; font-size: 10px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .staff-edit-queue-link:hover { color: #176b4b; background: #f8fbf8; }
+.staff-edit-queue-link.reactivate { color: #176b4b; border-color: #dcebe1; }
 .staff-queue-symbol, .staff-empty-icon { display: grid; flex: 0 0 42px; place-items: center; width: 42px; height: 42px; border-radius: 13px; color: #176b4b; background: #e6f4ec; }
 .staff-queue-details { display: grid; flex: 1; gap: 4px; }
 .staff-queue-details strong { color: #17251f; font-size: 13px; font-weight: 750; }
@@ -171,6 +172,7 @@
 .staff-queue-status.open { color: #176b4b; background: #e6f4ec; }
 .staff-queue-status.paused { color: #936516; background: #fff4d8; }
 .staff-queue-status.closed, .staff-queue-status.no-session { color: #647168; background: #eff2ef; }
+.staff-queue-status.inactive { color: #936516; background: #fff4d8; }
 .staff-queue-status.unavailable { color: #9d3939; background: #fff0ef; }
 .staff-location-empty { margin: 0; padding: 17px 22px; color: #718078; font-size: 11px; }
 .staff-create-queue-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid #dcebe1; border-radius: 10px; color: #176b4b; font-size: 10px; font-weight: 750; text-decoration: none; white-space: nowrap; }

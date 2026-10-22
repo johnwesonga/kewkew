@@ -73,6 +73,7 @@ defmodule KewkewWeb.Router do
     post "/queues/new/:location_id", StaffController, :create
     get "/queues/:queue_id/edit", StaffController, :edit
     put "/queues/:queue_id", StaffController, :update
+    put "/queues/:queue_id/availability", StaffController, :update_availability
   end
 
   scope "/staff", KewkewWeb do

@@ -36,6 +36,7 @@ defmodule Kewkew.Queues.PublicLookup do
         queues =
           Queue
           |> Ash.Query.filter(location_id == ^location.id)
+          |> Ash.Query.filter(active? == true)
           |> Ash.Query.load(:service)
           |> Ash.read!(domain: Kewkew.Queues)
           |> Enum.filter(& &1.service.active?)
@@ -85,7 +86,7 @@ defmodule Kewkew.Queues.PublicLookup do
     |> Ash.read_one(domain: Kewkew.Queues)
     |> case do
       {:ok, session} when not is_nil(session) ->
-        if queue.location.active? and queue.service.active? do
+        if queue.active? and queue.location.active? and queue.service.active? do
           {:ok,
            %{queue: queue, session: session, active_ticket_count: active_ticket_count(session)}}
         else
@@ -93,7 +94,7 @@ defmodule Kewkew.Queues.PublicLookup do
         end
 
       {:ok, nil} ->
-        if queue.location.active? and queue.service.active? do
+        if queue.active? and queue.location.active? and queue.service.active? do
           {:ok, %{queue: queue, session: nil, active_ticket_count: 0}}
         else
           {:ok, nil}

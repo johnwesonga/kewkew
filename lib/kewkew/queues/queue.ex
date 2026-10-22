@@ -31,6 +31,10 @@ defmodule Kewkew.Queues.Queue do
       accept [:name, :identity_policy, :max_active_tickets]
     end
 
+    update :set_active do
+      accept [:active?]
+    end
+
     read :by_public_slug do
       argument :slug, :string do
         allow_nil? false
@@ -52,6 +56,12 @@ defmodule Kewkew.Queues.Queue do
 
     attribute :public_slug, :string do
       allow_nil? false
+      public? true
+    end
+
+    attribute :active?, :boolean do
+      allow_nil? false
+      default true
       public? true
     end
 

@@ -5,6 +5,7 @@ defmodule KewkewWeb.StaffController do
 
   alias Kewkew.Business.StaffAccess
   alias Kewkew.Queues.StaffCreateQueue
+  alias Kewkew.Queues.StaffSetQueueAvailability
   alias Kewkew.Queues.StaffUpdateQueue
 
   @doc "Shows the locations and queues available to the authenticated staff member."
@@ -144,6 +145,37 @@ defmodule KewkewWeb.StaffController do
   def update(conn, _params) do
     conn
     |> put_flash(:error, "The queue details were incomplete.")
+    |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Activates or deactivates a queue for an authorized organization administrator."
+  def update_availability(conn, %{"queue_id" => queue_id, "active" => active})
+      when active in ["true", "false"] do
+    active? = active == "true"
+
+    case StaffSetQueueAvailability.set_active(conn.assigns.current_user.id, queue_id, active?) do
+      {:ok, queue} ->
+        message = if active?, do: "#{queue.name} is active.", else: "#{queue.name} is inactive."
+
+        conn
+        |> put_flash(:info, message)
+        |> redirect(to: ~p"/staff")
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to change that queue.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, _reason} ->
+        conn
+        |> put_flash(:error, "The queue availability could not be changed.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def update_availability(conn, _params) do
+    conn
+    |> put_flash(:error, "The queue availability setting was invalid.")
     |> redirect(to: ~p"/staff")
   end
 

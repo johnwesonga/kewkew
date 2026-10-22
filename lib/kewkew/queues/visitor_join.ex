@@ -46,12 +46,10 @@ defmodule Kewkew.Queues.VisitorJoin do
   end
 
   defp create_ticket(slug, tracking_token, token_digest, params, expected_policy) do
-    queue =
-      Queue
-      |> Ash.Query.for_read(:by_public_slug, %{slug: slug})
-      |> Ash.read_one!(domain: Queues)
+    queue = fetch_queue_for_join(slug)
 
-    if is_nil(queue) or not queue.location.active? or not queue.service.active? do
+    if is_nil(queue) or not queue.active? or not queue.location.active? or
+         not queue.service.active? do
       Repo.rollback(:unavailable)
     end
 
@@ -98,6 +96,18 @@ defmodule Kewkew.Queues.VisitorJoin do
       |> Ash.count!(domain: Queues)
 
     active_count >= queue.max_active_tickets
+  end
+
+  defp fetch_queue_for_join(slug) do
+    case Repo.one(from queue in Queue, where: queue.public_slug == ^slug, lock: "FOR UPDATE") do
+      nil ->
+        nil
+
+      _queue ->
+        Queue
+        |> Ash.Query.for_read(:by_public_slug, %{slug: slug})
+        |> Ash.read_one!(domain: Queues)
+    end
   end
 
   defp create_ticket_records(session, tracking_token, token_digest, names) do

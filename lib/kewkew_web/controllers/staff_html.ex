@@ -7,6 +7,7 @@ defmodule KewkewWeb.StaffHTML do
 
   def queue_status(%{location: %{active?: false}}), do: {"Unavailable", "unavailable"}
   def queue_status(%{service: %{active?: false}}), do: {"Unavailable", "unavailable"}
+  def queue_status(%{queue: %{active?: false}}), do: {"Inactive", "inactive"}
   def queue_status(%{session: nil}), do: {"No session", "no-session"}
   def queue_status(%{session: %{status: :open}}), do: {"Open", "open"}
   def queue_status(%{session: %{status: :paused}}), do: {"Paused", "paused"}
