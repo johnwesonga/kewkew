@@ -69,6 +69,8 @@ defmodule KewkewWeb.Router do
     pipe_through [:browser, :staff_members_only]
 
     get "/", StaffController, :index
+    get "/queues/new/:location_id", StaffController, :new
+    post "/queues/new/:location_id", StaffController, :create
   end
 
   scope "/staff", KewkewWeb do

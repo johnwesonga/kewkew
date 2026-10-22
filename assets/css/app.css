@@ -170,6 +170,20 @@
 .staff-queue-status.closed, .staff-queue-status.no-session { color: #647168; background: #eff2ef; }
 .staff-queue-status.unavailable { color: #9d3939; background: #fff0ef; }
 .staff-location-empty { margin: 0; padding: 17px 22px; color: #718078; font-size: 11px; }
+.staff-create-queue-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid #dcebe1; border-radius: 10px; color: #176b4b; font-size: 10px; font-weight: 750; text-decoration: none; white-space: nowrap; }
+.staff-create-queue-link:hover { background: #f1f8f3; }
+.staff-create-queue-card { overflow: hidden; }
+.staff-create-queue-form { display: grid; gap: 18px; max-width: 620px; padding: 24px; }
+.staff-create-queue-form .input { width: 100%; }
+.staff-form-location { display: grid; gap: 5px; }
+.staff-form-label { color: #718078; font-size: 11px; font-weight: 700; }
+.staff-form-location strong { color: #17251f; font-size: 13px; }
+.staff-form-note { margin: 0; color: #718078; font-size: 11px; line-height: 1.6; }
+.staff-form-errors { margin: 18px 24px 0; padding: 13px 15px; border-radius: 12px; color: #8b302c; background: #fff0ed; font-size: 11px; }
+.staff-form-errors p { margin: 0 0 7px; font-weight: 750; }
+.staff-form-errors ul { margin: 0; padding-left: 18px; }
+.staff-form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
+.staff-form-actions .staff-primary-button { width: auto; }
 .staff-open-queue { display: flex; align-items: center; gap: 7px; color: #176b4b; font-size: 11px; font-weight: 750; }
 .staff-empty-state { display: flex; min-height: 190px; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 28px; color: #718078; text-align: center; }
 .staff-empty-state .staff-empty-icon { flex: none; margin-bottom: 4px; }
@@ -246,6 +260,10 @@
   .staff-stat-card { min-height: 130px; padding: 15px; }
   .staff-stat-value { font-size: 24px; }
   .staff-queue-link { padding: 15px; }
+  .staff-create-queue-form { padding: 18px; }
+  .staff-form-errors { margin: 14px 18px 0; }
+  .staff-form-actions { flex-direction: column-reverse; }
+  .staff-form-actions .staff-primary-button { width: 100%; }
   .staff-open-queue { font-size: 0; }
   .staff-open-queue .icon { width: 18px; height: 18px; }
   .staff-ticket-list { padding: 0 14px; }

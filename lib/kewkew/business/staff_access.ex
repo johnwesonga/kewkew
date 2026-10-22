@@ -38,6 +38,23 @@ defmodule Kewkew.Business.StaffAccess do
     )
   end
 
+  def admin_location_for_user(user_id, location_id) do
+    with {:ok, user_id} <- Ecto.UUID.cast(user_id),
+         {:ok, location_id} <- Ecto.UUID.cast(location_id) do
+      Repo.one(
+        from location in Location,
+          join: membership in StaffMembership,
+          on: membership.organization_id == location.organization_id,
+          where:
+            location.id == ^location_id and membership.user_id == ^user_id and
+              membership.active? and membership.role == :admin,
+          limit: 1
+      )
+    else
+      _ -> nil
+    end
+  end
+
   def locations_for_user(user_id) do
     Repo.all(
       from location in Location,

@@ -13,7 +13,7 @@
 
     <div id="staff-queue-groups" class="staff-queue-groups">
       <section
-        :for={%{location: location, queues: queues} <- @queue_groups}
+        :for={%{location: location, queues: queues, can_manage?: can_manage?} <- @queue_groups}
         id={"staff-location-#{location.id}"}
         aria-labelledby={"staff-location-heading-#{location.id}"}
         class="staff-card staff-queue-list"
@@ -23,6 +23,14 @@
             <h2 id={"staff-location-heading-#{location.id}"}>{location.name}</h2>
             <p>{length(queues)} {if length(queues) == 1, do: "queue", else: "queues"}</p>
           </div>
+          <.link
+            :if={can_manage?}
+            id={"staff-create-queue-#{location.id}"}
+            navigate={~p"/staff/queues/new/#{location.id}"}
+            class="staff-create-queue-link"
+          >
+            <.icon name="hero-plus" class="size-4" /> Create queue
+          </.link>
         </div>
         <ul>
           <li :for={entry <- queues} id={"staff-queue-#{entry.queue.id}"}>

@@ -1,0 +1,93 @@
+<Layouts.app flash={@flash} staff?={true} staff_email={@staff_email}>
+  <section id="staff-create-queue" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> All queues
+        </.link>
+        <p class="staff-eyebrow">Queue setup</p>
+        <h1>Create a queue</h1>
+        <p class="staff-subhead">Set up a reusable queue for {@location.name}.</p>
+      </div>
+    </header>
+
+    <section class="staff-card staff-create-queue-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2>Queue details</h2>
+          <p>Visitors will use these settings each time a new session opens.</p>
+        </div>
+      </div>
+
+      <div
+        :if={@errors != []}
+        id="staff-create-queue-errors"
+        class="staff-form-errors"
+        role="alert"
+      >
+        <p>Review the queue details below:</p>
+        <ul>
+          <li :for={{_field, message} <- @errors}>{message}</li>
+        </ul>
+      </div>
+
+      <p :if={@services == []} id="staff-no-active-services" class="staff-form-note">
+        This location has no active services. Activate or create a service before setting up a queue.
+      </p>
+
+      <.form
+        :if={@services != []}
+        for={@form}
+        id="staff-create-queue-form"
+        action={~p"/staff/queues/new/#{@location.id}"}
+        method="post"
+        class="staff-create-queue-form"
+      >
+        <div class="staff-form-location">
+          <span class="staff-form-label">Location</span>
+          <strong>{@location.name}</strong>
+        </div>
+
+        <.input field={@form[:name]} label="Queue name" autocomplete="off" />
+
+        <.input
+          field={@form[:service_id]}
+          type="select"
+          label="Service"
+          prompt="Choose a service"
+          options={Enum.map(@services, &{&1.name, &1.id})}
+        />
+
+        <.input
+          field={@form[:identity_policy]}
+          type="select"
+          label="Visitor identity"
+          options={[
+            {"Anonymous ticket", "anonymous"},
+            {"First and last name required", "name_required"}
+          ]}
+        />
+
+        <.input
+          field={@form[:max_active_tickets]}
+          type="number"
+          label="Maximum active visitors (optional)"
+          min="1"
+          step="1"
+          placeholder="No limit"
+        />
+
+        <p class="staff-form-note">
+          Active visitors include those waiting, called, or being served. Leaving the limit blank allows an unlimited queue.
+        </p>
+
+        <div class="staff-form-actions">
+          <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
+          <button id="staff-create-queue-submit" type="submit" class="staff-primary-button">
+            Create queue
+          </button>
+        </div>
+      </.form>
+    </section>
+  </section>
+</Layouts.app>
