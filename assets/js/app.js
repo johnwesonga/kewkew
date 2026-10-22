@@ -59,6 +59,7 @@ const visitorTicket = document.getElementById("visitor-ticket")
 if (visitorTicket) {
   const status = document.getElementById("visitor-ticket-status")
   const position = document.getElementById("visitor-ticket-position")
+  const cancellationForm = document.getElementById("visitor-cancel-form")
   const statusUrl = visitorTicket.dataset.statusUrl
 
   const refreshTicketStatus = async () => {
@@ -82,6 +83,7 @@ if (visitorTicket) {
 
       if (status.textContent !== ticket.status_label) status.textContent = ticket.status_label
       if (position.textContent.trim() !== positionLabel) position.textContent = positionLabel
+      if (cancellationForm) cancellationForm.hidden = ticket.status !== "waiting"
     } catch (_error) {
       // Keep the last persisted state on screen and retry on the next interval.
     }

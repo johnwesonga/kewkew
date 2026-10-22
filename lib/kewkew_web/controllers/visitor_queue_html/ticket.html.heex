@@ -38,6 +38,7 @@
 
     <%= if @ticket.status == :waiting do %>
       <form
+        id="visitor-cancel-form"
         action={"/t/#{@tracking_token}/cancel"}
         method="post"
         data-confirm="Leave this queue? Your place in line will be cancelled."
