@@ -132,7 +132,7 @@ flowchart LR
 - If I lose connection or refresh, the page recovers by loading current persisted state.
 - Updates for another visitor never expose their name, contact details, or private tracking credential.
 
-**Dependencies** — Staff queue transitions and a refresh/live-update mechanism. Initial delivery may use page refresh/polling; real-time LiveView updates can be a separate incremental slice if necessary.
+**Dependencies** — Staff queue transitions in [staff-admin-flow-user-stories.md](staff-admin-flow-user-stories.md) and a refresh/live-update mechanism. The first implementation may use page refresh or polling; live updates across connected screens are specified in SF-8.
 
 ### VF-8: Leave or cancel my place in line
 
