@@ -56,12 +56,10 @@ defmodule KewkewWeb.StaffQueueLive do
   end
 
   @impl true
-  def handle_event("start_serving", %{"ticket_id" => ticket_id}, socket) do
-    case StaffStartServing.start_serving(
-           socket.assigns.current_user.id,
-           socket.assigns.queue.id,
-           ticket_id
-         ) do
+  def handle_event("start_serving", params, socket) do
+    ticket_id = Map.get(params, "ticket_id") || Map.get(params, "ticket-id")
+
+    case start_serving(socket, ticket_id) do
       {:ok, ticket} ->
         {:noreply,
          socket
@@ -81,6 +79,16 @@ defmodule KewkewWeb.StaffQueueLive do
         {:noreply,
          Phoenix.LiveView.put_flash(socket, :error, "Unable to start service for that ticket.")}
     end
+  end
+
+  defp start_serving(_socket, nil), do: {:error, :missing_ticket_id}
+
+  defp start_serving(socket, ticket_id) do
+    StaffStartServing.start_serving(
+      socket.assigns.current_user.id,
+      socket.assigns.queue.id,
+      ticket_id
+    )
   end
 
   defp refresh_board(socket) do
