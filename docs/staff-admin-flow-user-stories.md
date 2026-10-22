@@ -132,6 +132,22 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 **Dependencies** — Queue transition stories; Phoenix PubSub or equivalent update delivery; reconnect refresh behavior.
 
+### SF-9: Requeue a returning no-show visitor
+
+**User story** — As a queue operator, I want to requeue a visitor who returns after being marked as a no-show so they can receive service without jumping ahead of visitors already waiting.
+
+**Acceptance criteria**
+
+- The recall action is available only for a `no_show` ticket in the current queue session.
+- Recalling moves the ticket from `no_show` to `waiting`, preserves its displayed ticket number, and assigns it a new queue sequence at the end of the line.
+- The staff actor and transition are recorded in a `TicketEvent` in the same transaction as the ticket and queue-session updates.
+- The recalled ticket counts toward active capacity and queue position again, and appears at the end of the staff board's waiting order.
+- The visitor's private page returns to a waiting status and shows its current position; connected staff boards and the visitor page reflect the change promptly.
+- Completed and cancelled tickets cannot be recalled. Repeated or stale recall commands cannot change ticket state or create duplicate events.
+- Concurrent recalls receive distinct queue sequences and cannot put a returning visitor ahead of a ticket that was already waiting.
+
+**Dependencies** — SF-1, SF-2, SF-6, and SF-8; atomic queue-sequence allocation and ticket transition history.
+
 ## Initial transition policy
 
 | Current state | Staff action | Result |
@@ -142,8 +158,9 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 | `called` | Skip | `no_show` |
 | `called` | Cancel | `cancelled` |
 | `serving` | Complete | `completed` |
+| `no_show` | Recall | `waiting` at the end of the line |
 
-Completed, cancelled, and no-show tickets are terminal for this initial staff flow. Reopening a ticket, cancelling after service starts, call timeouts, and automatically calling the next visitor after a skip are outside these stories unless added as separate requirements.
+Completed and cancelled tickets are terminal for this initial staff flow. A no-show ticket can return to waiting only through SF-9. Cancelling after service starts, call timeouts, and automatically calling the next visitor after a skip are outside these stories unless added as separate requirements.
 
 ## Suggested implementation order
 
@@ -152,5 +169,6 @@ Completed, cancelled, and no-show tickets are terminal for this initial staff fl
 3. **Core transitions** — SF-3, SF-4, and SF-5, each as a small transactional domain action and focused UI slice.
 4. **Resolve the line** — SF-6 and SF-7, sharing terminal-state and audit behavior.
 5. **Live synchronization** — SF-8, publishing committed changes and retaining refresh/reconnect recovery.
+6. **Returning visitors** — SF-9, requeueing a no-show at the end of the line with a fresh queue sequence.
 
 Keep each transition independently reviewable and tested. Avoid generic ticket status editing; implement one authorized command per transition.
