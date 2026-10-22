@@ -224,7 +224,7 @@
 .staff-ticket-list { padding: 0 20px; }
 .staff-ticket-row { display: grid; grid-template-columns: 90px minmax(0, 1fr) 120px; align-items: center; gap: 12px; min-height: 72px; border-bottom: 1px solid #eff2ef; }
 .staff-ticket-row:last-child { border-bottom: 0; }
-.staff-no-waiting { margin: 0; padding: 14px 0; border-bottom: 1px solid #eff2ef; color: #718078; font-size: 11px; }
+.staff-no-waiting { margin: 0; padding: 14px 20px; border-bottom: 1px solid #eff2ef; color: #718078; font-size: 11px; }
 .staff-ticket-number { color: #10523a; font-size: 14px; font-weight: 850; }
 .staff-ticket-person { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .staff-person-avatar { display: grid; flex: 0 0 31px; width: 31px; height: 31px; place-items: center; border-radius: 50%; color: #718078; background: #eef3ef; font-size: 9px; font-weight: 800; }
