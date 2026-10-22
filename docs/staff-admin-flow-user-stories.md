@@ -6,6 +6,8 @@ Let authorized staff see the active queue and move tickets through service in a 
 
 These stories cover day-to-day queue operations. Organization setup, staff invitations, and queue configuration are prerequisites and will be scoped separately. Admins can manage staff access; queue operators can perform the queue actions granted to them.
 
+Staff authentication is planned with [AshAuthentication](https://ash-authentication.hexdocs.pm/readme.html) and its [Phoenix integration](https://ash-authentication-phoenix.hexdocs.pm/). AshAuthentication will establish the staff identity and sign-in session; Kewkew's staff membership and authorization rules will determine which organizations, locations, queues, and actions that identity can access. Authentication alone does not grant access to business data.
+
 ## Roles and shared rules
 
 - **Queue operator**: can view and operate queues at assigned locations.
@@ -24,12 +26,14 @@ These stories cover day-to-day queue operations. Organization setup, staff invit
 
 **Acceptance criteria**
 
-- A staff member must be authenticated before opening staff queue screens or invoking queue actions.
+- A staff member must sign in through the AshAuthentication-based staff flow before opening staff queue screens or invoking queue actions.
+- Staff account creation is invitation or administrator controlled; public self-registration is not part of the initial staff flow.
+- A successfully authenticated identity with no active Kewkew staff membership cannot access organization or queue data.
 - Staff can access only organizations and locations granted to their membership.
 - An administrator can grant and revoke staff membership and location access; operators cannot change access unless explicitly granted an admin role.
 - Unauthorized or cross-organization requests reveal no queue or visitor data and cannot change ticket state.
 
-**Dependencies** — Organization/location ownership, staff membership, authentication, and role policy.
+**Dependencies** — Organization/location ownership, staff membership, AshAuthentication plus its Phoenix integration, and role policy. Choose the initial sign-in strategy (for example, password or magic link) before implementation.
 
 ### SF-2: Monitor a queue
 
@@ -142,7 +146,7 @@ Completed, cancelled, and no-show tickets are terminal for this initial staff fl
 
 ## Suggested implementation order
 
-1. **Staff access foundation** — SF-1, including tenant and location authorization.
+1. **Staff access foundation** — SF-1, including AshAuthentication integration, controlled account provisioning, and tenant/location authorization.
 2. **Queue board** — SF-2 with persisted ordered state.
 3. **Core transitions** — SF-3, SF-4, and SF-5, each as a small transactional domain action and focused UI slice.
 4. **Resolve the line** — SF-6 and SF-7, sharing terminal-state and audit behavior.

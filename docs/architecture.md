@@ -28,7 +28,7 @@ flowchart LR
     Domains --> Metrics[Queue event history]
 ```
 
-Phoenix serves public visitor pages, authenticated staff workflows, and display views. Ash domains/resources own business rules, authorization, and persistence. PostgreSQL is the source of truth. LiveView and Phoenix PubSub deliver prompt updates to connected staff, visitors, and displays; clients reload or reconcile from persisted state after reconnecting. External notification delivery runs asynchronously and must not block queue operations.
+Phoenix serves public visitor pages, authenticated staff workflows, and display views. Staff authentication is planned with [AshAuthentication](https://ash-authentication.hexdocs.pm/readme.html) and its [Phoenix integration](https://ash-authentication-phoenix.hexdocs.pm/); Kewkew's membership and policy resources remain responsible for tenant and location authorization. Ash domains/resources own business rules, authorization, and persistence. PostgreSQL is the source of truth. LiveView and Phoenix PubSub deliver prompt updates to connected staff, visitors, and displays; clients reload or reconcile from persisted state after reconnecting. External notification delivery runs asynchronously and must not block queue operations.
 
 ## Domain boundaries
 
@@ -70,7 +70,7 @@ Queue actions should not wait for SMS/email delivery. Persist a notification int
 ## Web interfaces
 
 - **Visitor**: mobile-first, no account required to join; select an available service, provide only necessary contact/details, receive a private tracking link/token, see queue status and position, and leave/cancel when allowed. Estimated wait is a nice-to-have for a later release.
-- **Staff**: authenticated and organization/location scoped; monitor queue, call next, advance or resolve entries, and view the current service workload.
+- **Staff**: authenticated through the planned AshAuthentication/Phoenix integration and scoped by Kewkew organization/location membership; monitor queues, call next, advance or resolve tickets, and view current service workload.
 - **Waiting-room display**: read-only, location/queue scoped display that reveals only the minimum identifying information needed to call visitors. Use a separately revocable display credential rather than staff credentials.
 - **Business configuration**: manage locations, services, hours, queue rules, staff membership, and routing as those features are introduced.
 
@@ -105,7 +105,7 @@ The visitor-flow stories and their acceptance criteria are detailed in [`visitor
 
 ## Decisions to make when needed
 
-- Authentication and account onboarding approach.
+- Initial AshAuthentication strategy for staff sign-in (password, magic link, or another supported strategy) and staff invitation/account provisioning.
 - Whether to add identity-policy options beyond the initial anonymous or first-and-last-name-required choices.
 - Initial notification channel and provider.
 - Business rules for priority, appointments, capacity, operating hours, and no-shows.
