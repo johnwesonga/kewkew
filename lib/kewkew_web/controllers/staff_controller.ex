@@ -99,7 +99,7 @@ defmodule KewkewWeb.StaffController do
           "max_active_tickets" => capacity_value(context.queue.max_active_tickets)
         }
 
-        public_url = unverified_url(conn, "/q/#{context.queue.public_slug}")
+        public_url = request_url(conn, "/q/#{context.queue.public_slug}")
         render_edit_form(conn, context, params, public_url, [])
 
       {:error, :not_found} ->
@@ -176,7 +176,7 @@ defmodule KewkewWeb.StaffController do
   defp render_edit_error(conn, queue_id, params, errors) do
     case StaffUpdateQueue.fetch_queue(conn.assigns.current_user.id, queue_id) do
       {:ok, context} ->
-        public_url = unverified_url(conn, "/q/#{context.queue.public_slug}")
+        public_url = request_url(conn, "/q/#{context.queue.public_slug}")
 
         render_edit_form(conn, context, params, public_url, errors, status: :unprocessable_entity)
 
@@ -202,4 +202,9 @@ defmodule KewkewWeb.StaffController do
 
   defp capacity_value(nil), do: ""
   defp capacity_value(value), do: to_string(value)
+
+  defp request_url(conn, path) do
+    uri = URI.parse(Plug.Conn.request_url(conn))
+    URI.to_string(%{uri | path: path, query: nil, fragment: nil})
+  end
 end
