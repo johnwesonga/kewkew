@@ -111,6 +111,17 @@
             >
               <.icon name="hero-play" class="size-4" />
             </button>
+            <button
+              :if={ticket.status == :serving}
+              type="button"
+              class="staff-row-action"
+              phx-click="complete_service"
+              phx-value-ticket-id={ticket.id}
+              aria-label={"Complete service for ticket ##{ticket.ticket_number}"}
+              title="Complete service"
+            >
+              <.icon name="hero-check" class="size-4" />
+            </button>
             <span class={["staff-status-pill", ticket_status_class(ticket.status)]}>
               {ticket_status_label(ticket.status)}
             </span>

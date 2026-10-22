@@ -3,7 +3,13 @@ defmodule KewkewWeb.StaffQueueLive do
 
   use KewkewWeb, :live_view
 
-  alias Kewkew.Queues.{StaffBoard, StaffCallNext, StaffStartServing, Updates}
+  alias Kewkew.Queues.{
+    StaffBoard,
+    StaffCallNext,
+    StaffCompleteService,
+    StaffStartServing,
+    Updates
+  }
 
   @impl true
   def mount(%{"queue_id" => queue_id}, _session, socket) do
@@ -81,10 +87,46 @@ defmodule KewkewWeb.StaffQueueLive do
     end
   end
 
+  @impl true
+  def handle_event("complete_service", params, socket) do
+    ticket_id = Map.get(params, "ticket_id") || Map.get(params, "ticket-id")
+
+    case complete_service(socket, ticket_id) do
+      {:ok, ticket} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(
+           :info,
+           "Service for ticket ##{ticket.ticket_number} is complete."
+         )}
+
+      {:error, :not_serving} ->
+        {:noreply,
+         socket
+         |> assign_board_from_refresh()
+         |> Phoenix.LiveView.put_flash(:info, "That ticket is no longer being served.")}
+
+      {:error, _reason} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(socket, :error, "Unable to complete service for that ticket.")}
+    end
+  end
+
   defp start_serving(_socket, nil), do: {:error, :missing_ticket_id}
 
   defp start_serving(socket, ticket_id) do
     StaffStartServing.start_serving(
+      socket.assigns.current_user.id,
+      socket.assigns.queue.id,
+      ticket_id
+    )
+  end
+
+  defp complete_service(_socket, nil), do: {:error, :missing_ticket_id}
+
+  defp complete_service(socket, ticket_id) do
+    StaffCompleteService.complete_service(
       socket.assigns.current_user.id,
       socket.assigns.queue.id,
       ticket_id
