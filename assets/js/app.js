@@ -24,8 +24,7 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/kewkew"
 import topbar from "../vendor/topbar"
-import QRCode from "../vendor/QRCode"
-import QRErrorCorrectLevel from "../vendor/QRCode/QRErrorCorrectLevel"
+import QRCode from "qrcode"
 
 document.addEventListener("click", async event => {
   const button = event.target.closest("[data-copy-target]")
@@ -54,42 +53,23 @@ document.addEventListener("click", async event => {
 const queueQr = document.getElementById("staff-queue-qr")
 
 if (queueQr) {
-  try {
-    const qrCode = new QRCode(0, QRErrorCorrectLevel.M)
-    qrCode.addData(queueQr.dataset.queueUrl)
-    qrCode.make()
+  QRCode.toString(queueQr.dataset.queueUrl, {
+    type: "svg",
+    errorCorrectionLevel: "M",
+    margin: 4,
+    width: 300,
+    color: {dark: "#17251f", light: "#ffffff"},
+  }).then(svgMarkup => {
+    const svgDocument = new DOMParser().parseFromString(svgMarkup, "image/svg+xml")
+    const svg = svgDocument.documentElement
 
-    const moduleCount = qrCode.getModuleCount()
-    const quietZone = 4
-    const viewSize = moduleCount + quietZone * 2
-    let darkModules = ""
-
-    for (let row = 0; row < moduleCount; row++) {
-      for (let column = 0; column < moduleCount; column++) {
-        if (qrCode.isDark(row, column)) {
-          darkModules += `M${column + quietZone} ${row + quietZone}h1v1h-1z`
-        }
-      }
+    if (svg.localName !== "svg" || svgDocument.querySelector("parsererror")) {
+      throw new Error("Could not parse generated QR code SVG")
     }
 
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-    svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-    svg.setAttribute("viewBox", `0 0 ${viewSize} ${viewSize}`)
     svg.setAttribute("role", "img")
     svg.setAttribute("aria-label", `QR code for ${queueQr.dataset.queueUrl}`)
-    svg.setAttribute("shape-rendering", "crispEdges")
-
-    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect")
-    background.setAttribute("width", String(viewSize))
-    background.setAttribute("height", String(viewSize))
-    background.setAttribute("fill", "#ffffff")
-
-    const modules = document.createElementNS("http://www.w3.org/2000/svg", "path")
-    modules.setAttribute("d", darkModules)
-    modules.setAttribute("fill", "#17251f")
-
-    svg.append(background, modules)
-    queueQr.replaceChildren(svg)
+    queueQr.replaceChildren(document.importNode(svg, true))
 
     const qrFallback = document.getElementById("staff-queue-qr-fallback")
     if (qrFallback) qrFallback.hidden = true
@@ -99,10 +79,10 @@ if (queueQr) {
 
     const printButton = document.getElementById("staff-print-queue-qr")
     if (printButton) printButton.hidden = false
-  } catch (_error) {
+  }).catch(_error => {
     const qrFallback = document.getElementById("staff-queue-qr-fallback")
     if (qrFallback) qrFallback.textContent = "The QR code could not be generated. Use the public link instead."
-  }
+  })
 }
 
 document.addEventListener("click", event => {
@@ -120,7 +100,7 @@ document.addEventListener("click", event => {
     downloadLink.href = downloadUrl
     downloadLink.download = `${queueQr.dataset.queueSlug}-qr.svg`
     downloadLink.click()
-    URL.revokeObjectURL(downloadUrl)
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000)
     return
   }
 
