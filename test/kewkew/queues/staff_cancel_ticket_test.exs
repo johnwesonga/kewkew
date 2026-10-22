@@ -3,15 +3,18 @@ defmodule Kewkew.Queues.StaffCancelTicketTest do
 
   require Ash.Query
 
-  alias Kewkew.Queues.{StaffBoard, StaffCancelTicket, Ticket, TicketEvent}
+  alias Kewkew.Queues.{StaffBoard, StaffCancelTicket, Ticket, TicketEvent, Updates}
 
   test "cancels waiting and called tickets with staff-attributed history" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
+    :ok = Updates.subscribe(session.id)
 
     for {status, sequence} <- [waiting: 1, called: 2] do
       ticket = create_ticket(session, status, sequence)
 
       assert {:ok, cancelled} = StaffCancelTicket.cancel_ticket(user.id, queue.id, ticket.id)
+      assert_receive {:queue_session_updated, session_id}
+      assert session_id == session.id
       assert cancelled.status == :cancelled
       assert cancelled.cancelled_at
 
@@ -30,12 +33,15 @@ defmodule Kewkew.Queues.StaffCancelTicketTest do
   test "rejects a repeated cancellation without writing another event" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
     ticket = create_ticket(session, :called, 1)
+    :ok = Updates.subscribe(session.id)
 
     assert {:ok, _cancelled} = StaffCancelTicket.cancel_ticket(user.id, queue.id, ticket.id)
+    assert_receive {:queue_session_updated, session_id}
 
     assert {:error, :not_cancellable} =
              StaffCancelTicket.cancel_ticket(user.id, queue.id, ticket.id)
 
+    refute_receive {:queue_session_updated, ^session_id}
     assert event_count(ticket.id) == 1
   end
 

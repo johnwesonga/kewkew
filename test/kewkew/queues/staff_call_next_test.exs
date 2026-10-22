@@ -3,14 +3,17 @@ defmodule Kewkew.Queues.StaffCallNextTest do
 
   require Ash.Query
 
-  alias Kewkew.Queues.{StaffCallNext, Ticket, TicketEvent}
+  alias Kewkew.Queues.{StaffCallNext, Ticket, TicketEvent, Updates}
 
   test "calls the earliest waiting ticket and records its staff actor atomically" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
     later = create_ticket(session, 8, 2)
     first = create_ticket(session, 19, 1)
+    :ok = Updates.subscribe(session.id)
 
     assert {:ok, called} = StaffCallNext.call_next(user.id, queue.id)
+    assert_receive {:queue_session_updated, session_id}
+    assert session_id == session.id
     assert called.id == first.id
     assert called.status == :called
     assert called.called_at
@@ -27,13 +30,16 @@ defmodule Kewkew.Queues.StaffCallNextTest do
     assert DateTime.compare(event.occurred_at, called.called_at) == :eq
 
     assert {:ok, next} = StaffCallNext.call_next(user.id, queue.id)
+    assert_receive {:queue_session_updated, ^session_id}
     assert next.id == later.id
   end
 
   test "returns no_waiting when no ticket remains and does not write an event" do
-    %{user: user, queue: queue} = staff_queue_fixture()
+    %{user: user, queue: queue, session: session} = staff_queue_fixture()
+    :ok = Updates.subscribe(session.id)
 
     assert {:error, :no_waiting} = StaffCallNext.call_next(user.id, queue.id)
+    refute_receive {:queue_session_updated, _session_id}
 
     assert Ash.count!(TicketEvent, domain: Kewkew.Queues) == 0
   end

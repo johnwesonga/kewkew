@@ -199,6 +199,23 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
              "1"
   end
 
+  test "successful visitor joins broadcast a minimal session update only after success" do
+    queue = create_queue_fixture(max_active_tickets: 1)
+    session = latest_session(queue)
+    :ok = Kewkew.Queues.Updates.subscribe(session.id)
+
+    assert {:ok, _join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, new_attempt_token())
+
+    assert_receive {:queue_session_updated, session_id}
+    assert session_id == session.id
+
+    assert {:error, :full} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, new_attempt_token())
+
+    refute_receive {:queue_session_updated, ^session_id}
+  end
+
   test "ticket page shows persisted position among active tickets", %{conn: conn} do
     queue = create_queue_fixture()
     first_token = new_attempt_token()
@@ -226,12 +243,17 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
     assert {:ok, _second_join} =
              Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, second_token)
 
+    session = latest_session(queue)
+    session_id = session.id
+    :ok = Kewkew.Queues.Updates.subscribe(session.id)
+
     page = get(conn, "/t/#{token}")
     page_document = page |> html_response(200) |> LazyHTML.from_document()
     assert LazyHTML.query_by_id(page_document, "visitor-cancel-ticket")
 
     cancel_conn = post(recycle(page), "/t/#{token}/cancel")
     assert redirected_to(cancel_conn) == "/t/#{token}"
+    assert_receive {:queue_session_updated, ^session_id}
 
     cancelled_page = get(recycle(cancel_conn), "/t/#{token}")
     cancelled_document = cancelled_page |> html_response(200) |> LazyHTML.from_document()
@@ -255,6 +277,7 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
 
     repeated_conn = post(recycle(cancelled_page), "/t/#{token}/cancel")
     assert redirected_to(repeated_conn) == "/t/#{token}"
+    refute_receive {:queue_session_updated, _session_id}
     assert ticket_event_count(ticket.id, :cancelled) == 1
   end
 
@@ -311,6 +334,36 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
     refute Map.has_key?(response, "tracking_token")
     assert get_resp_header(conn, "cache-control") == ["no-store"]
     assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
+
+    second_join.ticket
+    |> Ecto.Changeset.change(status: :serving)
+    |> Kewkew.Repo.update!()
+
+    serving_response =
+      conn
+      |> recycle()
+      |> put_req_header("accept", "application/json")
+      |> get("/t/#{second_token}/status")
+      |> json_response(200)
+
+    assert serving_response["status"] == "serving"
+    assert serving_response["status_label"] == "Being served"
+    assert serving_response["position"] == 2
+
+    second_join.ticket
+    |> Ecto.Changeset.change(status: :completed, completed_at: DateTime.utc_now())
+    |> Kewkew.Repo.update!()
+
+    completed_response =
+      conn
+      |> recycle()
+      |> put_req_header("accept", "application/json")
+      |> get("/t/#{second_token}/status")
+      |> json_response(200)
+
+    assert completed_response["status"] == "completed"
+    assert completed_response["status_label"] == "Service complete"
+    assert is_nil(completed_response["position"])
   end
 
   test "ticket status endpoint shows a skipped ticket as inactive", %{conn: conn} do

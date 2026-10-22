@@ -3,13 +3,16 @@ defmodule Kewkew.Queues.StaffCompleteServiceTest do
 
   require Ash.Query
 
-  alias Kewkew.Queues.{StaffBoard, StaffCompleteService, Ticket, TicketEvent}
+  alias Kewkew.Queues.{StaffBoard, StaffCompleteService, Ticket, TicketEvent, Updates}
 
   test "completes a serving ticket, records its staff actor, and removes it from the board" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
     ticket = create_ticket(session, :serving)
+    :ok = Updates.subscribe(session.id)
 
     assert {:ok, completed} = StaffCompleteService.complete_service(user.id, queue.id, ticket.id)
+    assert_receive {:queue_session_updated, session_id}
+    assert session_id == session.id
     assert completed.status == :completed
     assert completed.completed_at
 
@@ -27,12 +30,15 @@ defmodule Kewkew.Queues.StaffCompleteServiceTest do
   test "rejects repeated completion without adding a duplicate event" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
     ticket = create_ticket(session, :serving)
+    :ok = Updates.subscribe(session.id)
 
     assert {:ok, _completed} = StaffCompleteService.complete_service(user.id, queue.id, ticket.id)
+    assert_receive {:queue_session_updated, session_id}
 
     assert {:error, :not_serving} =
              StaffCompleteService.complete_service(user.id, queue.id, ticket.id)
 
+    refute_receive {:queue_session_updated, ^session_id}
     assert event_count(ticket.id) == 1
   end
 

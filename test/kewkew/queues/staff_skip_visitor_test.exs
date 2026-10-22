@@ -3,13 +3,16 @@ defmodule Kewkew.Queues.StaffSkipVisitorTest do
 
   require Ash.Query
 
-  alias Kewkew.Queues.{StaffBoard, StaffSkipVisitor, Ticket, TicketEvent}
+  alias Kewkew.Queues.{StaffBoard, StaffSkipVisitor, Ticket, TicketEvent, Updates}
 
   test "skips a called ticket, records the staff actor, and removes it from the active board" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
     ticket = create_ticket(session, :called)
+    :ok = Updates.subscribe(session.id)
 
     assert {:ok, skipped} = StaffSkipVisitor.skip_visitor(user.id, queue.id, ticket.id)
+    assert_receive {:queue_session_updated, session_id}
+    assert session_id == session.id
     assert skipped.status == :no_show
 
     event = ticket_event(ticket.id)
@@ -26,9 +29,12 @@ defmodule Kewkew.Queues.StaffSkipVisitorTest do
   test "rejects repeated skips without adding another event" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
     ticket = create_ticket(session, :called)
+    :ok = Updates.subscribe(session.id)
 
     assert {:ok, _skipped} = StaffSkipVisitor.skip_visitor(user.id, queue.id, ticket.id)
+    assert_receive {:queue_session_updated, session_id}
     assert {:error, :not_called} = StaffSkipVisitor.skip_visitor(user.id, queue.id, ticket.id)
+    refute_receive {:queue_session_updated, ^session_id}
     assert event_count(ticket.id) == 1
   end
 

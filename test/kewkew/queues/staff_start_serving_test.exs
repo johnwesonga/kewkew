@@ -3,13 +3,16 @@ defmodule Kewkew.Queues.StaffStartServingTest do
 
   require Ash.Query
 
-  alias Kewkew.Queues.{StaffStartServing, Ticket, TicketEvent}
+  alias Kewkew.Queues.{StaffStartServing, Ticket, TicketEvent, Updates}
 
   test "starts a called ticket and records time and staff actor" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
     ticket = create_ticket(session, :called)
+    :ok = Updates.subscribe(session.id)
 
     assert {:ok, serving} = StaffStartServing.start_serving(user.id, queue.id, ticket.id)
+    assert_receive {:queue_session_updated, session_id}
+    assert session_id == session.id
     assert serving.status == :serving
     assert serving.started_at
 
@@ -24,9 +27,15 @@ defmodule Kewkew.Queues.StaffStartServingTest do
   test "rejects a repeated start without adding a duplicate event" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
     ticket = create_ticket(session, :called)
+    :ok = Updates.subscribe(session.id)
 
     assert {:ok, _serving} = StaffStartServing.start_serving(user.id, queue.id, ticket.id)
-    assert {:error, :not_called} = StaffStartServing.start_serving(user.id, queue.id, ticket.id)
+    assert_receive {:queue_session_updated, session_id}
+
+    assert {:error, :not_called} =
+             StaffStartServing.start_serving(user.id, queue.id, ticket.id)
+
+    refute_receive {:queue_session_updated, ^session_id}
     assert event_count(ticket.id) == 1
   end
 

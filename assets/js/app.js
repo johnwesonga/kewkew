@@ -97,7 +97,8 @@ if (visitorTicket) {
     }
   }
 
-  window.setInterval(refreshTicketStatus, 10000)
+  refreshTicketStatus()
+  window.setInterval(refreshTicketStatus, 3000)
   document.addEventListener("visibilitychange", refreshTicketStatus)
 }
 
