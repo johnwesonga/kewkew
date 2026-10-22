@@ -6,7 +6,7 @@ defmodule Kewkew.Queues.VisitorJoin do
   require Ash.Query
 
   alias Kewkew.Queues
-  alias Kewkew.Queues.{Queue, QueueSession, Ticket, TicketEvent, TrackingCredential}
+  alias Kewkew.Queues.{Queue, QueueSession, Ticket, TicketEvent, TrackingCredential, Updates}
   alias Kewkew.Repo
 
   def join_anonymous(slug, attempt_token) when is_binary(slug) and is_binary(attempt_token) do
@@ -35,8 +35,12 @@ defmodule Kewkew.Queues.VisitorJoin do
                  create_ticket(slug, attempt_token, token_digest, params, expected_policy)
              end
            end) do
-        {:ok, result} -> {:ok, result}
-        {:error, reason} -> {:error, reason}
+        {:ok, result} ->
+          Updates.broadcast_session_updated(result.ticket.queue_session_id)
+          {:ok, result}
+
+        {:error, reason} ->
+          {:error, reason}
       end
     end
   end

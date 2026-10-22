@@ -77,6 +77,32 @@ defmodule Kewkew.Business.StaffAccess do
     )
   end
 
+  def queue_for_user(user_id, queue_id) do
+    with {:ok, queue_id} <- Ecto.UUID.cast(queue_id),
+         {:ok, user_id} <- Ecto.UUID.cast(user_id) do
+      Repo.one(
+        from queue in Queue,
+          join: service in Service,
+          on: service.id == queue.service_id,
+          join: location in Location,
+          on: location.id == queue.location_id and service.location_id == location.id,
+          join: membership in StaffMembership,
+          on: membership.organization_id == location.organization_id,
+          left_join: assignment in StaffLocationAccess,
+          on:
+            assignment.staff_membership_id == membership.id and
+              assignment.location_id == location.id,
+          where:
+            queue.id == ^queue_id and membership.user_id == ^user_id and membership.active? and
+              (membership.role == :admin or not is_nil(assignment.id)),
+          select: %{queue: queue, location: location, service: service},
+          limit: 1
+      )
+    else
+      _ -> nil
+    end
+  end
+
   def grant_membership(actor_id, user_id, organization_id, role, location_ids \\ [])
 
   def grant_membership(actor_id, user_id, organization_id, role, location_ids)

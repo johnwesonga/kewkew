@@ -22,17 +22,14 @@ Requirements: Elixir and Erlang/OTP compatible with the versions in `mix.exs`, P
    mix setup
    ```
 
-2. Create the first staff administrator once (the password must be at least 12 characters):
+2. The development seed creates a local administrator account. Sign in at `/sign-in` with:
 
-   ```sh
-   export KEWKEW_ADMIN_EMAIL="admin@example.com"
-   export KEWKEW_ADMIN_PASSWORD="use-a-long-local-password"
-   export KEWKEW_ORGANIZATION_NAME="Example Business"
-   export KEWKEW_LOCATION_NAME="Main Location"
-   mix kewkew.bootstrap_admin
+   ```text
+   Email:    admin@kewkew.local
+   Password: kewkew-local-admin-password
    ```
 
-   The bootstrap task stops working once an organization or user exists. Sign in at `/sign-in`; the staff landing page is at `/staff`.
+   To choose different seed credentials, set `KEWKEW_DEV_STAFF_EMAIL` and `KEWKEW_DEV_STAFF_PASSWORD` before running `mix setup`. This account and password are for local development only. The staff landing page is at `/staff`.
 
 3. Start the server:
 
@@ -46,7 +43,7 @@ Requirements: Elixir and Erlang/OTP compatible with the versions in `mix.exs`, P
    iex -S mix phx.server
    ```
 
-3. Visit [http://localhost:4000](http://localhost:4000).
+4. Visit [http://localhost:4000](http://localhost:4000).
 
 ## Development
 

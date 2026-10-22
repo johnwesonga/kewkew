@@ -1,0 +1,107 @@
+<Layouts.app flash={@flash}>
+  <main id="staff-queue-board" class="mx-auto w-full max-w-4xl space-y-6">
+    <header class="space-y-2">
+      <.link navigate={~p"/staff"} class="text-sm font-semibold text-primary">
+        &larr; All queues
+      </.link>
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="text-sm text-base-content/70">{@location.name} · {@service.name}</p>
+          <h1 id="staff-queue-name" class="text-3xl font-bold">{@queue.name}</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="staff-queue-session-status" class="badge badge-lg">{@session_status}</span>
+          <button
+            id="staff-queue-refresh"
+            type="button"
+            class="btn btn-outline"
+            phx-click="refresh"
+          >
+            <.icon name="hero-arrow-path" class="size-4" /> Refresh
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section aria-label="Queue counts" class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div class="rounded-xl border border-base-300 p-4">
+        <p class="text-sm text-base-content/70">Waiting</p>
+        <p id="staff-waiting-count" class="text-3xl font-bold">{@waiting_count}</p>
+      </div>
+      <div class="rounded-xl border border-base-300 p-4">
+        <p class="text-sm text-base-content/70">Called</p>
+        <p id="staff-called-count" class="text-3xl font-bold">{@called_count}</p>
+      </div>
+      <div class="rounded-xl border border-base-300 p-4">
+        <p class="text-sm text-base-content/70">Being served</p>
+        <p id="staff-serving-count" class="text-3xl font-bold">{@serving_count}</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="waiting-heading" class="space-y-3">
+      <h2 id="waiting-heading" class="text-xl font-semibold">Waiting</h2>
+      <div id="waiting-tickets" phx-update="stream" class="space-y-2">
+        <p class="hidden rounded-lg bg-base-200 p-4 text-base-content/70 only:block">
+          No visitors are waiting.
+        </p>
+        <article
+          :for={{id, ticket} <- @streams.waiting_tickets}
+          id={id}
+          class="flex items-center justify-between rounded-lg border border-base-300 p-4"
+        >
+          <div>
+            <h3 class="text-lg font-bold">Ticket #{ticket.ticket_number}</h3>
+            <p :if={@show_names? and ticket.first_name} class="text-sm text-base-content/70">
+              {ticket.first_name} {ticket.last_name}
+            </p>
+          </div>
+          <span class="badge">Waiting</span>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="called-heading" class="space-y-3">
+      <h2 id="called-heading" class="text-xl font-semibold">Called</h2>
+      <div id="called-tickets" phx-update="stream" class="space-y-2">
+        <p class="hidden rounded-lg bg-base-200 p-4 text-base-content/70 only:block">
+          No visitors have been called.
+        </p>
+        <article
+          :for={{id, ticket} <- @streams.called_tickets}
+          id={id}
+          class="flex items-center justify-between rounded-lg border border-base-300 p-4"
+        >
+          <div>
+            <h3 class="text-lg font-bold">Ticket #{ticket.ticket_number}</h3>
+            <p :if={@show_names? and ticket.first_name} class="text-sm text-base-content/70">
+              {ticket.first_name} {ticket.last_name}
+            </p>
+          </div>
+          <span class="badge badge-warning">Called</span>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="serving-heading" class="space-y-3">
+      <h2 id="serving-heading" class="text-xl font-semibold">Being served</h2>
+      <div id="serving-tickets" phx-update="stream" class="space-y-2">
+        <p class="hidden rounded-lg bg-base-200 p-4 text-base-content/70 only:block">
+          No visitors are being served.
+        </p>
+        <article
+          :for={{id, ticket} <- @streams.serving_tickets}
+          id={id}
+          class="flex items-center justify-between rounded-lg border border-base-300 p-4"
+        >
+          <div>
+            <h3 class="text-lg font-bold">Ticket #{ticket.ticket_number}</h3>
+            <p :if={@show_names? and ticket.first_name} class="text-sm text-base-content/70">
+              {ticket.first_name} {ticket.last_name}
+            </p>
+          </div>
+          <span class="badge badge-success">Being served</span>
+        </article>
+      </div>
+    </section>
+  </main>
+</Layouts.app>

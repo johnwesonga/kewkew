@@ -4,9 +4,11 @@ end
 
 require Ash.Query
 
+alias Kewkew.Accounts.User
 alias Kewkew.Business
 alias Kewkew.Business.Location
 alias Kewkew.Business.Organization
+alias Kewkew.Business.StaffMembership
 alias Kewkew.Business.Service
 alias Kewkew.Queues
 alias Kewkew.Queues.{Queue, QueueSession}
@@ -39,6 +41,43 @@ location =
       },
       domain: Business
     )
+
+staff_email = System.get_env("KEWKEW_DEV_STAFF_EMAIL") || "admin@kewkew.local"
+staff_password = System.get_env("KEWKEW_DEV_STAFF_PASSWORD") || "kewkew-local-admin-password"
+
+staff_user =
+  Ash.read_one!(
+    Ash.Query.filter(User, email == ^staff_email),
+    domain: Kewkew.Accounts,
+    authorize?: false
+  ) ||
+    Ash.create!(
+      User,
+      %{email: staff_email, password: staff_password},
+      action: :provision_staff_user,
+      domain: Kewkew.Accounts,
+      authorize?: false
+    )
+
+staff_membership =
+  Ash.read_one!(
+    Ash.Query.filter(
+      StaffMembership,
+      user_id == ^staff_user.id and organization_id == ^organization.id
+    ),
+    domain: Business,
+    authorize?: false
+  )
+
+if is_nil(staff_membership) do
+  Ash.create!(
+    StaffMembership,
+    %{user_id: staff_user.id, organization_id: organization.id, role: :admin},
+    action: :grant,
+    domain: Business,
+    authorize?: false
+  )
+end
 
 service =
   Ash.read_one!(
@@ -129,3 +168,4 @@ end
 
 IO.puts("Name-required demo queue: /q/#{queue.public_slug}")
 IO.puts("Anonymous demo queue: /q/#{anonymous_queue.public_slug}")
+IO.puts("Local staff sign-in email: #{staff_email}")

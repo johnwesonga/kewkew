@@ -71,6 +71,18 @@ defmodule KewkewWeb.Router do
     get "/", StaffController, :index
   end
 
+  scope "/staff", KewkewWeb do
+    pipe_through :browser
+
+    ash_authentication_live_session :staff_routes,
+      on_mount: [
+        {KewkewWeb.LiveUserAuth, :live_user_required},
+        {KewkewWeb.StaffLiveAuth, :require_membership}
+      ] do
+      live "/queues/:queue_id", StaffQueueLive, :show
+    end
+  end
+
   scope "/t", KewkewWeb do
     pipe_through :api
 

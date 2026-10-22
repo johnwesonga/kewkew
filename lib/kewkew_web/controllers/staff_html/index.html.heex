@@ -1,0 +1,39 @@
+<Layouts.app flash={@flash}>
+  <main id="staff-home" class="space-y-8">
+    <header class="space-y-2">
+      <p class="text-sm text-base-content/70">Signed in as {@staff_email}</p>
+      <h1 class="text-3xl font-bold">Staff queues</h1>
+      <p class="text-base-content/70">Choose a queue to see its current visitors.</p>
+    </header>
+
+    <section aria-labelledby="staff-locations-heading" class="space-y-3">
+      <h2 id="staff-locations-heading" class="text-xl font-semibold">Assigned locations</h2>
+      <ul id="staff-locations" class="space-y-2">
+        <li :for={location <- @locations} id={"staff-location-#{location.id}"}>
+          <div class="rounded-lg border border-base-300 p-3">{location.name}</div>
+        </li>
+        <li :if={@locations == []} id="staff-no-locations" class="text-base-content/70">
+          No locations are assigned to this account.
+        </li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="staff-queues-heading" class="space-y-3">
+      <h2 id="staff-queues-heading" class="text-xl font-semibold">Queues you can access</h2>
+      <ul id="staff-queues" class="space-y-2">
+        <li :for={%{queue: queue, location: location} <- @queues} id={"staff-queue-#{queue.id}"}>
+          <.link
+            navigate={~p"/staff/queues/#{queue.id}"}
+            class="flex items-center justify-between rounded-lg border border-base-300 p-4 hover:bg-base-200"
+          >
+            <span class="font-semibold">{queue.name}</span>
+            <span class="text-sm text-base-content/70">{location.name}</span>
+          </.link>
+        </li>
+        <li :if={@queues == []} id="staff-no-queues" class="text-base-content/70">
+          There are no queues at your assigned locations.
+        </li>
+      </ul>
+    </section>
+  </main>
+</Layouts.app>

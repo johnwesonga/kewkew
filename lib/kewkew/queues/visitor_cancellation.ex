@@ -3,24 +3,30 @@ defmodule Kewkew.Queues.VisitorCancellation do
 
   import Ecto.Query
 
-  alias Kewkew.Queues.{Ticket, TicketEvent, TrackingCredential}
+  alias Kewkew.Queues.{Ticket, TicketEvent, TrackingCredential, Updates}
   alias Kewkew.Repo
 
   def cancel_by_tracking_token(token) when is_binary(token) do
     token_digest = digest(token)
 
-    Repo.transaction(fn ->
-      with %TrackingCredential{} = credential <- find_credential(token_digest),
-           :ok <- credential_is_valid(credential),
-           %Ticket{} = ticket <- lock_ticket(credential.ticket_id) do
-        cancel_ticket(ticket)
-      else
-        _ -> Repo.rollback(:unavailable)
-      end
-    end)
-    |> case do
-      {:ok, result} -> {:ok, result}
-      {:error, reason} -> {:error, reason}
+    case Repo.transaction(fn ->
+           with %TrackingCredential{} = credential <- find_credential(token_digest),
+                :ok <- credential_is_valid(credential),
+                %Ticket{} = ticket <- lock_ticket(credential.ticket_id) do
+             cancel_ticket(ticket)
+           else
+             _ -> Repo.rollback(:unavailable)
+           end
+         end) do
+      {:ok, {:cancelled, queue_session_id}} ->
+        Updates.broadcast_session_updated(queue_session_id)
+        {:ok, :cancelled}
+
+      {:ok, result} ->
+        {:ok, result}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -76,7 +82,7 @@ defmodule Kewkew.Queues.VisitorCancellation do
       domain: Kewkew.Queues
     )
 
-    :cancelled
+    {:cancelled, ticket.queue_session_id}
   end
 
   defp digest(token), do: :crypto.hash(:sha256, token) |> Base.encode16(case: :lower)
