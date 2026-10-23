@@ -17,7 +17,11 @@ These stories assume an organization, locations, services, staff memberships, an
 
 ## Stories
 
+**Status tracking** — `Complete` means the story's acceptance criteria are implemented; `In progress` means some criteria remain; `Planned` means implementation has not started. Status tracks implementation in this repository, not production release.
+
 ### AQ-1: View queues for an organization
+
+**Status** — Complete
 
 **User story** — As an organization administrator, I want to see queues grouped by location and service so I can understand what is configured and manage the right queue.
 
@@ -31,6 +35,8 @@ These stories assume an organization, locations, services, staff memberships, an
 **Dependencies** — SF-1; organization, location, service, and staff-access records.
 
 ### AQ-2: Create a queue
+
+**Status** — Complete
 
 **User story** — As an organization administrator, I want to create a queue for a service at a location so visitors can join that service's line.
 
@@ -47,6 +53,8 @@ These stories assume an organization, locations, services, staff memberships, an
 
 ### AQ-3: Edit queue configuration
 
+**Status** — Complete
+
 **User story** — As an organization administrator, I want to update a queue's name, identity policy, service details, or capacity so the visitor flow reflects current business needs.
 
 **Acceptance criteria**
@@ -62,6 +70,8 @@ These stories assume an organization, locations, services, staff memberships, an
 
 ### AQ-4: Share a queue link and QR code
 
+**Status** — Complete
+
 **User story** — As an organization administrator, I want a reusable visitor link and QR code for each queue so people can reach the correct join page in person or remotely.
 
 **Acceptance criteria**
@@ -74,6 +84,8 @@ These stories assume an organization, locations, services, staff memberships, an
 **Dependencies** — AQ-2; VF-1; public queue URL and QR rendering.
 
 ### AQ-5: Deactivate or reactivate a queue
+
+**Status** — Complete
 
 **User story** — As an organization administrator, I want to temporarily disable a queue without deleting its history so visitors cannot join a service that is unavailable.
 
@@ -89,6 +101,8 @@ These stories assume an organization, locations, services, staff memberships, an
 
 ### AQ-6: Open a queue session
 
+**Status** — Complete
+
 **User story** — As an administrator or authorized queue operator, I want to open a session when a queue is ready so visitors can join and receive tickets.
 
 **Acceptance criteria**
@@ -103,6 +117,8 @@ These stories assume an organization, locations, services, staff memberships, an
 
 ### AQ-7: Pause and resume a queue session
 
+**Status** — Complete
+
 **User story** — As an authorized queue operator, I want to pause and resume the current session so staff can temporarily stop arrivals while keeping the line intact.
 
 **Acceptance criteria**
@@ -116,6 +132,8 @@ These stories assume an organization, locations, services, staff memberships, an
 **Dependencies** — AQ-6; SF-1, SF-2, and SF-8; VF-2.
 
 ### AQ-8: Close a queue session and start the next one
+
+**Status** — Complete
 
 **User story** — As an authorized queue operator, I want to close a session when service ends so the next operating period starts with fresh ticket numbers and a clean line.
 

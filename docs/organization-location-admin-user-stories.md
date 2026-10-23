@@ -19,7 +19,11 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ## Stories
 
+**Status tracking** — `Complete` means the story's acceptance criteria are implemented; `In progress` means some criteria remain; `Planned` means implementation has not started. Status tracks implementation in this repository, not production release.
+
 ### OLA-1: Bootstrap an organization and its first administrator
+
+**Status** — Complete
 
 **User story** — As a Kewkew platform operator, I want to initialize an organization, its first location, and its first administrator so the business can securely begin setup.
 
@@ -35,6 +39,8 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-2: View the organization and its locations
 
+**Status** — In progress
+
 **User story** — As an organization administrator, I want to see my organization's profile and locations so I can manage the correct business and understand which sites are operating.
 
 **Acceptance criteria**
@@ -49,6 +55,8 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-3: Update organization details
 
+**Status** — Planned
+
 **User story** — As an organization administrator, I want to update my organization's name so that staff and operational pages use the current business name.
 
 **Acceptance criteria**
@@ -61,6 +69,8 @@ These stories cover the business setup and administration foundation. Queue conf
 **Dependencies** — OLA-2; organization-scoped authorization.
 
 ### OLA-4: Create and update a location
+
+**Status** — Planned
 
 **User story** — As an organization administrator, I want to add a location and maintain its name and timezone so queues can be organized around where service is provided.
 
@@ -75,6 +85,8 @@ These stories cover the business setup and administration foundation. Queue conf
 **Dependencies** — OLA-1 and OLA-2; organization-scoped authorization.
 
 ### OLA-5: Deactivate or reactivate a location
+
+**Status** — Planned
 
 **User story** — As an organization administrator, I want to temporarily deactivate a location so visitors cannot join services at a site that is not operating.
 
@@ -91,6 +103,8 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-6: Manage services at a location
 
+**Status** — Planned
+
 **User story** — As an organization administrator, I want to create and update services at a location so visitors can choose the kind of help they need.
 
 **Acceptance criteria**
@@ -105,6 +119,8 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-7: Deactivate or reactivate a service
 
+**Status** — Planned
+
 **User story** — As an organization administrator, I want to deactivate a service temporarily so visitors cannot join queues for a service that is unavailable.
 
 **Acceptance criteria**
@@ -118,6 +134,8 @@ These stories cover the business setup and administration foundation. Queue conf
 **Dependencies** — OLA-6; AQ-5 through AQ-8; visitor availability checks.
 
 ### OLA-8: Invite a staff member and grant initial access
+
+**Status** — Planned
 
 **User story** — As an organization administrator, I want to invite a staff member with an initial role and location access so they can securely use Kewkew for their assigned work.
 
@@ -135,6 +153,8 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-9: Change staff roles and location assignments
 
+**Status** — In progress
+
 **User story** — As an organization administrator, I want to update a staff member's role and location assignments so their access follows their responsibilities.
 
 **Acceptance criteria**
@@ -149,6 +169,8 @@ These stories cover the business setup and administration foundation. Queue conf
 **Dependencies** — OLA-8; SF-1; organization and location authorization.
 
 ### OLA-10: Suspend or remove staff access
+
+**Status** — In progress
 
 **User story** — As an organization administrator, I want to suspend a staff member's organization membership so they immediately lose access when they leave or change roles.
 

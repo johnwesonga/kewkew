@@ -9,6 +9,8 @@ Future visitor-flow ideas that are not part of the current implementation are tr
 
 These stories define the first product implementation area. They assume a business has already configured a location, service, queue, and join policy. Staff setup and queue management are dependencies, but are not part of this visitor-flow implementation scope.
 
+**Status tracking** — `Complete` means the story's acceptance criteria are implemented; `In progress` means some criteria remain; `Planned` means implementation has not started. Status tracks implementation in this repository, not production release.
+
 ## Visitor journey
 
 ```mermaid
@@ -41,6 +43,8 @@ flowchart LR
 
 ### VF-1: Open a queue from a shared link or QR code
 
+**Status** — Complete
+
 **User story** — As a visitor, I want to open a queue from a link or scanned QR code so that I can see where to join without installing an app.
 
 **Acceptance criteria**
@@ -53,6 +57,8 @@ flowchart LR
 **Dependencies** — A public queue URL/QR target and a configured location/service.
 
 ### VF-2: Understand whether a queue is open
+
+**Status** — Complete
 
 **User story** — As a visitor, I want to know whether I can join before entering details so that I do not waste time on a queue that is unavailable.
 
@@ -67,6 +73,8 @@ flowchart LR
 
 ### VF-3: Select a service when a location offers more than one
 
+**Status** — Complete
+
 **User story** — As a visitor, I want to choose the service I need so that I join the correct queue.
 
 **Acceptance criteria**
@@ -79,6 +87,8 @@ flowchart LR
 **Dependencies** — Location's public service list and queue availability. A direct queue link is the initial minimum path.
 
 ### VF-4: Join an anonymous queue
+
+**Status** — Complete
 
 **User story** — As a visitor using an anonymous queue, I want to receive a number without sharing my name so that I can wait while keeping the interaction minimal.
 
@@ -94,6 +104,8 @@ flowchart LR
 
 ### VF-5: Join a queue that requires first and last name
 
+**Status** — Complete
+
 **User story** — As a visitor at a service that matches tickets to people, I want to provide my first and last name so staff can identify me when my number is called.
 
 **Acceptance criteria**
@@ -107,6 +119,8 @@ flowchart LR
 **Dependencies** — Queue identity policy and ticket name fields.
 
 ### VF-6: Receive a ticket and private tracking page
+
+**Status** — Complete
 
 **User story** — As a visitor who joined successfully, I want a clear ticket confirmation and a private page so I can verify my place and return to it later.
 
@@ -122,6 +136,8 @@ flowchart LR
 
 ### VF-7: Follow queue position and status changes
 
+**Status** — Complete
+
 **User story** — As a waiting visitor, I want my ticket page to stay current so I know when my turn is approaching.
 
 **Acceptance criteria**
@@ -135,6 +151,8 @@ flowchart LR
 **Dependencies** — Staff queue transitions in [staff-admin-flow-user-stories.md](staff-admin-flow-user-stories.md) and a refresh/live-update mechanism. The first implementation may use page refresh or polling; live updates across connected screens are specified in SF-8.
 
 ### VF-8: Leave or cancel my place in line
+
+**Status** — Complete
 
 **User story** — As a visitor who can no longer wait, I want to leave the queue so staff do not hold my place unnecessarily.
 
@@ -150,6 +168,8 @@ flowchart LR
 
 ### VF-9: Understand when I am called
 
+**Status** — In progress
+
 **User story** — As a visitor whose turn has arrived, I want an unmistakable call-to-action on my tracking page so I know what to do next.
 
 **Acceptance criteria**
@@ -162,6 +182,8 @@ flowchart LR
 **Dependencies** — Staff call/skip operations and configurable service instructions. SMS/push notification delivery is not required for this story.
 
 ### VF-10: See a service completion confirmation
+
+**Status** — Planned
 
 **User story** — As a visitor whose service is complete, I want a thank-you confirmation so I know I can leave and no longer need to monitor my place in line.
 

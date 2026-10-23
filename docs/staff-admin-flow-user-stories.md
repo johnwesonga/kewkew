@@ -20,7 +20,11 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 ## Stories
 
+**Status tracking** — `Complete` means the story's acceptance criteria are implemented; `In progress` means some criteria remain; `Planned` means implementation has not started. Status tracks implementation in this repository, not production release.
+
 ### SF-1: Access assigned queues
+
+**Status** — In progress
 
 **User story** — As a staff member, I want to sign in and see only the queues I am assigned to so that visitor information and queue controls are limited to my work.
 
@@ -38,6 +42,8 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 ### SF-2: Monitor a queue
 
+**Status** — Complete
+
 **User story** — As a queue operator, I want to see waiting visitors and their current states so that I can serve the queue in order.
 
 **Acceptance criteria**
@@ -51,6 +57,8 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 **Dependencies** — SF-1; active queue sessions and visitor ticket creation.
 
 ### SF-3: Call the next visitor
+
+**Status** — Complete
 
 **User story** — As a queue operator, I want to call the next waiting visitor so that service follows queue order.
 
@@ -66,6 +74,8 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 ### SF-4: Start serving a called visitor
 
+**Status** — Complete
+
 **User story** — As a queue operator, I want to mark a called visitor as being served so the visitor and other staff know service has started.
 
 **Acceptance criteria**
@@ -79,6 +89,8 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 ### SF-5: Complete service
 
+**Status** — Complete
+
 **User story** — As a queue operator, I want to complete a visitor's service so their ticket leaves the active queue and the next visitor's position is accurate.
 
 **Acceptance criteria**
@@ -91,6 +103,8 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 **Dependencies** — SF-1, SF-2, SF-4; active-ticket and position rules.
 
 ### SF-6: Skip a visitor who does not respond
+
+**Status** — Complete
 
 **User story** — As a queue operator, I want to mark a called visitor as a no-show so the queue can continue when they do not respond.
 
@@ -106,6 +120,8 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 ### SF-7: Cancel a ticket as staff
 
+**Status** — Complete
+
 **User story** — As a queue operator, I want to cancel a ticket when a visitor or business circumstance requires it so the queue no longer holds that place.
 
 **Acceptance criteria**
@@ -120,6 +136,8 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 ### SF-8: See committed changes across connected screens
 
+**Status** — Complete
+
 **User story** — As staff or a visitor with a connected ticket page, I want queue changes to appear promptly so everyone acts on the same state.
 
 **Acceptance criteria**
@@ -133,6 +151,8 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 **Dependencies** — Queue transition stories; Phoenix PubSub or equivalent update delivery; reconnect refresh behavior.
 
 ### SF-9: Requeue a returning no-show visitor
+
+**Status** — Complete
 
 **User story** — As a queue operator, I want to requeue a visitor who returns after being marked as a no-show so they can receive service without jumping ahead of visitors already waiting.
 
