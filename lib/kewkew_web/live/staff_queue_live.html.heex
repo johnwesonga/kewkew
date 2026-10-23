@@ -30,6 +30,24 @@
         </button>
         <button
           :if={@session_status == "Open"}
+          id="staff-pause-session"
+          type="button"
+          class="staff-secondary-button"
+          phx-click="pause_session"
+        >
+          <.icon name="hero-pause" class="size-4" /> Pause joins
+        </button>
+        <button
+          :if={@session_status == "Paused"}
+          id="staff-resume-session"
+          type="button"
+          class="staff-primary-button"
+          phx-click="resume_session"
+        >
+          <.icon name="hero-play" class="size-4" /> Resume joins
+        </button>
+        <button
+          :if={@session_status in ["Open", "Paused"]}
           id="staff-call-next"
           type="button"
           class="staff-primary-button"

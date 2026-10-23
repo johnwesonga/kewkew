@@ -31,6 +31,25 @@ defmodule KewkewWeb.VisitorQueueController do
     end
   end
 
+  @doc "Returns the current public availability state so queue pages can refresh on changes."
+  def availability_status(conn, %{"slug" => slug}) do
+    response =
+      case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
+        {:ok, %{session: session, active_ticket_count: active_ticket_count, queue: queue}} ->
+          current_availability =
+            availability(session, active_ticket_count, queue.max_active_tickets)
+
+          %{state: Atom.to_string(current_availability.state)}
+
+        _ ->
+          %{state: "unavailable"}
+      end
+
+    conn
+    |> put_resp_header("cache-control", "no-store")
+    |> json(response)
+  end
+
   @doc "Displays the queue's join form based on its configured identity policy."
   def join(conn, %{"slug" => slug}) do
     case Kewkew.Queues.PublicLookup.fetch_queue(slug) do

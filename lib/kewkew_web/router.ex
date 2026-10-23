@@ -94,6 +94,12 @@ defmodule KewkewWeb.Router do
     get "/:token/status", VisitorQueueController, :track_status
   end
 
+  scope "/q", KewkewWeb do
+    pipe_through :api
+
+    get "/:slug/status", VisitorQueueController, :availability_status
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", KewkewWeb do
   #   pipe_through :api

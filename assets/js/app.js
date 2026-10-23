@@ -138,6 +138,33 @@ document.addEventListener("click", event => {
 
 const visitorTicket = document.getElementById("visitor-ticket")
 
+const visitorQueuePage = document.querySelector("[data-availability-url]")
+
+if (visitorQueuePage) {
+  const refreshQueueAvailability = async () => {
+    if (document.hidden) return
+
+    try {
+      const response = await fetch(visitorQueuePage.dataset.availabilityUrl, {
+        headers: {Accept: "application/json"},
+        cache: "no-store",
+      })
+
+      if (!response.ok) return
+
+      const availability = await response.json()
+      if (availability.state !== visitorQueuePage.dataset.availabilityState) {
+        window.location.reload()
+      }
+    } catch (_error) {
+      // Keep the current page and retry shortly if the status endpoint is unavailable.
+    }
+  }
+
+  window.setInterval(refreshQueueAvailability, 3000)
+  document.addEventListener("visibilitychange", refreshQueueAvailability)
+}
+
 if (visitorTicket) {
   const status = document.getElementById("visitor-ticket-status")
   const position = document.getElementById("visitor-ticket-position")

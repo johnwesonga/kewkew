@@ -12,6 +12,7 @@ defmodule KewkewWeb.StaffQueueLive do
     StaffRecallNoShow,
     StaffSkipVisitor,
     StaffStartServing,
+    StaffUpdateQueueSessionStatus,
     Updates
   }
 
@@ -98,6 +99,16 @@ defmodule KewkewWeb.StaffQueueLive do
         {:noreply,
          Phoenix.LiveView.put_flash(socket, :error, "Unable to open this queue session.")}
     end
+  end
+
+  @impl true
+  def handle_event("pause_session", _params, socket) do
+    transition_session(socket, :pause)
+  end
+
+  @impl true
+  def handle_event("resume_session", _params, socket) do
+    transition_session(socket, :resume)
   end
 
   @impl true
@@ -314,6 +325,50 @@ defmodule KewkewWeb.StaffQueueLive do
     case StaffBoard.fetch_queue(socket.assigns.current_user.id, socket.assigns.queue.id) do
       {:ok, board} -> assign_board(socket, board)
       {:error, :not_found} -> Phoenix.LiveView.redirect(socket, to: "/staff")
+    end
+  end
+
+  defp transition_session(socket, :pause) do
+    transition_session(socket, :pause, &StaffUpdateQueueSessionStatus.pause/2)
+  end
+
+  defp transition_session(socket, :resume) do
+    transition_session(socket, :resume, &StaffUpdateQueueSessionStatus.resume/2)
+  end
+
+  defp transition_session(socket, operation, transition) do
+    case transition.(socket.assigns.current_user.id, socket.assigns.queue.id) do
+      {:ok, _session} ->
+        socket = assign_board_from_refresh(socket)
+
+        message =
+          if operation == :pause, do: "Visitor joins are paused.", else: "Visitor joins are open."
+
+        {:noreply, Phoenix.LiveView.put_flash(socket, :info, message)}
+
+      {:error, :no_active_session} ->
+        socket = assign_board_from_refresh(socket)
+
+        {:noreply,
+         Phoenix.LiveView.put_flash(
+           socket,
+           :error,
+           "There is no open or paused session to update."
+         )}
+
+      {:error, :invalid_transition} ->
+        socket = assign_board_from_refresh(socket)
+
+        {:noreply,
+         Phoenix.LiveView.put_flash(
+           socket,
+           :info,
+           "The session changed before your action completed."
+         )}
+
+      {:error, _reason} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(socket, :error, "Unable to update this queue session.")}
     end
   end
 

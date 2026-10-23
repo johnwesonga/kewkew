@@ -32,6 +32,8 @@
 
       <section
         id="visitor-queue-details"
+        data-availability-url={"/q/#{@queue.public_slug}/status"}
+        data-availability-state={Atom.to_string(@availability.state)}
         class="rounded-3xl border border-[#e4eae5] bg-white p-6 shadow-[0_18px_50px_rgba(26,52,39,.09)] sm:p-8"
       >
         <div class="mb-7 flex items-center justify-between gap-3">
