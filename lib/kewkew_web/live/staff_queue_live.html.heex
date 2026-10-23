@@ -47,6 +47,17 @@
           <.icon name="hero-play" class="size-4" /> Resume joins
         </button>
         <button
+          :if={@session_can_be_closed?}
+          id="staff-close-session"
+          type="button"
+          class="staff-secondary-button"
+          phx-click="close_session"
+          disabled={!@can_close_session?}
+          aria-describedby={if(!@can_close_session?, do: "staff-close-session-reason", else: nil)}
+        >
+          <.icon name="hero-stop" class="size-4" /> Close session
+        </button>
+        <button
           :if={@session_status in ["Open", "Paused"]}
           id="staff-call-next"
           type="button"
@@ -79,6 +90,14 @@
       class="staff-queue-notice"
     >
       {@session_open_block_reason}
+    </p>
+
+    <p
+      :if={@session_can_be_closed? and not @can_close_session?}
+      id="staff-close-session-reason"
+      class="staff-queue-notice"
+    >
+      Complete or cancel all waiting, called, and serving tickets before closing the session. No-show tickets may remain in its history.
     </p>
 
     <section aria-label="Queue counts" class="staff-stats">
@@ -201,7 +220,12 @@
       <div class="staff-card-heading">
         <div>
           <h2 id="no-show-visitors-heading">No-show visitors</h2>
-          <p>Return a visitor to the end of the line if they come back.</p>
+          <p :if={@session_status in ["Open", "Paused"]}>
+            Return a visitor to the end of the line if they come back.
+          </p>
+          <p :if={@session_status == "Closed"}>
+            These no-show records are preserved with the closed session.
+          </p>
         </div>
       </div>
       <div id="staff-no-show-tickets" phx-update="stream" class="staff-ticket-list">
@@ -219,6 +243,7 @@
           </span>
           <span class="staff-ticket-actions">
             <button
+              :if={@session_status in ["Open", "Paused"]}
               type="button"
               class="staff-row-action"
               phx-click="recall_no_show"

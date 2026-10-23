@@ -7,6 +7,7 @@ defmodule KewkewWeb.StaffQueueLive do
     StaffBoard,
     StaffCallNext,
     StaffCancelTicket,
+    StaffCloseQueueSession,
     StaffCompleteService,
     StaffOpenQueueSession,
     StaffRecallNoShow,
@@ -109,6 +110,38 @@ defmodule KewkewWeb.StaffQueueLive do
   @impl true
   def handle_event("resume_session", _params, socket) do
     transition_session(socket, :resume)
+  end
+
+  @impl true
+  def handle_event("close_session", _params, socket) do
+    case StaffCloseQueueSession.close_session(
+           socket.assigns.current_user.id,
+           socket.assigns.queue.id
+         ) do
+      {:ok, _session} ->
+        socket = assign_board_from_refresh(socket)
+        {:noreply, Phoenix.LiveView.put_flash(socket, :info, "The queue session is closed.")}
+
+      {:error, :active_tickets_remain} ->
+        socket = assign_board_from_refresh(socket)
+
+        {:noreply,
+         Phoenix.LiveView.put_flash(
+           socket,
+           :error,
+           "Complete or cancel all waiting, called, and serving tickets before closing this session."
+         )}
+
+      {:error, :no_active_session} ->
+        socket = assign_board_from_refresh(socket)
+
+        {:noreply,
+         Phoenix.LiveView.put_flash(socket, :info, "There is no open or paused session to close.")}
+
+      {:error, _reason} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(socket, :error, "Unable to close this queue session.")}
+    end
   end
 
   @impl true
@@ -228,6 +261,16 @@ defmodule KewkewWeb.StaffQueueLive do
          socket
          |> assign_board_from_refresh()
          |> Phoenix.LiveView.put_flash(:info, "That ticket is no longer eligible for recall.")}
+
+      {:error, :session_closed} ->
+        socket = assign_board_from_refresh(socket)
+
+        {:noreply,
+         Phoenix.LiveView.put_flash(
+           socket,
+           :info,
+           "This session is closed. No-show tickets remain in its history."
+         )}
 
       {:error, _reason} ->
         {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Unable to requeue that visitor.")}
@@ -387,6 +430,11 @@ defmodule KewkewWeb.StaffQueueLive do
           board.location.active? and board.service.active?,
       session_can_be_opened?: is_nil(board.session) or board.session.status == :closed,
       session_open_block_reason: session_open_block_reason(board),
+      session_can_be_closed?:
+        not is_nil(board.session) and board.session.status in [:open, :paused],
+      can_close_session?:
+        not is_nil(board.session) and board.session.status in [:open, :paused] and
+          board.tickets == [],
       show_names?: board.queue.identity_policy == :name_required,
       waiting_count: length(Map.get(tickets_by_status, :waiting, [])),
       called_count: length(Map.get(tickets_by_status, :called, [])),

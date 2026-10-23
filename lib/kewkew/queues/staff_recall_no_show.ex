@@ -16,6 +16,8 @@ defmodule Kewkew.Queues.StaffRecallNoShow do
       case Repo.transaction(fn ->
              session = lock_latest_session(queue.id) || Repo.rollback(:no_session)
 
+             if session.status not in [:open, :paused], do: Repo.rollback(:session_closed)
+
              ticket =
                Repo.one(
                  from ticket in Ticket,
