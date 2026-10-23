@@ -29,15 +29,18 @@ defmodule Kewkew.Business.StaffSetLocationAvailability do
           case Ash.update(location, %{active?: active?},
                  action: :set_active,
                  domain: Kewkew.Business,
-                 authorize?: false
+                 authorize?: false,
+                 return_notifications?: true
                ) do
-            {:ok, updated_location} -> updated_location
+            {:ok, updated_location, notifications} -> {updated_location, notifications}
             {:error, _error} -> Repo.rollback(:update_failed)
           end
         end)
 
       case result do
-        {:ok, location} ->
+        {:ok, {location, notifications}} ->
+          Ash.Notifier.notify(notifications)
+
           from(queue in Queue, where: queue.location_id == ^location.id, select: queue.id)
           |> Repo.all()
           |> Enum.each(&Updates.broadcast_queue_updated/1)
