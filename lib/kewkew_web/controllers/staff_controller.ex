@@ -7,6 +7,7 @@ defmodule KewkewWeb.StaffController do
   alias Kewkew.Business.StaffLocationAdministration
   alias Kewkew.Business.StaffSetLocationAvailability
   alias Kewkew.Business.StaffServiceAdministration
+  alias Kewkew.Business.StaffSetServiceAvailability
   alias Kewkew.Business.StaffAccess
   alias Kewkew.Queues.StaffCreateQueue
   alias Kewkew.Queues.StaffSetQueueAvailability
@@ -392,6 +393,42 @@ defmodule KewkewWeb.StaffController do
   def update_service(conn, _params) do
     conn
     |> put_flash(:error, "The service details were incomplete.")
+    |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Activates or deactivates a service for an authorized organization administrator."
+  def update_service_availability(conn, %{"service_id" => service_id, "active" => active})
+      when active in ["true", "false"] do
+    active? = active == "true"
+
+    case StaffSetServiceAvailability.set_active(
+           conn.assigns.current_user.id,
+           service_id,
+           active?
+         ) do
+      {:ok, service} ->
+        message =
+          if active?, do: "#{service.name} is active.", else: "#{service.name} is inactive."
+
+        conn
+        |> put_flash(:info, message)
+        |> redirect(to: ~p"/staff")
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to change that service.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, _reason} ->
+        conn
+        |> put_flash(:error, "The service availability could not be changed.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def update_service_availability(conn, _params) do
+    conn
+    |> put_flash(:error, "The service availability setting was invalid.")
     |> redirect(to: ~p"/staff")
   end
 

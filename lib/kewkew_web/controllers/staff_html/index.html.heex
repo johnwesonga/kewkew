@@ -148,6 +148,25 @@
                     >
                       <.icon name="hero-pencil-square" class="size-4" /> Edit
                     </.link>
+                    <.link
+                      :if={can_manage?}
+                      id={"staff-toggle-service-#{service.id}"}
+                      href={
+                        if service.active?,
+                          do: ~p"/staff/services/#{service.id}/availability?active=false",
+                          else: ~p"/staff/services/#{service.id}/availability?active=true"
+                      }
+                      method="put"
+                      data-confirm={
+                        if service.active?,
+                          do:
+                            "Deactivate #{service.name}? Visitors cannot join or open new sessions, but staff can continue resolving existing tickets.",
+                          else: nil
+                      }
+                      class={["staff-edit-queue-link", !service.active? && "reactivate"]}
+                    >
+                      {if service.active?, do: "Deactivate", else: "Reactivate"}
+                    </.link>
                   </span>
                 </li>
               </ul>

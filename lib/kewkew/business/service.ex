@@ -22,6 +22,10 @@ defmodule Kewkew.Business.Service do
     update :update_details do
       accept [:name, :description]
     end
+
+    update :set_active do
+      accept [:active?]
+    end
   end
 
   attributes do

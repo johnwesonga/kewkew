@@ -80,6 +80,7 @@ defmodule KewkewWeb.Router do
     post "/locations/:location_id/services", StaffController, :create_service
     get "/services/:service_id/edit", StaffController, :edit_service
     put "/services/:service_id", StaffController, :update_service
+    put "/services/:service_id/availability", StaffController, :update_service_availability
     get "/queues/new/:location_id", StaffController, :new
     post "/queues/new/:location_id", StaffController, :create
     get "/queues/:queue_id/edit", StaffController, :edit
