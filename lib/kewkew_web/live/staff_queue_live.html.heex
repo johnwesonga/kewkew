@@ -16,6 +16,20 @@
       </div>
       <div class="staff-heading-actions">
         <button
+          :if={@session_can_be_opened?}
+          id="staff-open-session"
+          type="button"
+          class="staff-primary-button"
+          phx-click="open_session"
+          disabled={!@can_open_session?}
+          aria-describedby={
+            if(@session_open_block_reason, do: "staff-open-session-reason", else: nil)
+          }
+        >
+          <.icon name="hero-play" class="size-4" /> Open queue session
+        </button>
+        <button
+          :if={@session_status == "Open"}
           id="staff-call-next"
           type="button"
           class="staff-primary-button"
@@ -40,6 +54,14 @@
         </button>
       </div>
     </header>
+
+    <p
+      :if={@session_can_be_opened? and @session_open_block_reason}
+      id="staff-open-session-reason"
+      class="staff-queue-notice"
+    >
+      {@session_open_block_reason}
+    </p>
 
     <section aria-label="Queue counts" class="staff-stats">
       <article class="staff-card staff-stat-card">

@@ -8,6 +8,7 @@ defmodule KewkewWeb.StaffQueueLive do
     StaffCallNext,
     StaffCancelTicket,
     StaffCompleteService,
+    StaffOpenQueueSession,
     StaffRecallNoShow,
     StaffSkipVisitor,
     StaffStartServing,
@@ -20,8 +21,9 @@ defmodule KewkewWeb.StaffQueueLive do
 
     case StaffBoard.fetch_queue(user_id, queue_id) do
       {:ok, board} ->
-        if connected?(socket) and board.session do
-          Updates.subscribe(board.session.id)
+        if connected?(socket) do
+          Updates.subscribe_queue(board.queue.id)
+          if board.session, do: Updates.subscribe(board.session.id)
         end
 
         {:ok, assign_board(socket, board)}
@@ -41,7 +43,62 @@ defmodule KewkewWeb.StaffQueueLive do
   end
 
   @impl true
+  def handle_info({:queue_updated, queue_id}, socket) do
+    if socket.assigns.queue.id == queue_id do
+      refresh_board(socket)
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_event("refresh", _params, socket), do: refresh_board(socket)
+
+  @impl true
+  def handle_event("open_session", _params, socket) do
+    case StaffOpenQueueSession.open_session(
+           socket.assigns.current_user.id,
+           socket.assigns.queue.id
+         ) do
+      {:ok, _session} ->
+        socket = assign_board_from_refresh(socket)
+        {:noreply, Phoenix.LiveView.put_flash(socket, :info, "The queue session is open.")}
+
+      {:error, :queue_inactive} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(
+           socket,
+           :error,
+           "This queue is inactive. Reactivate it before opening a session."
+         )}
+
+      {:error, :location_inactive} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(
+           socket,
+           :error,
+           "This location is inactive. Reactivate it before opening a session."
+         )}
+
+      {:error, :service_inactive} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(
+           socket,
+           :error,
+           "This service is inactive. Reactivate it before opening a session."
+         )}
+
+      {:error, :session_already_open} ->
+        socket = assign_board_from_refresh(socket)
+
+        {:noreply,
+         Phoenix.LiveView.put_flash(socket, :info, "A session is already open or paused.")}
+
+      {:error, _reason} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(socket, :error, "Unable to open this queue session.")}
+    end
+  end
 
   @impl true
   def handle_event("call_next", _params, socket) do
@@ -270,6 +327,11 @@ defmodule KewkewWeb.StaffQueueLive do
       service: board.service,
       session: board.session,
       session_status: session_status(board.session),
+      can_open_session?:
+        (is_nil(board.session) or board.session.status == :closed) and board.queue.active? and
+          board.location.active? and board.service.active?,
+      session_can_be_opened?: is_nil(board.session) or board.session.status == :closed,
+      session_open_block_reason: session_open_block_reason(board),
       show_names?: board.queue.identity_policy == :name_required,
       waiting_count: length(Map.get(tickets_by_status, :waiting, [])),
       called_count: length(Map.get(tickets_by_status, :called, [])),
@@ -290,6 +352,17 @@ defmodule KewkewWeb.StaffQueueLive do
   defp session_status(%{status: :closed}), do: "Closed"
 
   defp session_status(_session), do: "Unavailable"
+
+  defp session_open_block_reason(%{queue: %{active?: false}}),
+    do: "This queue is inactive. Reactivate it before opening a session."
+
+  defp session_open_block_reason(%{location: %{active?: false}}),
+    do: "This location is inactive. Reactivate it before opening a session."
+
+  defp session_open_block_reason(%{service: %{active?: false}}),
+    do: "This service is inactive. Reactivate it before opening a session."
+
+  defp session_open_block_reason(_board), do: nil
 
   defp session_status_class(%{status: :open}), do: "open"
   defp session_status_class(%{status: :paused}), do: "paused"
