@@ -28,6 +28,14 @@ defmodule Kewkew.Business.StaffLocationAdministration do
     end
   end
 
+  def locations_for_organization(organization_id) do
+    Repo.all(
+      from location in Location,
+        where: location.organization_id == ^organization_id,
+        order_by: location.name
+    )
+  end
+
   @doc "Creates a location within an organization the user actively administers."
   def create_location(user_id, organization_id, params) when is_map(params) do
     with {:ok, user_id} <- Ecto.UUID.cast(user_id),

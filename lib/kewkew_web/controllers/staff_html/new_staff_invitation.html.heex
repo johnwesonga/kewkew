@@ -1,0 +1,53 @@
+<Layouts.app flash={@flash} staff?={true} staff_email={@staff_email}>
+  <section id="staff-invitation-page" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <p class="staff-eyebrow">Staff access · {@organization.name}</p>
+        <h1>Invite a staff member</h1>
+        <p class="staff-subhead">We’ll email a one-time link so they can securely join.</p>
+      </div>
+    </header>
+    <ul :if={@errors != []} id="staff-invitation-errors" class="staff-form-errors">
+      <li :for={error <- @errors}>{error}</li>
+    </ul>
+    <.form
+      for={Phoenix.Component.to_form(@params, as: :invitation)}
+      id="staff-invitation-form"
+      action={~p"/staff/organizations/#{@organization.id}/staff/invitations"}
+      method="post"
+      class="staff-create-queue-form"
+    >
+      <label for="invitation-email">Email</label>
+      <input
+        id="invitation-email"
+        name="invitation[email]"
+        type="email"
+        required
+        value={@params["email"]}
+      />
+      <label for="invitation-role">Role</label>
+      <select id="invitation-role" name="invitation[role]">
+        <option value="operator" selected={@params["role"] == "operator"}>Operator</option>
+        <option value="admin" selected={@params["role"] == "admin"}>Administrator</option>
+      </select>
+      <fieldset id="invitation-locations">
+        <legend>Operator locations</legend>
+        <label :for={location <- @locations}>
+          <input
+            type="checkbox"
+            name="invitation[location_ids][]"
+            value={location.id}
+            checked={location.id in Map.get(@params, "location_ids", [])}
+          />
+          {location.name}
+        </label>
+      </fieldset>
+      <div class="staff-form-actions">
+        <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
+        <button id="send-staff-invitation" type="submit" class="staff-primary-button">
+          Send invitation
+        </button>
+      </div>
+    </.form>
+  </section>
+</Layouts.app>

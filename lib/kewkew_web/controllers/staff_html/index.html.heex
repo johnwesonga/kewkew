@@ -51,6 +51,14 @@
           >
             <.icon name="hero-plus" class="size-4" /> Add location
           </.link>
+          <.link
+            :if={can_manage?}
+            id={"staff-invite-member-#{organization.id}"}
+            navigate={~p"/staff/organizations/#{organization.id}/staff/new"}
+            class="staff-create-queue-link"
+          >
+            <.icon name="hero-user-plus" class="size-4" /> Invite staff
+          </.link>
         </header>
 
         <div

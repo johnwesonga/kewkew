@@ -1,0 +1,35 @@
+<Layouts.app flash={@flash}>
+  <main class="container mx-auto max-w-xl p-8">
+    <h1 class="text-2xl font-bold">Join {@invitation.organization_name}</h1>
+    <p class="mt-2">This invitation is for {@invitation.email} as an {@invitation.role}.</p>
+    <ul :if={@errors != []} id="invitation-errors" class="mt-4 text-red-700">
+      <li :for={error <- @errors}>{error}</li>
+    </ul>
+    <.form
+      for={@form}
+      id="staff-invitation-accept-form"
+      action={~p"/staff/invitations/#{@token}"}
+      method="post"
+      class="mt-6 space-y-4"
+    >
+      <.input
+        field={@form[:password]}
+        type="password"
+        label="Create password"
+        autocomplete="new-password"
+      />
+      <.input
+        field={@form[:password_confirmation]}
+        type="password"
+        label="Confirm password"
+        autocomplete="new-password"
+      />
+      <p class="text-sm">
+        Use at least 12 characters. Existing accounts keep their current password.
+      </p>
+      <button id="accept-staff-invitation" type="submit" class="btn btn-primary">
+        Accept invitation
+      </button>
+    </.form>
+  </main>
+</Layouts.app>

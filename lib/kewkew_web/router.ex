@@ -53,6 +53,8 @@ defmodule KewkewWeb.Router do
     get "/locations/:location_id/services", VisitorQueueController, :services
     get "/t/:token", VisitorQueueController, :track
     auth_routes AuthController, Kewkew.Accounts.User, path: "/auth"
+    get "/staff/invitations/:token", StaffInvitationController, :show
+    post "/staff/invitations/:token", StaffInvitationController, :accept
 
     sign_out_route AuthController, "/sign-out",
       overrides: [KewkewWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
@@ -70,6 +72,12 @@ defmodule KewkewWeb.Router do
 
     get "/", StaffController, :index
     get "/organizations/:organization_id/edit", StaffController, :edit_organization
+    get "/organizations/:organization_id/staff/new", StaffController, :new_staff_invitation
+
+    post "/organizations/:organization_id/staff/invitations",
+         StaffController,
+         :create_staff_invitation
+
     put "/organizations/:organization_id", StaffController, :update_organization
     get "/organizations/:organization_id/locations/new", StaffController, :new_location
     post "/organizations/:organization_id/locations", StaffController, :create_location

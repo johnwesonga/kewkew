@@ -9,6 +9,7 @@ defmodule KewkewWeb.StaffController do
   alias Kewkew.Business.StaffServiceAdministration
   alias Kewkew.Business.StaffSetServiceAvailability
   alias Kewkew.Business.StaffAccess
+  alias Kewkew.Accounts.StaffInvitations
   alias Kewkew.Queues.StaffCreateQueue
   alias Kewkew.Queues.StaffSetQueueAvailability
   alias Kewkew.Queues.StaffUpdateQueue
@@ -47,6 +48,91 @@ defmodule KewkewWeb.StaffController do
       queue_count: length(queues)
     )
   end
+
+  def new_staff_invitation(conn, %{"organization_id" => organization_id}) do
+    case StaffUpdateOrganization.fetch_organization(conn.assigns.current_user.id, organization_id) do
+      {:ok, organization} ->
+        locations =
+          Kewkew.Business.StaffLocationAdministration.locations_for_organization(organization.id)
+
+        render(conn, :new_staff_invitation,
+          page_title: "Invite staff",
+          staff_email: to_string(conn.assigns.current_user.email),
+          organization: organization,
+          locations: locations,
+          params: %{"email" => "", "role" => "operator", "location_ids" => []},
+          errors: []
+        )
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to invite staff to that organization.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def create_staff_invitation(conn, %{
+        "organization_id" => organization_id,
+        "invitation" => params
+      }) do
+    base_url = KewkewWeb.Endpoint.url()
+
+    case StaffInvitations.invite(conn.assigns.current_user.id, organization_id, params, base_url) do
+      {:ok, _invitation} ->
+        conn
+        |> put_flash(:info, "Invitation sent to #{String.trim(params["email"])}.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, reason} ->
+        case StaffUpdateOrganization.fetch_organization(
+               conn.assigns.current_user.id,
+               organization_id
+             ) do
+          {:ok, organization} ->
+            locations =
+              Kewkew.Business.StaffLocationAdministration.locations_for_organization(
+                organization.id
+              )
+
+            message = invitation_error(reason)
+
+            render(conn, :new_staff_invitation,
+              status: :unprocessable_entity,
+              page_title: "Invite staff",
+              staff_email: to_string(conn.assigns.current_user.email),
+              organization: organization,
+              locations: locations,
+              params: params,
+              errors: [message]
+            )
+
+          {:error, :not_found} ->
+            conn
+            |> put_flash(
+              :error,
+              "You do not have permission to invite staff to that organization."
+            )
+            |> redirect(to: ~p"/staff")
+        end
+    end
+  end
+
+  def create_staff_invitation(conn, _params),
+    do:
+      conn
+      |> put_flash(:error, "The invitation details were incomplete.")
+      |> redirect(to: ~p"/staff")
+
+  defp invitation_error(:forbidden),
+    do: "You do not have permission to invite staff to this organization."
+
+  defp invitation_error(:invalid_location_assignment),
+    do: "Select at least one valid location for an operator."
+
+  defp invitation_error(:delivery_failed),
+    do: "The invitation could not be delivered. Please try again."
+
+  defp invitation_error(_), do: "Enter a valid email and role."
 
   @doc "Shows the organization name editor to an active organization administrator."
   def edit_organization(conn, %{"organization_id" => organization_id}) do
