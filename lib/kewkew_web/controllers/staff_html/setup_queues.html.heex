@@ -1,0 +1,87 @@
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={@staff_email}
+  can_setup?={true}
+  active_nav={:queue_setup}
+>
+  <section id="staff-setup-queues" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <p class="staff-eyebrow">Workspace setup</p>
+        <h1>Queues</h1>
+        <p class="staff-subhead">
+          Configure the queues visitors can join. Live ticket work stays in Live queues.
+        </p>
+      </div>
+    </header>
+    <section :if={@locations == []} id="staff-no-setup-queue-locations" class="staff-card">
+      <p class="staff-empty-state">
+        <strong>No locations yet</strong>
+        <span>Add a location before configuring queues.</span>
+        <.link navigate={~p"/staff/setup/locations"} class="staff-create-queue-link">
+          Manage locations
+        </.link>
+      </p>
+    </section>
+    <div class="staff-setup-groups">
+      <section :for={location <- @locations} class="staff-card">
+        <header class="staff-card-heading">
+          <div>
+            <p class="staff-eyebrow">{Map.get(@organization_names, location.organization_id)}</p>
+            <h2>{location.name}</h2>
+          </div>
+          <.link
+            :if={location.active?}
+            navigate={~p"/staff/queues/new/#{location.id}"}
+            class="staff-create-queue-link"
+          >
+            <.icon name="hero-plus" class="size-4" /> Create queue
+          </.link>
+        </header>
+        <% location_queues = Enum.filter(@queues, &(&1.location.id == location.id)) %>
+        <ul :if={location_queues != []} class="staff-setup-list">
+          <li :for={entry <- location_queues} id={"staff-setup-queue-#{entry.queue.id}"}>
+            <div class="staff-setup-list-main">
+              <strong>{entry.queue.name}</strong>
+              <span>
+                {entry.service.name} · {KewkewWeb.StaffHTML.identity_policy_label(entry.queue)}
+              </span>
+            </div>
+            <span class={[
+              "staff-queue-status",
+              if(entry.queue.active?, do: "open", else: "inactive")
+            ]}>
+              {if entry.queue.active?, do: "Active", else: "Inactive"}
+            </span>
+            <.link
+              navigate={~p"/staff/queues/#{entry.queue.id}/edit"}
+              class="staff-edit-queue-link"
+            >
+              Edit
+            </.link>
+            <.link
+              href={
+                if entry.queue.active?,
+                  do: ~p"/staff/queues/#{entry.queue.id}/availability?active=false",
+                  else: ~p"/staff/queues/#{entry.queue.id}/availability?active=true"
+              }
+              method="put"
+              data-confirm={
+                if entry.queue.active?,
+                  do: "Deactivate #{entry.queue.name}? Visitors will no longer be able to join.",
+                  else: nil
+              }
+              class={["staff-edit-queue-link", !entry.queue.active? && "reactivate"]}
+            >
+              {if entry.queue.active?, do: "Deactivate", else: "Reactivate"}
+            </.link>
+          </li>
+        </ul>
+        <p :if={location_queues == []} class="staff-location-empty">
+          No queues at this location yet.
+        </p>
+      </section>
+    </div>
+  </section>
+</Layouts.app>

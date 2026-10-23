@@ -172,7 +172,7 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 **Status** — Complete
 
-**Status note** — `/staff` is now the focused Live queues view and `/staff/setup` is the administrator-only setup area. Setup links are hidden for operators and the server rejects direct setup access without an active admin membership.
+**Status note** — `/staff` is the focused Live queues view. The administrator-only Setup area has a summary landing page with separate Locations, per-location Services, Queues, and Staff access views. Setup links are hidden for operators, and the server rejects direct setup access without an active admin membership.
 
 **User story** — As a staff member, I want queue operations and workspace setup in separate views so I can quickly find the actions relevant to my role.
 

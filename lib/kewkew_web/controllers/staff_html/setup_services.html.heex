@@ -1,0 +1,59 @@
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={@staff_email}
+  can_setup?={true}
+  active_nav={:services}
+>
+  <section id="staff-setup-services" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff/setup/locations"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> All locations
+        </.link>
+        <p class="staff-eyebrow">{@organization.name} · {@location.name}</p>
+        <h1>Services</h1>
+        <p class="staff-subhead">
+          Manage the types of help visitors can choose at this location.
+        </p>
+      </div>
+      <.link
+        navigate={~p"/staff/locations/#{@location.id}/services/new"}
+        class="staff-create-queue-link"
+      >
+        <.icon name="hero-plus" class="size-4" /> Add service
+      </.link>
+    </header>
+    <section :if={@services == []} id="staff-no-services" class="staff-card">
+      <p class="staff-empty-state">
+        <strong>No services yet</strong><span>Add a service before creating queues for this location.</span>
+      </p>
+    </section>
+    <ul :if={@services != []} id="staff-service-setup-list" class="staff-card staff-setup-list">
+      <li :for={service <- @services} id={"staff-setup-service-#{service.id}"}>
+        <div class="staff-setup-list-main">
+          <strong>{service.name}</strong>
+          <span>{service.description || "No description"}</span>
+        </div>
+        <span class={["staff-queue-status", if(service.active?, do: "open", else: "unavailable")]}>
+          {if service.active?, do: "Active", else: "Inactive"}
+        </span>
+        <.link navigate={~p"/staff/services/#{service.id}/edit"} class="staff-edit-queue-link">
+          Edit
+        </.link>
+        <.link
+          href={
+            if service.active?,
+              do: ~p"/staff/services/#{service.id}/availability?active=false",
+              else: ~p"/staff/services/#{service.id}/availability?active=true"
+          }
+          method="put"
+          data-confirm={if service.active?, do: "Deactivate #{service.name}?", else: nil}
+          class={["staff-edit-queue-link", !service.active? && "reactivate"]}
+        >
+          {if service.active?, do: "Deactivate", else: "Reactivate"}
+        </.link>
+      </li>
+    </ul>
+  </section>
+</Layouts.app>

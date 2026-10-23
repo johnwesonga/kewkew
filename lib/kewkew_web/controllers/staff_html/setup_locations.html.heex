@@ -1,0 +1,93 @@
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={@staff_email}
+  can_setup?={true}
+  active_nav={:locations}
+>
+  <section id="staff-setup-locations" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <p class="staff-eyebrow">Workspace setup</p>
+        <h1>Locations</h1>
+        <p class="staff-subhead">Manage where your business serves visitors.</p>
+      </div>
+    </header>
+    <div class="staff-setup-groups">
+      <section :for={entry <- @organizations} class="staff-card">
+        <header class="staff-card-heading">
+          <div>
+            <p class="staff-eyebrow">Organization</p>
+            <h2>{entry.organization.name}</h2>
+          </div>
+          <.link
+            navigate={~p"/staff/organizations/#{entry.organization.id}/locations/new"}
+            class="staff-create-queue-link"
+          >
+            <.icon name="hero-plus" class="size-4" /> Add location
+          </.link>
+        </header>
+        <ul
+          :if={Enum.any?(@location_rows, &(&1.location.organization_id == entry.organization.id))}
+          class="staff-setup-list"
+        >
+          <li
+            :for={row <- @location_rows}
+            :if={row.location.organization_id == entry.organization.id}
+          >
+            <div class="staff-setup-list-main">
+              <strong>{row.location.name}</strong>
+              <span>
+                {row.location.timezone} · {length(row.services)} {if length(row.services) == 1,
+                  do: "service",
+                  else: "services"} · {row.queue_count} {if row.queue_count == 1,
+                  do: "queue",
+                  else: "queues"}
+              </span>
+            </div>
+            <span class={[
+              "staff-queue-status",
+              if(row.location.active?, do: "open", else: "unavailable")
+            ]}>
+              {if row.location.active?, do: "Active", else: "Inactive"}
+            </span>
+            <.link
+              navigate={~p"/staff/setup/locations/#{row.location.id}/services"}
+              class="staff-edit-queue-link"
+            >
+              Manage services
+            </.link>
+            <.link
+              navigate={~p"/staff/locations/#{row.location.id}/edit"}
+              class="staff-edit-queue-link"
+            >
+              Edit
+            </.link>
+            <.link
+              href={
+                if row.location.active?,
+                  do: ~p"/staff/locations/#{row.location.id}/availability?active=false",
+                  else: ~p"/staff/locations/#{row.location.id}/availability?active=true"
+              }
+              method="put"
+              data-confirm={
+                if row.location.active?, do: "Deactivate #{row.location.name}?", else: nil
+              }
+              class={["staff-edit-queue-link", !row.location.active? && "reactivate"]}
+            >
+              {if row.location.active?, do: "Deactivate", else: "Reactivate"}
+            </.link>
+          </li>
+        </ul>
+        <p
+          :if={
+            !Enum.any?(@location_rows, &(&1.location.organization_id == entry.organization.id))
+          }
+          class="staff-location-empty"
+        >
+          No locations yet. Add one to start configuring services and queues.
+        </p>
+      </section>
+    </div>
+  </section>
+</Layouts.app>

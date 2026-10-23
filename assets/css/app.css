@@ -222,6 +222,25 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 .staff-live-queue-context h2 { margin: 3px 0 5px; color: #17251f; font-size: 16px; font-weight: 800; }
 .staff-live-queue-context > p:last-child { margin: 0; color: #718078; font-size: 11px; }
 .staff-live-queue-card > .staff-primary-button { flex: none; text-decoration: none; }
+.staff-nav-subnav { display: grid; gap: 3px; margin: -5px 0 10px 30px; }
+.staff-nav-subnav a { padding: 7px 10px; border-radius: 9px; color: #718078; font-size: 11px; text-decoration: none; }
+.staff-nav-subnav a:hover, .staff-nav-subnav a.active { color: #176b4b; background: #eaf5ed; font-weight: 750; }
+.staff-setup-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.staff-setup-card { position: relative; display: grid; gap: 6px; padding: 20px; color: #17251f; text-decoration: none; }
+.staff-setup-card:hover { border-color: #b9d9c4; transform: translateY(-1px); }
+.staff-setup-card strong { margin-top: 8px; font-size: 14px; }
+.staff-setup-card > span:not(.staff-setup-card-icon) { color: #176b4b; font-size: 12px; font-weight: 750; }
+.staff-setup-card small { color: #718078; font-size: 10px; }
+.staff-setup-card-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: #176b4b; background: #eaf5ed; }
+.staff-setup-organizations { margin-top: 16px; }
+.staff-setup-organization-list, .staff-setup-list { margin: 0; padding: 0; list-style: none; }
+.staff-setup-organization-list li, .staff-setup-list li { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid #edf1ed; }
+.staff-setup-organization-list li > span { display: grid; flex: 1; gap: 4px; }
+.staff-setup-organization-list small { color: #87948c; font-size: 10px; }
+.staff-setup-groups { display: grid; gap: 14px; }
+.staff-setup-list-main { display: grid; flex: 1; min-width: 0; gap: 4px; color: #34443b; font-size: 12px; }
+.staff-setup-list-main span { color: #87948c; font-size: 10px; }
+.staff-setup-member-list { padding: 0 20px 12px; }
 .staff-create-queue-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid #dcebe1; border-radius: 10px; color: #176b4b; font-size: 10px; font-weight: 750; text-decoration: none; white-space: nowrap; }
 .staff-create-queue-link:hover { background: #f1f8f3; }
 .staff-create-queue-card { overflow: hidden; }
@@ -375,6 +394,15 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 [data-theme="dark"] .staff-member-identity span { color: #a6b5ab; }
 [data-theme="dark"] .staff-live-queue-context h2 { color: #e5eee8; }
 [data-theme="dark"] .staff-live-queue-context > p:last-child { color: #a6b5ab; }
+[data-theme="dark"] .staff-setup-card { color: #e5eee8; }
+[data-theme="dark"] .staff-setup-card small,
+[data-theme="dark"] .staff-setup-list-main span,
+[data-theme="dark"] .staff-setup-organization-list small { color: #a6b5ab; }
+[data-theme="dark"] .staff-setup-list li,
+[data-theme="dark"] .staff-setup-organization-list li { border-color: #2e3a32; }
+[data-theme="dark"] .staff-setup-list-main { color: #dce7df; }
+[data-theme="dark"] .staff-nav-subnav a:hover,
+[data-theme="dark"] .staff-nav-subnav a.active { color: #b7e7c8; background: #203a2b; }
 [data-theme="dark"] .staff-invitation-location-option input { accent-color: #b7e7c8; }
 [data-theme="dark"] .staff-open-queue { color: #b7e7c8; }
 [data-theme="dark"] .staff-queue-symbol,
@@ -394,6 +422,9 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 }
 
 @media (max-width: 640px) {
+  .staff-setup-grid { grid-template-columns: 1fr; }
+  .staff-setup-list li { flex-wrap: wrap; }
+  .staff-setup-list-main { flex-basis: 100%; }
   .staff-live-queue-card { align-items: flex-start; flex-wrap: wrap; }
   .staff-live-queue-card > .staff-queue-status { margin-left: auto; }
   .staff-live-queue-card > .staff-primary-button { width: 100%; justify-content: center; }

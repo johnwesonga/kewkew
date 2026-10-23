@@ -33,59 +33,169 @@ defmodule KewkewWeb.StaffController do
   def setup(conn, _params) do
     user_id = conn.assigns.current_user.id
 
+    with {:ok, data} <- load_setup_data(user_id) do
+      render(conn, :setup,
+        page_title: "Workspace setup",
+        staff_email: to_string(conn.assigns.current_user.email),
+        organizations: data.organizations,
+        organization_count: length(data.organizations),
+        location_count: length(data.locations),
+        service_count: length(data.services),
+        queue_count: length(data.queues),
+        member_count:
+          Enum.reduce(data.members_by_organization, 0, fn {_id, members}, count ->
+            count + length(members)
+          end),
+        can_setup?: true
+      )
+    else
+      :forbidden -> setup_forbidden(conn)
+    end
+  end
+
+  def setup_locations(conn, _params) do
+    with {:ok, data} <- load_setup_data(conn.assigns.current_user.id) do
+      rows =
+        Enum.map(data.locations, fn location ->
+          services = Enum.filter(data.services, &(&1.location_id == location.id))
+          queues = Enum.filter(data.queues, &(&1.location.id == location.id))
+
+          organization =
+            Enum.find_value(
+              data.organizations,
+              &(&1.organization.id == location.organization_id && &1.organization)
+            )
+
+          %{
+            location: location,
+            organization: organization,
+            services: services,
+            queue_count: length(queues)
+          }
+        end)
+
+      render(conn, :setup_locations,
+        page_title: "Locations",
+        staff_email: to_string(conn.assigns.current_user.email),
+        organizations: data.organizations,
+        location_rows: rows,
+        can_setup?: true
+      )
+    else
+      :forbidden -> setup_forbidden(conn)
+    end
+  end
+
+  def setup_services(conn, %{"location_id" => location_id}) do
+    user_id = conn.assigns.current_user.id
+
+    with {:ok, data} <- load_setup_data(user_id),
+         {:ok, %{location: location, organization: organization}} <-
+           StaffLocationAdministration.fetch_location(user_id, location_id) do
+      services = Enum.filter(data.services, &(&1.location_id == location.id))
+
+      render(conn, :setup_services,
+        page_title: "Services · #{location.name}",
+        staff_email: to_string(conn.assigns.current_user.email),
+        location: location,
+        organization: organization,
+        services: services,
+        can_setup?: true
+      )
+    else
+      :forbidden ->
+        setup_forbidden(conn)
+
+      _ ->
+        conn
+        |> put_flash(:error, "That location is unavailable.")
+        |> redirect(to: ~p"/staff/setup/locations")
+    end
+  end
+
+  def setup_services(conn, _params),
+    do:
+      conn |> put_flash(:error, "Choose a location.") |> redirect(to: ~p"/staff/setup/locations")
+
+  def setup_queues(conn, _params) do
+    with {:ok, data} <- load_setup_data(conn.assigns.current_user.id) do
+      render(conn, :setup_queues,
+        page_title: "Queue setup",
+        staff_email: to_string(conn.assigns.current_user.email),
+        queues: data.queues,
+        locations: data.locations,
+        organization_names:
+          Map.new(data.organizations, fn entry ->
+            {entry.organization.id, entry.organization.name}
+          end),
+        can_setup?: true
+      )
+    else
+      :forbidden -> setup_forbidden(conn)
+    end
+  end
+
+  def setup_staff(conn, _params) do
+    with {:ok, data} <- load_setup_data(conn.assigns.current_user.id) do
+      organization_groups =
+        Enum.map(data.organizations, fn %{organization: organization} ->
+          %{
+            organization: organization,
+            members: Map.get(data.members_by_organization, organization.id, [])
+          }
+        end)
+
+      render(conn, :setup_staff,
+        page_title: "Staff access",
+        staff_email: to_string(conn.assigns.current_user.email),
+        organization_groups: organization_groups,
+        can_setup?: true
+      )
+    else
+      :forbidden -> setup_forbidden(conn)
+    end
+  end
+
+  defp load_setup_data(user_id) do
     organizations =
       StaffAccess.organizations_for_user(user_id)
       |> Enum.filter(&(&1.role == :admin))
 
     if organizations == [] do
-      conn
-      |> put_status(:forbidden)
-      |> text("Setup access is available to active organization administrators only.")
+      :forbidden
     else
       locations =
-        organizations
-        |> Enum.flat_map(fn %{organization: organization} ->
-          Kewkew.Business.StaffLocationAdministration.locations_for_organization(organization.id)
+        Enum.flat_map(organizations, fn %{organization: organization} ->
+          StaffLocationAdministration.locations_for_organization(organization.id)
         end)
 
       services = StaffAccess.services_for_locations(Enum.map(locations, & &1.id))
+      organization_ids = Enum.map(organizations, & &1.organization.id)
 
       queues =
-        organizations
-        |> Enum.flat_map(fn %{organization: organization} ->
-          StaffAccess.queues_for_user(user_id)
-          |> Enum.filter(&(&1.location.organization_id == organization.id))
+        StaffAccess.queues_for_user(user_id)
+        |> Enum.filter(&(&1.location.organization_id in organization_ids))
+
+      members_by_organization =
+        Map.new(organizations, fn %{organization: organization} ->
+          {organization.id, StaffAccess.memberships_for_organization(user_id, organization.id)}
         end)
 
-      organization_groups =
-        Enum.map(organizations, fn %{organization: organization, role: role} ->
-          organization_locations =
-            Enum.filter(locations, &(&1.organization_id == organization.id))
-
-          %{
-            organization: organization,
-            role: role,
-            can_manage?: true,
-            members: StaffAccess.memberships_for_organization(user_id, organization.id),
-            locations:
-              Enum.map(organization_locations, fn location ->
-                %{
-                  location: location,
-                  services: Enum.filter(services, &(&1.location_id == location.id)),
-                  queues: Enum.filter(queues, &(&1.location.id == location.id))
-                }
-              end)
-          }
-        end)
-
-      render(conn, :setup,
-        page_title: "Workspace setup",
-        staff_email: to_string(conn.assigns.current_user.email),
-        organization_groups: organization_groups,
-        queue_count: length(queues),
-        can_setup?: true
-      )
+      {:ok,
+       %{
+         organizations: organizations,
+         locations: locations,
+         services: services,
+         queues: queues,
+         members_by_organization: members_by_organization
+       }}
     end
+  end
+
+  defp setup_forbidden(conn) do
+    conn
+    |> put_status(:forbidden)
+    |> text("Setup access is available to active organization administrators only.")
   end
 
   def new_staff_invitation(conn, %{"organization_id" => organization_id}) do
@@ -122,7 +232,7 @@ defmodule KewkewWeb.StaffController do
       {:ok, _invitation} ->
         conn
         |> put_flash(:info, "Invitation sent to #{String.trim(params["email"])}.")
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/staff")
 
       {:error, reason} ->
         case StaffUpdateOrganization.fetch_organization(
@@ -196,12 +306,12 @@ defmodule KewkewWeb.StaffController do
           :info,
           if(active?, do: "Staff access restored.", else: "Staff access suspended.")
         )
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/staff")
 
       {:error, :last_active_admin} ->
         conn
         |> put_flash(:error, "Add or restore another administrator before suspending this one.")
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/staff")
 
       {:error, _} ->
         conn
@@ -251,7 +361,7 @@ defmodule KewkewWeb.StaffController do
       {:ok, organization} ->
         conn
         |> put_flash(:info, "Organization name updated to #{organization.name}.")
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup")
 
       {:error, :invalid_name} ->
         case StaffUpdateOrganization.fetch_organization(
@@ -324,7 +434,7 @@ defmodule KewkewWeb.StaffController do
       {:ok, location} ->
         conn
         |> put_flash(:info, "Location #{location.name} was created.")
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/locations")
 
       {:error, :invalid_params, errors} ->
         case StaffLocationAdministration.fetch_organization(
@@ -393,7 +503,7 @@ defmodule KewkewWeb.StaffController do
       {:ok, location} ->
         conn
         |> put_flash(:info, "Location #{location.name} was updated.")
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/locations")
 
       {:error, :invalid_params, errors} ->
         render_location_update_error(conn, location_id, params, errors)
@@ -432,7 +542,7 @@ defmodule KewkewWeb.StaffController do
 
         conn
         |> put_flash(:info, message)
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/locations")
 
       {:error, :not_found} ->
         conn
@@ -481,7 +591,7 @@ defmodule KewkewWeb.StaffController do
       {:ok, service} ->
         conn
         |> put_flash(:info, "Service #{service.name} was created.")
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/locations/#{location_id}/services")
 
       {:error, :invalid_params, errors} ->
         case StaffServiceAdministration.fetch_location(conn.assigns.current_user.id, location_id) do
@@ -544,7 +654,7 @@ defmodule KewkewWeb.StaffController do
       {:ok, service} ->
         conn
         |> put_flash(:info, "Service #{service.name} was updated.")
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/locations/#{service.location_id}/services")
 
       {:error, :invalid_params, errors} ->
         render_service_update_error(conn, service_id, params, Enum.map(errors, &elem(&1, 1)))
@@ -583,7 +693,7 @@ defmodule KewkewWeb.StaffController do
 
         conn
         |> put_flash(:info, message)
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/locations/#{service.location_id}/services")
 
       {:error, :not_found} ->
         conn
@@ -632,7 +742,7 @@ defmodule KewkewWeb.StaffController do
       {:ok, queue} ->
         conn
         |> put_flash(:info, "Queue #{queue.name} was created.")
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/queues")
 
       {:error, :invalid_params, errors} ->
         render_create_error(conn, user_id, location_id, params, errors)
@@ -695,7 +805,7 @@ defmodule KewkewWeb.StaffController do
           :info,
           "Settings for #{queue.name} were saved. Existing tickets are unchanged."
         )
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/queues")
 
       {:error, :invalid_params, errors} ->
         render_edit_error(conn, queue_id, params, errors)
@@ -729,7 +839,7 @@ defmodule KewkewWeb.StaffController do
 
         conn
         |> put_flash(:info, message)
-        |> redirect(to: ~p"/staff")
+        |> redirect(to: ~p"/staff/setup/queues")
 
       {:error, :not_found} ->
         conn

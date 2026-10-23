@@ -76,6 +76,23 @@ defmodule KewkewWeb.Layouts do
               >
                 <.icon name="hero-cog-6-tooth" class="size-4" /> Setup
               </.link>
+              <div :if={@can_setup?} class="staff-nav-subnav">
+                <.link
+                  navigate={~p"/staff/setup/locations"}
+                  class={@active_nav in [:locations, :services] && "active"}
+                >
+                  Locations
+                </.link>
+                <.link
+                  navigate={~p"/staff/setup/queues"}
+                  class={@active_nav == :queue_setup && "active"}
+                >
+                  Queues
+                </.link>
+                <.link navigate={~p"/staff/setup/staff"} class={@active_nav == :staff && "active"}>
+                  Staff access
+                </.link>
+              </div>
             </nav>
             <div class="staff-help-card">
               <strong>Welcome to Kewkew</strong>

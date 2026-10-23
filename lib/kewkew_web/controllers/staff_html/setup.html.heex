@@ -5,325 +5,58 @@
   can_setup?={true}
   active_nav={:setup}
 >
-  <section id="staff-home" class="staff-page">
+  <section id="staff-setup-home" class="staff-page">
     <header class="staff-page-heading">
       <div>
-        <p class="staff-eyebrow">Your workspace</p>
-        <h1>Workspace setup</h1>
-        <p class="staff-subhead">
-          Manage organization details, locations, services, queues, and staff access.
-        </p>
+        <p class="staff-eyebrow">Administrator workspace</p>
+        <h1>Setup overview</h1>
+        <p class="staff-subhead">Choose an area to manage your organization.</p>
       </div>
-      <span id="staff-queue-count" class="staff-assignment-count">
-        {@queue_count} {if @queue_count == 1, do: "queue", else: "queues"}
-      </span>
     </header>
 
-    <div id="staff-organization-groups" class="staff-queue-groups">
-      <section
-        :for={
-          %{
-            organization: organization,
-            role: role,
-            can_manage?: can_manage?,
-            members: members,
-            locations: locations
-          } <- @organization_groups
-        }
-        id={"staff-organization-#{organization.id}"}
-        aria-labelledby={"staff-organization-heading-#{organization.id}"}
-        class="staff-card staff-organization-card"
-      >
-        <header class="staff-card-heading">
-          <div>
-            <p class="staff-eyebrow">Organization</p>
-            <h2 id={"staff-organization-heading-#{organization.id}"}>{organization.name}</h2>
-          </div>
-          <span id={"staff-organization-role-#{organization.id}"} class="staff-assignment-count">
-            {if role == :admin, do: "Administrator", else: "Operator"}
+    <div class="staff-setup-grid">
+      <.link navigate={~p"/staff/setup/locations"} class="staff-card staff-setup-card">
+        <span class="staff-setup-card-icon"><.icon name="hero-map-pin" class="size-5" /></span>
+        <strong>Locations</strong>
+        <span>
+          {@location_count} {if @location_count == 1, do: "location", else: "locations"}
+        </span>
+        <small>{@service_count} services · Manage sites and availability</small>
+      </.link>
+      <.link navigate={~p"/staff/setup/queues"} class="staff-card staff-setup-card">
+        <span class="staff-setup-card-icon"><.icon name="hero-queue-list" class="size-5" /></span>
+        <strong>Queues</strong>
+        <span>{@queue_count} {if @queue_count == 1, do: "queue", else: "queues"}</span>
+        <small>Configure visitor-facing queues</small>
+      </.link>
+      <.link navigate={~p"/staff/setup/staff"} class="staff-card staff-setup-card">
+        <span class="staff-setup-card-icon"><.icon name="hero-users" class="size-5" /></span>
+        <strong>Staff access</strong>
+        <span>{@member_count} {if @member_count == 1, do: "member", else: "members"}</span>
+        <small>Invite staff and manage access</small>
+      </.link>
+    </div>
+
+    <section class="staff-card staff-setup-organizations">
+      <header class="staff-card-heading">
+        <div>
+          <h2>Organizations</h2>
+          <p>{@organization_count} organizations you administer</p>
+        </div>
+      </header>
+      <ul class="staff-setup-organization-list">
+        <li :for={entry <- @organizations}>
+          <span>
+            <strong>{entry.organization.name}</strong><small>Organization profile and settings</small>
           </span>
           <.link
-            :if={can_manage?}
-            id={"staff-edit-organization-#{organization.id}"}
-            navigate={~p"/staff/organizations/#{organization.id}/edit"}
+            navigate={~p"/staff/organizations/#{entry.organization.id}/edit"}
             class="staff-edit-queue-link"
           >
-            <.icon name="hero-pencil-square" class="size-4" /> Edit organization
+            Edit organization
           </.link>
-          <.link
-            :if={can_manage?}
-            id={"staff-add-location-#{organization.id}"}
-            navigate={~p"/staff/organizations/#{organization.id}/locations/new"}
-            class="staff-create-queue-link"
-          >
-            <.icon name="hero-plus" class="size-4" /> Add location
-          </.link>
-          <.link
-            :if={can_manage?}
-            id={"staff-invite-member-#{organization.id}"}
-            navigate={~p"/staff/organizations/#{organization.id}/staff/new"}
-            class="staff-create-queue-link"
-          >
-            <.icon name="hero-user-plus" class="size-4" /> Invite staff
-          </.link>
-        </header>
-
-        <section
-          :if={can_manage?}
-          id={"staff-members-#{organization.id}"}
-          class="staff-members-section"
-        >
-          <div class="staff-location-section-heading">
-            <h3>Staff access</h3>
-          </div>
-          <ul :if={members != []} class="staff-member-list">
-            <li
-              :for={%{membership: membership, email: email} <- members}
-              id={"staff-member-#{membership.id}"}
-            >
-              <span class="staff-member-identity">
-                <strong>{email}</strong>
-                <span>{if membership.role == :admin, do: "Administrator", else: "Operator"}</span>
-              </span>
-              <span class={[
-                "staff-queue-status",
-                if(membership.active?, do: "open", else: "inactive")
-              ]}>
-                {if membership.active?, do: "Active", else: "Suspended"}
-              </span>
-              <.link
-                :if={membership.active?}
-                id={"staff-suspend-#{membership.id}"}
-                href={
-                  ~p"/staff/organizations/#{organization.id}/staff/#{membership.id}/availability?active=false"
-                }
-                method="put"
-                data-confirm={
-                  "Suspend access for #{email}? They will lose access to this organization immediately."
-                }
-                class="staff-edit-queue-link"
-              >
-                Suspend access
-              </.link>
-              <.link
-                :if={!membership.active?}
-                id={"staff-restore-#{membership.id}"}
-                href={
-                  ~p"/staff/organizations/#{organization.id}/staff/#{membership.id}/availability?active=true"
-                }
-                method="put"
-                class="staff-edit-queue-link reactivate"
-              >
-                Restore access
-              </.link>
-            </li>
-          </ul>
-        </section>
-
-        <div
-          :if={locations == []}
-          id={"staff-organization-no-locations-#{organization.id}"}
-          class="staff-location-empty"
-        >
-          <strong>No locations are assigned to this account.</strong>
-          <span :if={can_manage?}>
-            Add a location first, then configure its services and queues to begin operating.
-          </span>
-          <span :if={!can_manage?}>
-            Ask an organization administrator to assign you to a location.
-          </span>
-        </div>
-
-        <section
-          :for={%{location: location, services: services, queues: queues} <- locations}
-          id={"staff-location-#{location.id}"}
-          class="staff-location-overview"
-          aria-labelledby={"staff-location-heading-#{location.id}"}
-        >
-          <header class="staff-location-overview-heading">
-            <div>
-              <h3 id={"staff-location-heading-#{location.id}"}>{location.name}</h3>
-              <p id={"staff-location-timezone-#{location.id}"}>Timezone: {location.timezone}</p>
-            </div>
-            <span
-              id={"staff-location-status-#{location.id}"}
-              class={["staff-queue-status", if(location.active?, do: "open", else: "unavailable")]}
-            >
-              {if location.active?, do: "Active", else: "Inactive"}
-            </span>
-            <.link
-              :if={can_manage?}
-              id={"staff-edit-location-#{location.id}"}
-              navigate={~p"/staff/locations/#{location.id}/edit"}
-              class="staff-edit-queue-link"
-            >
-              <.icon name="hero-pencil-square" class="size-4" /> Edit
-            </.link>
-            <.link
-              :if={can_manage?}
-              id={"staff-toggle-location-#{location.id}"}
-              href={
-                if location.active?,
-                  do: ~p"/staff/locations/#{location.id}/availability?active=false",
-                  else: ~p"/staff/locations/#{location.id}/availability?active=true"
-              }
-              method="put"
-              data-confirm={
-                if location.active?,
-                  do:
-                    "Deactivate #{location.name}? Visitors cannot join and new sessions cannot open. Existing sessions and tickets will remain available to staff.",
-                  else: nil
-              }
-              class={["staff-edit-queue-link", !location.active? && "reactivate"]}
-            >
-              {if location.active?, do: "Deactivate", else: "Reactivate"}
-            </.link>
-          </header>
-
-          <div class="staff-location-overview-content">
-            <section aria-labelledby={"staff-services-heading-#{location.id}"}>
-              <div class="staff-location-section-heading">
-                <h4 id={"staff-services-heading-#{location.id}"}>Services</h4>
-                <.link
-                  :if={can_manage?}
-                  id={"staff-create-service-#{location.id}"}
-                  navigate={~p"/staff/locations/#{location.id}/services/new"}
-                  class="staff-create-queue-link"
-                >
-                  <.icon name="hero-plus" class="size-4" /> Add service
-                </.link>
-              </div>
-              <ul
-                :if={services != []}
-                id={"staff-services-#{location.id}"}
-                class="staff-service-list"
-              >
-                <li :for={service <- services} id={"staff-service-#{service.id}"}>
-                  <span>
-                    <strong>{service.name}</strong>
-                    <span :if={service.description not in [nil, ""]}>{service.description}</span>
-                  </span>
-                  <span class="staff-service-actions">
-                    <span class={["staff-service-state", service.active? && "active"]}>
-                      {if service.active?, do: "Active", else: "Inactive"}
-                    </span>
-                    <.link
-                      :if={can_manage?}
-                      id={"staff-edit-service-#{service.id}"}
-                      navigate={~p"/staff/services/#{service.id}/edit"}
-                      class="staff-edit-queue-link"
-                    >
-                      <.icon name="hero-pencil-square" class="size-4" /> Edit
-                    </.link>
-                    <.link
-                      :if={can_manage?}
-                      id={"staff-toggle-service-#{service.id}"}
-                      href={
-                        if service.active?,
-                          do: ~p"/staff/services/#{service.id}/availability?active=false",
-                          else: ~p"/staff/services/#{service.id}/availability?active=true"
-                      }
-                      method="put"
-                      data-confirm={
-                        if service.active?,
-                          do:
-                            "Deactivate #{service.name}? Visitors cannot join or open new sessions, but staff can continue resolving existing tickets.",
-                          else: nil
-                      }
-                      class={["staff-edit-queue-link", !service.active? && "reactivate"]}
-                    >
-                      {if service.active?, do: "Deactivate", else: "Reactivate"}
-                    </.link>
-                  </span>
-                </li>
-              </ul>
-              <p
-                :if={services == []}
-                id={"staff-location-no-services-#{location.id}"}
-                class="staff-location-empty"
-              >
-                No services are configured for this location yet.
-                <span :if={can_manage?}>Add a service before creating a queue.</span>
-              </p>
-            </section>
-
-            <section aria-labelledby={"staff-queues-heading-#{location.id}"}>
-              <div class="staff-location-section-heading">
-                <h4 id={"staff-queues-heading-#{location.id}"}>Queues</h4>
-                <.link
-                  :if={can_manage? && location.active?}
-                  id={"staff-create-queue-#{location.id}"}
-                  navigate={~p"/staff/queues/new/#{location.id}"}
-                  class="staff-create-queue-link"
-                >
-                  <.icon name="hero-plus" class="size-4" /> Create queue
-                </.link>
-              </div>
-              <ul
-                :if={queues != []}
-                id={"staff-queues-#{location.id}"}
-                class="staff-organization-queue-list"
-              >
-                <li :for={entry <- queues} id={"staff-queue-#{entry.queue.id}"}>
-                  <% {status, status_class} = queue_status(entry) %>
-                  <div class="staff-setup-queue-summary">
-                    <span>
-                      <strong>{entry.queue.name}</strong>
-                      <span>{entry.service.name} · {identity_policy_label(entry.queue)}</span>
-                    </span>
-                    <span class={["staff-queue-status", status_class]}>{status}</span>
-                  </div>
-                  <.link
-                    :if={can_manage?}
-                    id={"staff-edit-queue-#{entry.queue.id}"}
-                    navigate={~p"/staff/queues/#{entry.queue.id}/edit"}
-                    class="staff-edit-queue-link"
-                  >
-                    <.icon name="hero-pencil-square" class="size-4" /> Edit
-                  </.link>
-                  <.link
-                    :if={can_manage?}
-                    id={"staff-toggle-queue-#{entry.queue.id}"}
-                    href={
-                      if entry.queue.active?,
-                        do: ~p"/staff/queues/#{entry.queue.id}/availability?active=false",
-                        else: ~p"/staff/queues/#{entry.queue.id}/availability?active=true"
-                    }
-                    method="put"
-                    data-confirm={
-                      if entry.queue.active?,
-                        do:
-                          "Deactivate #{entry.queue.name}? Visitors cannot join, but staff can keep serving existing tickets.",
-                        else: nil
-                    }
-                    class={["staff-edit-queue-link", !entry.queue.active? && "reactivate"]}
-                  >
-                    {if entry.queue.active?, do: "Deactivate", else: "Reactivate"}
-                  </.link>
-                </li>
-              </ul>
-              <p
-                :if={queues == []}
-                id={"staff-location-no-queues-#{location.id}"}
-                class="staff-location-empty"
-              >
-                No queues are configured for this location yet.
-                <span :if={can_manage?}>Create a queue to let visitors join.</span>
-              </p>
-            </section>
-          </div>
-        </section>
-      </section>
-
-      <section :if={@organization_groups == []} id="staff-no-organizations" class="staff-card">
-        <p class="staff-empty-state">
-          <span class="staff-empty-icon">
-            <.icon name="hero-building-office-2" class="size-6" />
-          </span>
-          <strong>No active organization memberships</strong>
-          <span>Ask an organization administrator to invite you to their workspace.</span>
-        </p>
-      </section>
-    </div>
+        </li>
+      </ul>
+    </section>
   </section>
 </Layouts.app>

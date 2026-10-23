@@ -1,0 +1,72 @@
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={@staff_email}
+  can_setup?={true}
+  active_nav={:staff}
+>
+  <section id="staff-setup-access" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <p class="staff-eyebrow">Workspace setup</p>
+        <h1>Staff access</h1>
+        <p class="staff-subhead">Invite team members and manage their organization access.</p>
+      </div>
+    </header>
+    <div class="staff-setup-groups">
+      <section :for={entry <- @organization_groups} class="staff-card">
+        <header class="staff-card-heading">
+          <div>
+            <p class="staff-eyebrow">Organization</p>
+            <h2>{entry.organization.name}</h2>
+          </div>
+          <.link
+            navigate={~p"/staff/organizations/#{entry.organization.id}/staff/new"}
+            class="staff-create-queue-link"
+          >
+            <.icon name="hero-user-plus" class="size-4" /> Invite staff
+          </.link>
+        </header>
+        <ul :if={entry.members != []} class="staff-member-list staff-setup-member-list">
+          <li
+            :for={%{membership: membership, email: email} <- entry.members}
+            id={"staff-setup-member-#{membership.id}"}
+          >
+            <span class="staff-member-identity">
+              <strong>{email}</strong>
+              <span>{if membership.role == :admin, do: "Administrator", else: "Operator"}</span>
+            </span>
+            <span class={[
+              "staff-queue-status",
+              if(membership.active?, do: "open", else: "inactive")
+            ]}>
+              {if membership.active?, do: "Active", else: "Suspended"}
+            </span>
+            <.link
+              :if={membership.active?}
+              href={
+                ~p"/staff/organizations/#{entry.organization.id}/staff/#{membership.id}/availability?active=false"
+              }
+              method="put"
+              data-confirm={"Suspend access for #{email}?"}
+              class="staff-edit-queue-link"
+            >
+              Suspend
+            </.link>
+            <.link
+              :if={!membership.active?}
+              href={
+                ~p"/staff/organizations/#{entry.organization.id}/staff/#{membership.id}/availability?active=true"
+              }
+              method="put"
+              class="staff-edit-queue-link reactivate"
+            >
+              Restore
+            </.link>
+          </li>
+        </ul>
+        <p :if={entry.members == []} class="staff-location-empty">No staff memberships found.</p>
+      </section>
+    </div>
+  </section>
+</Layouts.app>
