@@ -2,6 +2,31 @@
 
 Features below are product requirements that are intentionally not part of the current implementation slice.
 
+## TODO-VF-3: Show queue progress with animation
+
+**Status** — Nice-to-have; out of scope for the initial release.
+
+**User story** — As a visitor waiting in a queue, I want a subtle animation to show my progress so I can understand that my place is moving as staff serve people ahead of me.
+
+### Scope
+
+- Add a lightweight progress visual to the private ticket page while the ticket is active.
+- Reflect persisted queue-position updates; animate only when the visitor's position changes, rather than showing continuous or invented progress.
+- Keep the ticket number and text position as the accessible source of truth. The animation supplements them and does not replace status announcements.
+- Avoid implying an estimated wait or an exact percentage complete when the total queue length is unknown.
+- Stop or change the animation when the ticket is called, being served, completed, cancelled, or marked as a no-show.
+
+### Accessibility and behavior
+
+- Respect the visitor's `prefers-reduced-motion` setting and provide a static visual in that case.
+- Do not use color or movement as the only indicator of position or ticket status.
+- Keep animation brief and non-distracting, and avoid restarting it on routine page refreshes when the position has not changed.
+
+### Dependencies and decisions
+
+- Depends on VF-7 status polling and reliable position updates on the private ticket page.
+- Choose the visual treatment after reviewing the visitor UX mock and test it on small mobile screens.
+
 ## TODO-VF-2: Estimated wait
 
 **Status** — Nice-to-have; out of scope for the initial release.
