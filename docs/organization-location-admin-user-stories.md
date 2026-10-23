@@ -88,7 +88,9 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-5: Deactivate or reactivate a location
 
-**Status** — Planned
+**Status** — Complete
+
+**Status note** — Organization admins can deactivate or reactivate a location. Public discovery and visitor joins already reject inactive locations, and opening a new session checks location availability. Existing session actions remain authorized; toggling availability broadcasts queue updates without closing sessions or changing tickets.
 
 **User story** — As an organization administrator, I want to temporarily deactivate a location so visitors cannot join services at a site that is not operating.
 

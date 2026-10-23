@@ -92,6 +92,25 @@
             >
               <.icon name="hero-pencil-square" class="size-4" /> Edit
             </.link>
+            <.link
+              :if={can_manage?}
+              id={"staff-toggle-location-#{location.id}"}
+              href={
+                if location.active?,
+                  do: ~p"/staff/locations/#{location.id}/availability?active=false",
+                  else: ~p"/staff/locations/#{location.id}/availability?active=true"
+              }
+              method="put"
+              data-confirm={
+                if location.active?,
+                  do:
+                    "Deactivate #{location.name}? Visitors cannot join and new sessions cannot open. Existing sessions and tickets will remain available to staff.",
+                  else: nil
+              }
+              class={["staff-edit-queue-link", !location.active? && "reactivate"]}
+            >
+              {if location.active?, do: "Deactivate", else: "Reactivate"}
+            </.link>
           </header>
 
           <div class="staff-location-overview-content">

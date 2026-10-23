@@ -22,6 +22,10 @@ defmodule Kewkew.Business.Location do
     update :update_details do
       accept [:name, :timezone]
     end
+
+    update :set_active do
+      accept [:active?]
+    end
   end
 
   attributes do
