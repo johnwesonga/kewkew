@@ -8,27 +8,37 @@ defmodule KewkewWeb.StaffController do
   alias Kewkew.Queues.StaffSetQueueAvailability
   alias Kewkew.Queues.StaffUpdateQueue
 
-  @doc "Shows the locations and queues available to the authenticated staff member."
+  @doc "Shows organizations, permitted locations, services, and queues for authenticated staff."
   def index(conn, _params) do
     user_id = conn.assigns.current_user.id
+    organizations = StaffAccess.organizations_for_user(user_id)
     locations = StaffAccess.locations_for_user(user_id)
+    services = StaffAccess.services_for_locations(Enum.map(locations, & &1.id))
     queues = StaffAccess.queues_for_user(user_id)
 
-    queue_groups =
-      Enum.map(locations, fn location ->
-        location_queues = Enum.filter(queues, &(&1.location.id == location.id))
+    organization_groups =
+      Enum.map(organizations, fn %{organization: organization, role: role} ->
+        organization_locations = Enum.filter(locations, &(&1.organization_id == organization.id))
 
         %{
-          location: location,
-          queues: location_queues,
-          can_manage?: StaffAccess.can_manage_organization?(user_id, location.organization_id)
+          organization: organization,
+          role: role,
+          can_manage?: role == :admin,
+          locations:
+            Enum.map(organization_locations, fn location ->
+              %{
+                location: location,
+                services: Enum.filter(services, &(&1.location_id == location.id)),
+                queues: Enum.filter(queues, &(&1.location.id == location.id))
+              }
+            end)
         }
       end)
 
     render(conn, :index,
       page_title: "Staff queues",
       staff_email: to_string(conn.assigns.current_user.email),
-      queue_groups: queue_groups,
+      organization_groups: organization_groups,
       queue_count: length(queues)
     )
   end

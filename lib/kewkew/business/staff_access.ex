@@ -38,6 +38,17 @@ defmodule Kewkew.Business.StaffAccess do
     )
   end
 
+  def organizations_for_user(user_id) do
+    Repo.all(
+      from membership in StaffMembership,
+        join: organization in Organization,
+        on: organization.id == membership.organization_id,
+        where: membership.user_id == ^user_id and membership.active?,
+        order_by: [asc: organization.name],
+        select: %{organization: organization, role: membership.role}
+    )
+  end
+
   def admin_location_for_user(user_id, location_id) do
     with {:ok, user_id} <- Ecto.UUID.cast(user_id),
          {:ok, location_id} <- Ecto.UUID.cast(location_id) do
@@ -69,6 +80,16 @@ defmodule Kewkew.Business.StaffAccess do
             (membership.role == :admin or not is_nil(assignment.id)),
         order_by: [asc: location.name],
         distinct: true
+    )
+  end
+
+  def services_for_locations([]), do: []
+
+  def services_for_locations(location_ids) do
+    Repo.all(
+      from service in Service,
+        where: service.location_id in ^location_ids,
+        order_by: [asc: service.name]
     )
   end
 

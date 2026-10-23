@@ -39,7 +39,7 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-2: View the organization and its locations
 
-**Status** — In progress
+**Status** — Complete
 
 **User story** — As an organization administrator, I want to see my organization's profile and locations so I can manage the correct business and understand which sites are operating.
 
