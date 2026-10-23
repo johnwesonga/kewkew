@@ -410,6 +410,18 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 [data-theme="dark"] .staff-ticket-number { color: #b7e7c8; }
 [data-theme="dark"] .staff-person-avatar { color: #c0ccc3; background: #2b3830; }
 
+.visitor-queue-progress { position: relative; width: min(100%, 220px); height: 26px; margin: 18px auto 0; }
+.visitor-queue-progress-track { position: absolute; top: 12px; right: 10px; left: 10px; height: 2px; border-radius: 999px; background: #dce5dd; }
+.visitor-queue-progress-marker { position: absolute; top: 3px; left: 10px; display: grid; width: 20px; height: 20px; place-items: center; border-radius: 50%; color: #176b4b; background: #e6f4ec; transition: transform 450ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease; }
+.visitor-queue-progress[data-progress-active="false"] .visitor-queue-progress-marker { opacity: 0; }
+.visitor-queue-progress.is-advancing .visitor-queue-progress-marker { animation: visitor-queue-advance 650ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes visitor-queue-advance { from { transform: translateX(0); } to { transform: translateX(190px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .visitor-queue-progress-marker { transition: none; }
+  .visitor-queue-progress.is-advancing .visitor-queue-progress-marker { animation: none; }
+}
+
 @media (max-width: 900px) {
   .staff-setup-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .staff-workspace { display: block; }

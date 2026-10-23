@@ -168,8 +168,15 @@ if (visitorQueuePage) {
 if (visitorTicket) {
   const status = document.getElementById("visitor-ticket-status")
   const position = document.getElementById("visitor-ticket-position")
+  const progress = document.getElementById("visitor-queue-progress")
   const cancellationForm = document.getElementById("visitor-cancel-form")
   const statusUrl = visitorTicket.dataset.statusUrl
+  let lastPosition = progress?.dataset.position ? Number(progress.dataset.position) : null
+  let lastStatus = visitorTicket.dataset.ticketStatus
+
+  if (progress) {
+    progress.dataset.progressActive = String(lastStatus === "waiting" && lastPosition !== null)
+  }
 
   const refreshTicketStatus = async () => {
     if (document.hidden) return
@@ -189,10 +196,26 @@ if (visitorTicket) {
 
       const ticket = await response.json()
       const positionLabel = ticket.position ? `${ticket.position} in line` : "No longer waiting"
+      const positionChanged = ticket.position !== lastPosition
+      const statusChanged = ticket.status !== lastStatus
 
       if (status.textContent !== ticket.status_label) status.textContent = ticket.status_label
       if (position.textContent.trim() !== positionLabel) position.textContent = positionLabel
       if (cancellationForm) cancellationForm.hidden = ticket.status !== "waiting"
+
+      if (progress) {
+        progress.dataset.progressActive = String(ticket.status === "waiting" && ticket.position !== null)
+        if (positionChanged || (statusChanged && ticket.status !== "waiting")) {
+          progress.classList.remove("is-advancing")
+          if (positionChanged && ticket.status === "waiting" && ticket.position !== null) {
+            void progress.offsetWidth
+            progress.classList.add("is-advancing")
+          }
+        }
+      }
+
+      lastPosition = ticket.position
+      lastStatus = ticket.status
     } catch (_error) {
       // Keep the last persisted state on screen and retry on the next interval.
     }

@@ -2,6 +2,7 @@
   <section
     id="visitor-ticket"
     data-status-url={"/t/#{@tracking_token}/status"}
+    data-ticket-status={Atom.to_string(@ticket.status)}
     class="w-full max-w-lg rounded-3xl border border-[#e4eae5] bg-white p-7 text-center shadow-[0_18px_50px_rgba(26,52,39,.09)] sm:p-10"
   >
     <div class="mx-auto grid size-12 place-items-center rounded-2xl bg-[#e6f4ec] text-xl font-extrabold text-[#176b4b]">
@@ -31,6 +32,18 @@
       <p class="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#87948b]">
         Position
       </p>
+      <div
+        id="visitor-queue-progress"
+        class="visitor-queue-progress"
+        data-position={@position}
+        data-progress-active={@ticket.status == :waiting && not is_nil(@position)}
+        aria-hidden="true"
+      >
+        <span class="visitor-queue-progress-track"></span>
+        <span class="visitor-queue-progress-marker">
+          <.icon name="hero-user" class="size-4" />
+        </span>
+      </div>
       <p id="visitor-ticket-position" aria-live="polite" class="mt-2 text-lg font-extrabold">
         {if(@position, do: "#{@position} in line", else: "No longer waiting")}
       </p>
