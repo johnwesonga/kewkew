@@ -4,7 +4,7 @@
 
 Let organization administrators configure reusable queues at their locations and let authorized staff control when a queue accepts visitors. Queue configuration persists across operating sessions; ticket numbers and line sequence restart for each new session.
 
-These stories assume an organization, locations, services, staff memberships, and location assignments already exist. Staff authentication and authorization are defined in [staff-admin-flow-user-stories.md](staff-admin-flow-user-stories.md). Visitor-facing behavior is defined in [visitor-flow-user-stories.md](visitor-flow-user-stories.md).
+These stories assume an organization, locations, services, staff memberships, and location assignments already exist. Their setup and administration are defined in [organization-location-admin-user-stories.md](organization-location-admin-user-stories.md). Staff authentication and queue authorization are defined in [staff-admin-flow-user-stories.md](staff-admin-flow-user-stories.md). Visitor-facing behavior is defined in [visitor-flow-user-stories.md](visitor-flow-user-stories.md).
 
 ## Shared rules
 
