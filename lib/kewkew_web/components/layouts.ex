@@ -48,6 +48,7 @@ defmodule KewkewWeb.Layouts do
             <span>Kewkew<small>Queue, without the wait</small></span>
           </a>
           <div class="staff-top-actions">
+            <.theme_toggle />
             <div :if={@location_name} class="staff-location">
               <.icon name="hero-map-pin" class="size-4" />
               <span>{@location_name}</span>
@@ -177,37 +178,49 @@ defmodule KewkewWeb.Layouts do
   end
 
   @doc """
-  Provides dark vs light theme toggle based on themes defined in app.css.
+  Provides system, light, and dark theme controls based on themes defined in app.css.
 
   See <head> in root.html.heex which applies the theme before page load.
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
+    <div id="theme-toggle" class="theme-toggle" role="group" aria-label="Color theme">
+      <div class="theme-toggle-indicator" aria-hidden="true" />
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        id="theme-system"
+        type="button"
+        class="theme-toggle-button"
+        aria-label="Use system theme"
+        title="System"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-computer-desktop-micro" class="size-4" />
       </button>
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        id="theme-light"
+        type="button"
+        class="theme-toggle-button"
+        aria-label="Use light theme"
+        title="Light"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-sun-micro" class="size-4" />
       </button>
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        id="theme-dark"
+        type="button"
+        class="theme-toggle-button"
+        aria-label="Use dark theme"
+        title="Dark"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-moon-micro" class="size-4" />
       </button>
     </div>
     """

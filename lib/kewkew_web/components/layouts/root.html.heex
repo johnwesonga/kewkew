@@ -12,21 +12,46 @@
     </script>
     <script>
       (() => {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+        const setSystemTheme = () => {
+          document.documentElement.setAttribute("data-theme", systemTheme.matches ? "dark" : "light");
+          document.documentElement.dataset.kewkewTheme = "system";
+        };
+
+        const updateThemeControls = (theme) => {
+          document.querySelectorAll("[data-phx-theme]").forEach((button) => {
+            button.setAttribute("aria-pressed", String(button.dataset.phxTheme === theme));
+          });
+        };
+
         const setTheme = (theme) => {
           if (theme === "system") {
             localStorage.removeItem("phx:theme");
-            document.documentElement.removeAttribute("data-theme");
-          } else {
+            setSystemTheme();
+          } else if (theme === "light" || theme === "dark") {
             localStorage.setItem("phx:theme", theme);
             document.documentElement.setAttribute("data-theme", theme);
+            document.documentElement.removeAttribute("data-kewkew-theme");
           }
+          updateThemeControls(theme);
         };
         if (!document.documentElement.hasAttribute("data-theme")) {
           setTheme(localStorage.getItem("phx:theme") || "system");
         }
         window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
-        
+
+        systemTheme.addEventListener("change", () => {
+          if (!localStorage.getItem("phx:theme")) {
+            setSystemTheme();
+            updateThemeControls("system");
+          }
+        });
+
         window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
+        document.addEventListener("DOMContentLoaded", () => {
+          updateThemeControls(localStorage.getItem("phx:theme") || "system");
+        });
       })();
     </script>
   </head>
