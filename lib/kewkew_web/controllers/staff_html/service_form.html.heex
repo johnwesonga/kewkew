@@ -1,0 +1,64 @@
+<Layouts.app flash={@flash} staff?={true} staff_email={@staff_email}>
+  <section id="staff-service-form-page" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> Organization overview
+        </.link>
+        <p class="staff-eyebrow">Service setup · {@location.name}</p>
+        <h1>{@page_title}</h1>
+        <p class="staff-subhead">Describe a type of help visitors can choose at this location.</p>
+      </div>
+    </header>
+
+    <section class="staff-card staff-create-queue-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2>Service details</h2>
+          <p>The service stays attached to this location.</p>
+        </div>
+      </div>
+
+      <div
+        :if={@errors != []}
+        id="staff-service-errors"
+        class="staff-form-errors"
+        role="alert"
+      >
+        <p>Review the service details:</p>
+        <ul>
+          <li :for={message <- @errors}>{message}</li>
+        </ul>
+      </div>
+
+      <.form
+        for={@form}
+        id="staff-service-form"
+        action={@form_action}
+        method={@method}
+        class="staff-create-queue-form"
+      >
+        <.input
+          field={@form[:name]}
+          label="Service name"
+          maxlength="120"
+          required
+        />
+
+        <.input
+          field={@form[:description]}
+          type="textarea"
+          label="Description (optional)"
+          maxlength="1000"
+        />
+
+        <div class="staff-form-actions">
+          <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
+          <button id="staff-save-service" type="submit" class="staff-primary-button">
+            {@submit_label}
+          </button>
+        </div>
+      </.form>
+    </section>
+  </section>
+</Layouts.app>

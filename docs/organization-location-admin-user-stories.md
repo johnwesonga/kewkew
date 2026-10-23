@@ -107,7 +107,9 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-6: Manage services at a location
 
-**Status** — Planned
+**Status** — Complete
+
+**Status note** — Organization admins can create services at an authorized location and edit a service's name and optional description. Service edits cannot change its location; operator access is rejected by the server-side administration service.
 
 **User story** — As an organization administrator, I want to create and update services at a location so visitors can choose the kind of help they need.
 

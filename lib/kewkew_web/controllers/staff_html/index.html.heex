@@ -115,16 +115,39 @@
 
           <div class="staff-location-overview-content">
             <section aria-labelledby={"staff-services-heading-#{location.id}"}>
-              <h4 id={"staff-services-heading-#{location.id}"}>Services</h4>
+              <div class="staff-location-section-heading">
+                <h4 id={"staff-services-heading-#{location.id}"}>Services</h4>
+                <.link
+                  :if={can_manage?}
+                  id={"staff-create-service-#{location.id}"}
+                  navigate={~p"/staff/locations/#{location.id}/services/new"}
+                  class="staff-create-queue-link"
+                >
+                  <.icon name="hero-plus" class="size-4" /> Add service
+                </.link>
+              </div>
               <ul
                 :if={services != []}
                 id={"staff-services-#{location.id}"}
                 class="staff-service-list"
               >
                 <li :for={service <- services} id={"staff-service-#{service.id}"}>
-                  <span>{service.name}</span>
-                  <span class={["staff-service-state", service.active? && "active"]}>
-                    {if service.active?, do: "Active", else: "Inactive"}
+                  <span>
+                    <strong>{service.name}</strong>
+                    <span :if={service.description not in [nil, ""]}>{service.description}</span>
+                  </span>
+                  <span class="staff-service-actions">
+                    <span class={["staff-service-state", service.active? && "active"]}>
+                      {if service.active?, do: "Active", else: "Inactive"}
+                    </span>
+                    <.link
+                      :if={can_manage?}
+                      id={"staff-edit-service-#{service.id}"}
+                      navigate={~p"/staff/services/#{service.id}/edit"}
+                      class="staff-edit-queue-link"
+                    >
+                      <.icon name="hero-pencil-square" class="size-4" /> Edit
+                    </.link>
                   </span>
                 </li>
               </ul>
