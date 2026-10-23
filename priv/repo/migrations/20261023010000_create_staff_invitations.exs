@@ -8,7 +8,6 @@ defmodule Kewkew.Repo.Migrations.CreateStaffInvitations do
       add :role, :text, null: false
       add :token_hash, :binary, null: false
       add :expires_at, :utc_datetime_usec, null: false
-      add :delivered_at, :utc_datetime_usec
       add :accepted_at, :utc_datetime_usec
       add :revoked_at, :utc_datetime_usec
       add :location_ids, {:array, :binary_id}, null: false, default: []
