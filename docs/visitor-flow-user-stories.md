@@ -161,13 +161,30 @@ flowchart LR
 
 **Dependencies** — Staff call/skip operations and configurable service instructions. SMS/push notification delivery is not required for this story.
 
+### VF-10: See a service completion confirmation
+
+**User story** — As a visitor whose service is complete, I want a thank-you confirmation so I know I can leave and no longer need to monitor my place in line.
+
+**Acceptance criteria**
+
+- When the ticket becomes `completed`, the private tracking page changes to a clear thank-you state and identifies the completed ticket and service.
+- The completed view removes active-queue controls and information, including queue position, the leave action, and the copy-private-link control.
+- The existing private URL continues to show the completion confirmation when refreshed or reopened; it does not redirect to an unrelated page or become an unavailable link immediately after service.
+- The visitor's view updates promptly when completion occurs while the page is open. After completion, it does not continue polling for queue position.
+- The confirmation does not expose additional personal information or imply that the ticket is still active.
+- Cancelled and no-show tickets keep their own status and next-step messaging; they are not presented as successful service completion.
+
+**Dependencies** — VF-6 and VF-7; persisted completed ticket state and status refresh.
+
+**Design decision** — Render the thank-you state at the existing private tracking URL rather than redirecting to a generic page. This preserves a useful refresh destination and avoids a redirect that discards the ticket context. The page hides the share/copy controls after completion while the original private URL remains usable as a completion receipt.
+
 ## Suggested implementation order
 
 1. **Direct queue link and availability** — VF-1, VF-2 for one queue per link.
 2. **Join and confirmation** — VF-4 and VF-5 with server-side policy enforcement, durable ticket creation, and private tracking link (VF-6's core).
 3. **Return and track** — remaining VF-6 plus VF-7 using persisted state; add live updates once queue operations exist.
 4. **Visitor self-service** — VF-8 after cancellation policy is decided.
-5. **Called state** — VF-9 after staff queue operations are implemented.
+5. **Called state and completion** — VF-9 and VF-10 after staff queue operations are implemented.
 6. **Multiple-service discovery** — VF-3 when a location's service list is available; it need not block the direct-link MVP.
 
 Each implementation slice should have focused domain and LiveView tests for its acceptance criteria. Keep public visitor stories separate from staff queue operations so each change remains reviewable.
