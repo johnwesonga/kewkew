@@ -168,6 +168,24 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 **Dependencies** — SF-1, SF-2, SF-6, and SF-8; atomic queue-sequence allocation and ticket transition history.
 
+### SF-10: Navigate between queue operations and workspace setup
+
+**Status** — Planned
+
+**User story** — As a staff member, I want queue operations and workspace setup in separate views so I can quickly find the actions relevant to my role.
+
+**Acceptance criteria**
+
+- Staff navigation provides a focused Live queues view for queues the signed-in staff member is authorized to access.
+- The Live queues view links to each queue's operational board and shows enough location and service context to identify the queue.
+- Organization, location, service, and queue configuration controls are grouped in a separate Setup area rather than mixed into the Live queues view.
+- Only active organization administrators see and can open the Setup area; operators cannot access it by entering a setup URL directly.
+- The Setup area provides focused organization, location, service, and queue configuration views, retaining the existing organization and location authorization rules.
+- Queue boards remain focused on live tickets and operational actions; setup controls do not appear in the ticket workflow.
+- Switching between views preserves the existing organization, location, and queue scoping rules for users with multiple memberships or assignments.
+
+**Dependencies** — SF-1; OLA-2 through OLA-6; AQ-1 through AQ-4; staff workspace navigation.
+
 ## Initial transition policy
 
 | Current state | Staff action | Result |
@@ -190,5 +208,6 @@ Completed and cancelled tickets are terminal for this initial staff flow. A no-s
 4. **Resolve the line** — SF-6 and SF-7, sharing terminal-state and audit behavior.
 5. **Live synchronization** — SF-8, publishing committed changes and retaining refresh/reconnect recovery.
 6. **Returning visitors** — SF-9, requeueing a no-show at the end of the line with a fresh queue sequence.
+7. **Workspace organization** — SF-10, separating operational queue views from administrative setup.
 
 Keep each transition independently reviewable and tested. Avoid generic ticket status editing; implement one authorized command per transition.
