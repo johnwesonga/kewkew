@@ -61,6 +61,8 @@ defmodule KewkewWeb.StaffController do
           organization: organization,
           locations: locations,
           params: %{"email" => "", "role" => "operator", "location_ids" => []},
+          form:
+            Phoenix.Component.to_form(%{"email" => "", "role" => "operator"}, as: :invitation),
           errors: []
         )
 
@@ -103,6 +105,7 @@ defmodule KewkewWeb.StaffController do
               organization: organization,
               locations: locations,
               params: params,
+              form: Phoenix.Component.to_form(params, as: :invitation),
               errors: [message]
             )
 

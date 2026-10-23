@@ -217,6 +217,10 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 .staff-create-queue-card { overflow: hidden; }
 .staff-create-queue-form { display: grid; gap: 18px; max-width: 620px; padding: 24px; }
 .staff-create-queue-form .input { width: 100%; }
+.staff-invitation-locations { display: grid; gap: 9px; padding: 0; border: 0; }
+.staff-invitation-locations legend { margin-bottom: 4px; color: #34443b; font-size: 12px; font-weight: 750; }
+.staff-invitation-location-option { display: flex; align-items: center; gap: 9px; width: fit-content; color: #526158; font-size: 12px; cursor: pointer; }
+.staff-invitation-location-option input { width: 16px; height: 16px; accent-color: #176b4b; }
 .staff-form-location { display: grid; gap: 5px; }
 .staff-form-label { color: #718078; font-size: 11px; font-weight: 700; }
 .staff-form-location strong { color: #17251f; font-size: 13px; }
@@ -354,6 +358,9 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 [data-theme="dark"] .staff-queue-status.unavailable { color: #f3aaa4; background: #3a2422; }
 [data-theme="dark"] .staff-create-queue-form .input,
 [data-theme="dark"] .staff-public-link .input { color: #e5eee8; background: #16211b; border-color: #39473f; }
+[data-theme="dark"] .staff-invitation-locations legend { color: #dce7df; }
+[data-theme="dark"] .staff-invitation-location-option { color: #c0ccc3; }
+[data-theme="dark"] .staff-invitation-location-option input { accent-color: #b7e7c8; }
 [data-theme="dark"] .staff-open-queue { color: #b7e7c8; }
 [data-theme="dark"] .staff-queue-symbol,
 [data-theme="dark"] .staff-empty-icon { color: #b7e7c8; background: #203a2b; }

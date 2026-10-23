@@ -2,52 +2,85 @@
   <section id="staff-invitation-page" class="staff-page">
     <header class="staff-page-heading">
       <div>
+        <.link navigate={~p"/staff"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> Organization overview
+        </.link>
         <p class="staff-eyebrow">Staff access · {@organization.name}</p>
         <h1>Invite a staff member</h1>
         <p class="staff-subhead">We’ll email a one-time link so they can securely join.</p>
       </div>
     </header>
-    <ul :if={@errors != []} id="staff-invitation-errors" class="staff-form-errors">
-      <li :for={error <- @errors}>{error}</li>
-    </ul>
-    <.form
-      for={Phoenix.Component.to_form(@params, as: :invitation)}
-      id="staff-invitation-form"
-      action={~p"/staff/organizations/#{@organization.id}/staff/invitations"}
-      method="post"
-      class="staff-create-queue-form"
-    >
-      <label for="invitation-email">Email</label>
-      <input
-        id="invitation-email"
-        name="invitation[email]"
-        type="email"
-        required
-        value={@params["email"]}
-      />
-      <label for="invitation-role">Role</label>
-      <select id="invitation-role" name="invitation[role]">
-        <option value="operator" selected={@params["role"] == "operator"}>Operator</option>
-        <option value="admin" selected={@params["role"] == "admin"}>Administrator</option>
-      </select>
-      <fieldset id="invitation-locations">
-        <legend>Operator locations</legend>
-        <label :for={location <- @locations}>
-          <input
-            type="checkbox"
-            name="invitation[location_ids][]"
-            value={location.id}
-            checked={location.id in Map.get(@params, "location_ids", [])}
-          />
-          {location.name}
-        </label>
-      </fieldset>
-      <div class="staff-form-actions">
-        <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
-        <button id="send-staff-invitation" type="submit" class="staff-primary-button">
-          Send invitation
-        </button>
+    <section class="staff-card staff-create-queue-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2>Staff details</h2>
+          <p>Choose the access this person needs in the organization.</p>
+        </div>
       </div>
-    </.form>
+
+      <div
+        :if={@errors != []}
+        id="staff-invitation-errors"
+        class="staff-form-errors"
+        role="alert"
+      >
+        <p>Review the invitation details:</p>
+        <ul>
+          <li :for={error <- @errors}>{error}</li>
+        </ul>
+      </div>
+
+      <.form
+        for={@form}
+        id="staff-invitation-form"
+        action={~p"/staff/organizations/#{@organization.id}/staff/invitations"}
+        method="post"
+        class="staff-create-queue-form"
+      >
+        <.input
+          field={@form[:email]}
+          type="email"
+          label="Email address"
+          autocomplete="email"
+          placeholder="name@example.com"
+          required
+        />
+
+        <.input
+          field={@form[:role]}
+          type="select"
+          label="Role"
+          options={[{"Operator", "operator"}, {"Administrator", "admin"}]}
+        />
+
+        <fieldset id="invitation-locations" class="staff-invitation-locations">
+          <legend>Operator locations</legend>
+          <p class="staff-form-note">Select one or more locations for an operator.</p>
+          <label :for={location <- @locations} class="staff-invitation-location-option">
+            <input
+              type="checkbox"
+              name="invitation[location_ids][]"
+              value={location.id}
+              checked={location.id in Map.get(@params, "location_ids", [])}
+            />
+            <span>{location.name}</span>
+          </label>
+          <p :if={@locations == []} class="staff-form-note">
+            Create a location before inviting an operator.
+          </p>
+        </fieldset>
+
+        <p class="staff-form-note">
+          The invitation link expires after seven days. The invitee chooses their own password.
+        </p>
+
+        <div class="staff-form-actions">
+          <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
+          <button id="send-staff-invitation" type="submit" class="staff-primary-button">
+            Send invitation
+          </button>
+        </div>
+      </.form>
+    </section>
   </section>
 </Layouts.app>
