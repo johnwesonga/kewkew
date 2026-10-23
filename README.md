@@ -45,6 +45,25 @@ Requirements: Elixir and Erlang/OTP compatible with the versions in `mix.exs`, P
 
 4. Visit [http://localhost:4000](http://localhost:4000).
 
+## First organization setup
+
+For a fresh non-development installation, apply database migrations, then run the trusted bootstrap task with these environment variables set:
+
+```text
+KEWKEW_ADMIN_EMAIL
+KEWKEW_ADMIN_PASSWORD
+KEWKEW_ORGANIZATION_NAME
+KEWKEW_LOCATION_NAME
+```
+
+```sh
+mix kewkew.bootstrap_admin
+```
+
+The task creates the organization, its first location, the administrator account, and the active admin membership together. It can only run before any organization or staff account exists; use the normal staff sign-in flow afterward. Keep the password in your deployment's secret or environment configuration. The development seed credentials above are only for local development and are separate from this bootstrap task.
+
+The implementation and acceptance criteria are tracked in [OLA-1](docs/organization-location-admin-user-stories.md#ola-1-bootstrap-an-organization-and-its-first-administrator).
+
 ## Development
 
 - Run the test suite with `mix test`.
