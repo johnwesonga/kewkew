@@ -35,3 +35,7 @@ kewkew-*.tar
 npm-debug.log
 /assets/node_modules/
 
+john-mac.tail22e26.ts.net.crt
+john-mac.tail22e26.ts.net.key
+
+/priv/cert/
