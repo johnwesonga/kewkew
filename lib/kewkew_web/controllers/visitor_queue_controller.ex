@@ -105,7 +105,7 @@ defmodule KewkewWeb.VisitorQueueController do
           position: ticket_data.position,
           status_label: ticket_status_label(ticket_data.ticket.status),
           tracking_token: token,
-          tracking_url: unverified_url(conn, "/t/#{token}"),
+          tracking_url: request_url(conn, "/t/#{token}"),
           csrf_token: Plug.CSRFProtection.get_csrf_token()
         )
     end
@@ -281,4 +281,9 @@ defmodule KewkewWeb.VisitorQueueController do
       state: :closed,
       message: "This queue is currently closed. Please check back later."
     }
+
+  defp request_url(conn, path) do
+    uri = URI.parse(Plug.Conn.request_url(conn))
+    URI.to_string(%{uri | path: path, query: nil, fragment: nil})
+  end
 end
