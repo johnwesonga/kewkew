@@ -1,0 +1,72 @@
+<Layouts.app flash={@flash} staff?={true} staff_email={@staff_email}>
+  <section id="staff-location-form-page" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> Organization overview
+        </.link>
+        <p class="staff-eyebrow">Location setup · {@organization.name}</p>
+        <h1>{@page_title}</h1>
+        <p class="staff-subhead">Set the location name and its local timezone.</p>
+      </div>
+    </header>
+
+    <section class="staff-card staff-create-queue-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2>Location details</h2>
+          <p>Event timestamps remain stored in UTC.</p>
+        </div>
+      </div>
+
+      <div
+        :if={@errors != []}
+        id="staff-location-errors"
+        class="staff-form-errors"
+        role="alert"
+      >
+        <p>Review the location details:</p>
+        <ul>
+          <li :for={message <- @errors}>{message}</li>
+        </ul>
+      </div>
+
+      <.form
+        for={@form}
+        id="staff-location-form"
+        action={@form_action}
+        method={@method}
+        class="staff-create-queue-form"
+      >
+        <.input
+          field={@form[:name]}
+          label="Location name"
+          autocomplete="organization"
+          maxlength="120"
+          required
+        />
+
+        <.input
+          field={@form[:timezone]}
+          label="Timezone"
+          placeholder="Etc/UTC"
+          maxlength="64"
+          required
+        />
+
+        <p class="staff-form-note">
+          Use an IANA timezone such as Etc/UTC, Africa/Nairobi, or America/Los_Angeles. This setting
+          changes how future location-specific times are displayed; existing event timestamps are
+          not rewritten.
+        </p>
+
+        <div class="staff-form-actions">
+          <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
+          <button id="staff-save-location" type="submit" class="staff-primary-button">
+            {@submit_label}
+          </button>
+        </div>
+      </.form>
+    </section>
+  </section>
+</Layouts.app>

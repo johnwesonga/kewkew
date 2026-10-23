@@ -16,7 +16,11 @@ defmodule Kewkew.Business.Location do
 
     create :create do
       primary? true
-      accept [:name, :timezone, :active?, :organization_id]
+      accept [:name, :timezone, :organization_id]
+    end
+
+    update :update_details do
+      accept [:name, :timezone]
     end
   end
 
@@ -26,12 +30,14 @@ defmodule Kewkew.Business.Location do
     attribute :name, :string do
       allow_nil? false
       public? true
+      constraints min_length: 1, max_length: 120
     end
 
     attribute :timezone, :string do
       allow_nil? false
       default "Etc/UTC"
       public? true
+      constraints min_length: 1, max_length: 64
     end
 
     attribute :active?, :boolean do

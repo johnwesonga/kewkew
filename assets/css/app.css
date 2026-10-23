@@ -167,7 +167,7 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 .staff-organization-card > .staff-card-heading { flex-wrap: wrap; padding: 19px 22px; }
 .staff-organization-card > .staff-card-heading .staff-eyebrow { margin: 0 0 5px; }
 .staff-location-overview { border-top: 1px solid #eff2ef; }
-.staff-location-overview-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 16px 22px; background: #fbfcfb; }
+.staff-location-overview-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; padding: 16px 22px; background: #fbfcfb; }
 .staff-location-overview-heading h3 { margin: 0; color: #17251f; font-size: 13px; font-weight: 750; }
 .staff-location-overview-heading p { margin: 5px 0 0; color: #718078; font-size: 10px; }
 .staff-location-overview-content { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 24px; padding: 18px 22px 20px; }

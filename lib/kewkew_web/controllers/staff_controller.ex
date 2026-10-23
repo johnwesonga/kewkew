@@ -4,6 +4,7 @@ defmodule KewkewWeb.StaffController do
   use KewkewWeb, :controller
 
   alias Kewkew.Business.StaffUpdateOrganization
+  alias Kewkew.Business.StaffLocationAdministration
   alias Kewkew.Business.StaffAccess
   alias Kewkew.Queues.StaffCreateQueue
   alias Kewkew.Queues.StaffSetQueueAvailability
@@ -108,6 +109,136 @@ defmodule KewkewWeb.StaffController do
   def update_organization(conn, _params) do
     conn
     |> put_flash(:error, "The organization details were incomplete.")
+    |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Shows the location creation form to an organization administrator."
+  def new_location(conn, %{"organization_id" => organization_id}) do
+    case StaffLocationAdministration.fetch_organization(
+           conn.assigns.current_user.id,
+           organization_id
+         ) do
+      {:ok, organization} ->
+        render_location_form(
+          conn,
+          organization,
+          nil,
+          %{"name" => "", "timezone" => "Etc/UTC"},
+          []
+        )
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to add locations to that organization.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def new_location(conn, _params) do
+    conn
+    |> put_flash(:error, "Choose an organization before adding a location.")
+    |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Creates a location in an organization the user actively administers."
+  def create_location(conn, %{"organization_id" => organization_id, "location" => params}) do
+    case StaffLocationAdministration.create_location(
+           conn.assigns.current_user.id,
+           organization_id,
+           params
+         ) do
+      {:ok, location} ->
+        conn
+        |> put_flash(:info, "Location #{location.name} was created.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, :invalid_params, errors} ->
+        case StaffLocationAdministration.fetch_organization(
+               conn.assigns.current_user.id,
+               organization_id
+             ) do
+          {:ok, organization} ->
+            render_location_form(conn, organization, nil, params, Enum.map(errors, &elem(&1, 1)),
+              status: :unprocessable_entity
+            )
+
+          {:error, :not_found} ->
+            conn
+            |> put_flash(
+              :error,
+              "You do not have permission to add locations to that organization."
+            )
+            |> redirect(to: ~p"/staff")
+        end
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to add locations to that organization.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, _reason} ->
+        conn
+        |> put_flash(:error, "The location could not be created.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def create_location(conn, _params) do
+    conn
+    |> put_flash(:error, "The location details were incomplete.")
+    |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Shows the location editor to an administrator of its organization."
+  def edit_location(conn, %{"location_id" => location_id}) do
+    case StaffLocationAdministration.fetch_location(conn.assigns.current_user.id, location_id) do
+      {:ok, %{location: location, organization: organization}} ->
+        params = %{"name" => location.name, "timezone" => location.timezone}
+        render_location_form(conn, organization, location, params, [])
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to edit that location.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def edit_location(conn, _params) do
+    conn
+    |> put_flash(:error, "Choose a location to edit.")
+    |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Updates a location's name and timezone without permitting an organization change."
+  def update_location(conn, %{"location_id" => location_id, "location" => params}) do
+    case StaffLocationAdministration.update_location(
+           conn.assigns.current_user.id,
+           location_id,
+           params
+         ) do
+      {:ok, location} ->
+        conn
+        |> put_flash(:info, "Location #{location.name} was updated.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, :invalid_params, errors} ->
+        render_location_update_error(conn, location_id, params, errors)
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to edit that location.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, _reason} ->
+        conn
+        |> put_flash(:error, "The location could not be updated.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def update_location(conn, _params) do
+    conn
+    |> put_flash(:error, "The location details were incomplete.")
     |> redirect(to: ~p"/staff")
   end
 
@@ -280,6 +411,45 @@ defmodule KewkewWeb.StaffController do
       errors: errors,
       status: Keyword.get(opts, :status, :ok)
     )
+  end
+
+  defp render_location_form(conn, organization, location, params, errors, opts \\ []) do
+    {form_action, method, submit_label, page_title} =
+      case location do
+        nil ->
+          {~p"/staff/organizations/#{organization.id}/locations", "post", "Add location",
+           "Add location"}
+
+        location ->
+          {~p"/staff/locations/#{location.id}", "put", "Save changes", "Edit location"}
+      end
+
+    render(conn, :location_form,
+      page_title: page_title,
+      staff_email: to_string(conn.assigns.current_user.email),
+      organization: organization,
+      location: location,
+      form_action: form_action,
+      method: method,
+      submit_label: submit_label,
+      form: Phoenix.Component.to_form(params, as: :location),
+      errors: errors,
+      status: Keyword.get(opts, :status, :ok)
+    )
+  end
+
+  defp render_location_update_error(conn, location_id, params, errors) do
+    case StaffLocationAdministration.fetch_location(conn.assigns.current_user.id, location_id) do
+      {:ok, %{location: location, organization: organization}} ->
+        render_location_form(conn, organization, location, params, Enum.map(errors, &elem(&1, 1)),
+          status: :unprocessable_entity
+        )
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to edit that location.")
+        |> redirect(to: ~p"/staff")
+    end
   end
 
   defp render_create_form(conn, location, services, params, errors, opts \\ []) do

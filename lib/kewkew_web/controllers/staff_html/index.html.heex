@@ -43,6 +43,14 @@
           >
             <.icon name="hero-pencil-square" class="size-4" /> Edit organization
           </.link>
+          <.link
+            :if={can_manage?}
+            id={"staff-add-location-#{organization.id}"}
+            navigate={~p"/staff/organizations/#{organization.id}/locations/new"}
+            class="staff-create-queue-link"
+          >
+            <.icon name="hero-plus" class="size-4" /> Add location
+          </.link>
         </header>
 
         <div
@@ -76,6 +84,14 @@
             >
               {if location.active?, do: "Active", else: "Inactive"}
             </span>
+            <.link
+              :if={can_manage?}
+              id={"staff-edit-location-#{location.id}"}
+              navigate={~p"/staff/locations/#{location.id}/edit"}
+              class="staff-edit-queue-link"
+            >
+              <.icon name="hero-pencil-square" class="size-4" /> Edit
+            </.link>
           </header>
 
           <div class="staff-location-overview-content">

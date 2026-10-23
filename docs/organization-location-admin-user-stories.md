@@ -70,7 +70,9 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-4: Create and update a location
 
-**Status** — Planned
+**Status** — In progress
+
+**Status note** — Administrator-only location creation and editing are implemented. Timezone values are validated and stored, but no location-specific event times are displayed yet, so timezone-aware presentation remains for the first relevant time display.
 
 **User story** — As an organization administrator, I want to add a location and maintain its name and timezone so queues can be organized around where service is provided.
 
