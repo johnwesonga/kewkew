@@ -73,6 +73,7 @@ defmodule KewkewWeb.Router do
     get "/", StaffController, :index
     get "/setup", StaffController, :setup
     get "/setup/locations", StaffController, :setup_locations
+    get "/setup/services", StaffController, :setup_services_index
     get "/setup/locations/:location_id/services", StaffController, :setup_services
     get "/setup/queues", StaffController, :setup_queues
     get "/setup/staff", StaffController, :setup_staff

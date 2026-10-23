@@ -1,0 +1,69 @@
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={@staff_email}
+  can_setup?={true}
+  active_nav={:services}
+>
+  <section id="staff-setup-all-services" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <p class="staff-eyebrow">Workspace setup</p>
+        <h1>Services</h1>
+        <p class="staff-subhead">
+          Manage the services visitors can choose across your locations.
+        </p>
+      </div>
+    </header>
+
+    <section :if={@location_groups == []} id="staff-no-service-locations" class="staff-card">
+      <p class="staff-empty-state">
+        <strong>No locations yet</strong>
+        <span>Add a location before configuring services.</span>
+        <.link navigate={~p"/staff/setup/locations"} class="staff-create-queue-link">
+          Manage locations
+        </.link>
+      </p>
+    </section>
+
+    <div :if={@location_groups != []} class="staff-setup-groups">
+      <section :for={group <- @location_groups} class="staff-card">
+        <header class="staff-card-heading">
+          <div>
+            <p class="staff-eyebrow">{group.organization.name}</p>
+            <h2>{group.location.name}</h2>
+          </div>
+          <.link
+            navigate={~p"/staff/locations/#{group.location.id}/services/new"}
+            class="staff-create-queue-link"
+          >
+            <.icon name="hero-plus" class="size-4" /> Add service
+          </.link>
+        </header>
+        <ul :if={group.services != []} class="staff-setup-list">
+          <li :for={service <- group.services} id={"staff-all-service-#{service.id}"}>
+            <div class="staff-setup-list-main">
+              <strong>{service.name}</strong>
+              <span>{service.description || "No description"}</span>
+            </div>
+            <span class={[
+              "staff-queue-status",
+              if(service.active?, do: "open", else: "unavailable")
+            ]}>
+              {if service.active?, do: "Active", else: "Inactive"}
+            </span>
+            <.link
+              navigate={~p"/staff/setup/locations/#{group.location.id}/services"}
+              class="staff-edit-queue-link"
+            >
+              Manage location services
+            </.link>
+          </li>
+        </ul>
+        <p :if={group.services == []} class="staff-location-empty">
+          No services at this location yet.
+        </p>
+      </section>
+    </div>
+  </section>
+</Layouts.app>

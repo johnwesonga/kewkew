@@ -21,13 +21,21 @@
         <span>
           {@location_count} {if @location_count == 1, do: "location", else: "locations"}
         </span>
-        <small>{@service_count} services · Manage sites and availability</small>
+        <small>Manage sites and availability</small>
       </.link>
       <.link navigate={~p"/staff/setup/queues"} class="staff-card staff-setup-card">
         <span class="staff-setup-card-icon"><.icon name="hero-queue-list" class="size-5" /></span>
         <strong>Queues</strong>
         <span>{@queue_count} {if @queue_count == 1, do: "queue", else: "queues"}</span>
         <small>Configure visitor-facing queues</small>
+      </.link>
+      <.link navigate={~p"/staff/setup/services"} class="staff-card staff-setup-card">
+        <span class="staff-setup-card-icon">
+          <.icon name="hero-wrench-screwdriver" class="size-5" />
+        </span>
+        <strong>Services</strong>
+        <span>{@service_count} {if @service_count == 1, do: "service", else: "services"}</span>
+        <small>Manage services across your locations</small>
       </.link>
       <.link navigate={~p"/staff/setup/staff"} class="staff-card staff-setup-card">
         <span class="staff-setup-card-icon"><.icon name="hero-users" class="size-5" /></span>

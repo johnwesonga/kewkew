@@ -79,9 +79,15 @@ defmodule KewkewWeb.Layouts do
               <div :if={@can_setup?} class="staff-nav-subnav">
                 <.link
                   navigate={~p"/staff/setup/locations"}
-                  class={@active_nav in [:locations, :services] && "active"}
+                  class={@active_nav == :locations && "active"}
                 >
                   Locations
+                </.link>
+                <.link
+                  navigate={~p"/staff/setup/services"}
+                  class={@active_nav == :services && "active"}
+                >
+                  Services
                 </.link>
                 <.link
                   navigate={~p"/staff/setup/queues"}

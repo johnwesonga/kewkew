@@ -117,6 +117,33 @@ defmodule KewkewWeb.StaffController do
     do:
       conn |> put_flash(:error, "Choose a location.") |> redirect(to: ~p"/staff/setup/locations")
 
+  def setup_services_index(conn, _params) do
+    with {:ok, data} <- load_setup_data(conn.assigns.current_user.id) do
+      location_groups =
+        Enum.map(data.locations, fn location ->
+          organization =
+            Enum.find_value(data.organizations, fn entry ->
+              if entry.organization.id == location.organization_id, do: entry.organization
+            end)
+
+          %{
+            location: location,
+            organization: organization,
+            services: Enum.filter(data.services, &(&1.location_id == location.id))
+          }
+        end)
+
+      render(conn, :setup_all_services,
+        page_title: "Services",
+        staff_email: to_string(conn.assigns.current_user.email),
+        location_groups: location_groups,
+        can_setup?: true
+      )
+    else
+      :forbidden -> setup_forbidden(conn)
+    end
+  end
+
   def setup_queues(conn, _params) do
     with {:ok, data} <- load_setup_data(conn.assigns.current_user.id) do
       render(conn, :setup_queues,
