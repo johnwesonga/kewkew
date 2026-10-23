@@ -7,7 +7,11 @@ defmodule KewkewWeb.StaffLiveAuth do
     case socket.assigns[:current_user] do
       %{id: user_id} when is_binary(user_id) ->
         if StaffAccess.has_active_membership?(user_id) do
-          {:cont, socket}
+          can_setup? =
+            StaffAccess.organizations_for_user(user_id)
+            |> Enum.any?(&(&1.role == :admin))
+
+          {:cont, Phoenix.Component.assign(socket, :can_setup?, can_setup?)}
         else
           {:halt, Phoenix.LiveView.redirect(socket, to: "/")}
         end

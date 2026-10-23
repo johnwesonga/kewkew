@@ -1,8 +1,14 @@
-<Layouts.app flash={@flash} staff?={true} staff_email={@staff_email}>
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={@staff_email}
+  can_setup?={true}
+  active_nav={:setup}
+>
   <section id="staff-edit-organization" class="staff-page">
     <header class="staff-page-heading">
       <div>
-        <.link navigate={~p"/staff"} class="staff-back-link">
+        <.link navigate={~p"/staff/setup"} class="staff-back-link">
           <.icon name="hero-arrow-left" class="size-4" /> Organization overview
         </.link>
         <p class="staff-eyebrow">Organization setup</p>
@@ -52,7 +58,7 @@
         </p>
 
         <div class="staff-form-actions">
-          <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
+          <.link navigate={~p"/staff/setup"} class="staff-secondary-button">Cancel</.link>
           <button id="staff-save-organization" type="submit" class="staff-primary-button">
             Save changes
           </button>

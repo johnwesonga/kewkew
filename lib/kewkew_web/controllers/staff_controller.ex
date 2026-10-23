@@ -14,44 +14,78 @@ defmodule KewkewWeb.StaffController do
   alias Kewkew.Queues.StaffSetQueueAvailability
   alias Kewkew.Queues.StaffUpdateQueue
 
-  @doc "Shows organizations, permitted locations, services, and queues for authenticated staff."
+  @doc "Shows only the live queues available to the signed-in staff member."
   def index(conn, _params) do
     user_id = conn.assigns.current_user.id
-    organizations = StaffAccess.organizations_for_user(user_id)
-    locations = StaffAccess.locations_for_user(user_id)
-    services = StaffAccess.services_for_locations(Enum.map(locations, & &1.id))
     queues = StaffAccess.queues_for_user(user_id)
-
-    organization_groups =
-      Enum.map(organizations, fn %{organization: organization, role: role} ->
-        organization_locations = Enum.filter(locations, &(&1.organization_id == organization.id))
-
-        %{
-          organization: organization,
-          role: role,
-          can_manage?: role == :admin,
-          members:
-            if(role == :admin,
-              do: StaffAccess.memberships_for_organization(user_id, organization.id),
-              else: []
-            ),
-          locations:
-            Enum.map(organization_locations, fn location ->
-              %{
-                location: location,
-                services: Enum.filter(services, &(&1.location_id == location.id)),
-                queues: Enum.filter(queues, &(&1.location.id == location.id))
-              }
-            end)
-        }
-      end)
+    can_setup? = Enum.any?(StaffAccess.organizations_for_user(user_id), &(&1.role == :admin))
 
     render(conn, :index,
-      page_title: "Staff queues",
+      page_title: "Live queues",
       staff_email: to_string(conn.assigns.current_user.email),
-      organization_groups: organization_groups,
-      queue_count: length(queues)
+      queues: queues,
+      queue_count: length(queues),
+      can_setup?: can_setup?
     )
+  end
+
+  @doc "Shows setup tools to staff with at least one active administrator membership."
+  def setup(conn, _params) do
+    user_id = conn.assigns.current_user.id
+
+    organizations =
+      StaffAccess.organizations_for_user(user_id)
+      |> Enum.filter(&(&1.role == :admin))
+
+    if organizations == [] do
+      conn
+      |> put_status(:forbidden)
+      |> text("Setup access is available to active organization administrators only.")
+    else
+      locations =
+        organizations
+        |> Enum.flat_map(fn %{organization: organization} ->
+          Kewkew.Business.StaffLocationAdministration.locations_for_organization(organization.id)
+        end)
+
+      services = StaffAccess.services_for_locations(Enum.map(locations, & &1.id))
+
+      queues =
+        organizations
+        |> Enum.flat_map(fn %{organization: organization} ->
+          StaffAccess.queues_for_user(user_id)
+          |> Enum.filter(&(&1.location.organization_id == organization.id))
+        end)
+
+      organization_groups =
+        Enum.map(organizations, fn %{organization: organization, role: role} ->
+          organization_locations =
+            Enum.filter(locations, &(&1.organization_id == organization.id))
+
+          %{
+            organization: organization,
+            role: role,
+            can_manage?: true,
+            members: StaffAccess.memberships_for_organization(user_id, organization.id),
+            locations:
+              Enum.map(organization_locations, fn location ->
+                %{
+                  location: location,
+                  services: Enum.filter(services, &(&1.location_id == location.id)),
+                  queues: Enum.filter(queues, &(&1.location.id == location.id))
+                }
+              end)
+          }
+        end)
+
+      render(conn, :setup,
+        page_title: "Workspace setup",
+        staff_email: to_string(conn.assigns.current_user.email),
+        organization_groups: organization_groups,
+        queue_count: length(queues),
+        can_setup?: true
+      )
+    end
   end
 
   def new_staff_invitation(conn, %{"organization_id" => organization_id}) do

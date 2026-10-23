@@ -33,6 +33,7 @@ defmodule KewkewWeb.Layouts do
 
   attr :staff?, :boolean, default: false, doc: "whether to render the staff workspace shell"
   attr :staff_email, :string, default: nil, doc: "the signed-in staff member's email"
+  attr :can_setup?, :boolean, default: false, doc: "whether setup navigation is available"
   attr :location_name, :string, default: nil, doc: "the active location label"
   attr :active_nav, :atom, default: :queues, doc: "the active staff navigation item"
 
@@ -67,6 +68,13 @@ defmodule KewkewWeb.Layouts do
                 class={["staff-nav-link", @active_nav == :queues && "active"]}
               >
                 <.icon name="hero-queue-list" class="size-4" /> Live queues
+              </.link>
+              <.link
+                :if={@can_setup?}
+                navigate={~p"/staff/setup"}
+                class={["staff-nav-link", @active_nav == :setup && "active"]}
+              >
+                <.icon name="hero-cog-6-tooth" class="size-4" /> Setup
               </.link>
             </nav>
             <div class="staff-help-card">

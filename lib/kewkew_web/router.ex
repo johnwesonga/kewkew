@@ -71,6 +71,7 @@ defmodule KewkewWeb.Router do
     pipe_through [:browser, :staff_members_only]
 
     get "/", StaffController, :index
+    get "/setup", StaffController, :setup
     get "/organizations/:organization_id/edit", StaffController, :edit_organization
     get "/organizations/:organization_id/staff/new", StaffController, :new_staff_invitation
 

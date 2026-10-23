@@ -217,6 +217,11 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 .staff-member-list li { display: flex; align-items: center; gap: 12px; min-height: 42px; }
 .staff-member-identity { display: grid; flex: 1; gap: 3px; color: #34443b; font-size: 12px; }
 .staff-member-identity span { color: #87948c; font-size: 10px; }
+.staff-live-queue-card { display: flex; align-items: center; gap: 16px; padding: 20px 22px; }
+.staff-live-queue-context { flex: 1; min-width: 0; }
+.staff-live-queue-context h2 { margin: 3px 0 5px; color: #17251f; font-size: 16px; font-weight: 800; }
+.staff-live-queue-context > p:last-child { margin: 0; color: #718078; font-size: 11px; }
+.staff-live-queue-card > .staff-primary-button { flex: none; text-decoration: none; }
 .staff-create-queue-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid #dcebe1; border-radius: 10px; color: #176b4b; font-size: 10px; font-weight: 750; text-decoration: none; white-space: nowrap; }
 .staff-create-queue-link:hover { background: #f1f8f3; }
 .staff-create-queue-card { overflow: hidden; }
@@ -368,6 +373,8 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 [data-theme="dark"] .staff-members-section { border-color: #2e3a32; }
 [data-theme="dark"] .staff-member-identity { color: #dce7df; }
 [data-theme="dark"] .staff-member-identity span { color: #a6b5ab; }
+[data-theme="dark"] .staff-live-queue-context h2 { color: #e5eee8; }
+[data-theme="dark"] .staff-live-queue-context > p:last-child { color: #a6b5ab; }
 [data-theme="dark"] .staff-invitation-location-option input { accent-color: #b7e7c8; }
 [data-theme="dark"] .staff-open-queue { color: #b7e7c8; }
 [data-theme="dark"] .staff-queue-symbol,
@@ -384,6 +391,12 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
   .staff-main { padding: 32px 24px 50px; }
   .staff-page-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
   .staff-heading-actions { width: 100%; justify-content: flex-start; }
+}
+
+@media (max-width: 640px) {
+  .staff-live-queue-card { align-items: flex-start; flex-wrap: wrap; }
+  .staff-live-queue-card > .staff-queue-status { margin-left: auto; }
+  .staff-live-queue-card > .staff-primary-button { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 650px) {

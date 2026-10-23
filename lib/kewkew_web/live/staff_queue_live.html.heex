@@ -2,6 +2,7 @@
   flash={@flash}
   staff?={true}
   staff_email={to_string(@current_user.email)}
+  can_setup?={@can_setup?}
   location_name={@location.name}
 >
   <section id="staff-queue-board" class="staff-page">
