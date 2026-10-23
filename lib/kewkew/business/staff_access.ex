@@ -148,6 +148,8 @@ defmodule Kewkew.Business.StaffAccess do
           on: service.id == queue.service_id,
           join: location in Location,
           on: location.id == queue.location_id and service.location_id == location.id,
+          join: organization in Organization,
+          on: organization.id == location.organization_id,
           join: membership in StaffMembership,
           on: membership.organization_id == location.organization_id,
           left_join: assignment in StaffLocationAccess,
@@ -157,7 +159,12 @@ defmodule Kewkew.Business.StaffAccess do
           where:
             queue.id == ^queue_id and membership.user_id == ^user_id and membership.active? and
               (membership.role == :admin or not is_nil(assignment.id)),
-          select: %{queue: queue, location: location, service: service},
+          select: %{
+            queue: queue,
+            location: location,
+            service: service,
+            organization: organization
+          },
           limit: 1
       )
     else

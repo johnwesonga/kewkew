@@ -35,6 +35,14 @@
           <span id={"staff-organization-role-#{organization.id}"} class="staff-assignment-count">
             {if role == :admin, do: "Administrator", else: "Operator"}
           </span>
+          <.link
+            :if={can_manage?}
+            id={"staff-edit-organization-#{organization.id}"}
+            navigate={~p"/staff/organizations/#{organization.id}/edit"}
+            class="staff-edit-queue-link"
+          >
+            <.icon name="hero-pencil-square" class="size-4" /> Edit organization
+          </.link>
         </header>
 
         <div

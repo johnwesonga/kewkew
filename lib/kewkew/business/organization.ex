@@ -19,6 +19,10 @@ defmodule Kewkew.Business.Organization do
       primary? true
       accept [:name]
     end
+
+    update :update_profile do
+      accept [:name]
+    end
   end
 
   policies do
@@ -33,6 +37,7 @@ defmodule Kewkew.Business.Organization do
     attribute :name, :string do
       allow_nil? false
       public? true
+      constraints min_length: 1, max_length: 120
     end
 
     create_timestamp :inserted_at

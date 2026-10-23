@@ -8,9 +8,9 @@
     <header class="staff-page-heading">
       <div>
         <.link navigate={~p"/staff"} class="staff-back-link">
-          <.icon name="hero-arrow-left" class="size-4" /> All queues
+          <.icon name="hero-arrow-left" class="size-4" /> Organization overview
         </.link>
-        <p class="staff-eyebrow">{@location.name} · {@service.name}</p>
+        <p class="staff-eyebrow">{@organization.name} · {@location.name} · {@service.name}</p>
         <h1 id="staff-queue-name">{@queue.name}</h1>
         <p class="staff-subhead">Monitor visitors as they move through this queue.</p>
       </div>

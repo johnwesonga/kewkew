@@ -1,0 +1,63 @@
+<Layouts.app flash={@flash} staff?={true} staff_email={@staff_email}>
+  <section id="staff-edit-organization" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> Organization overview
+        </.link>
+        <p class="staff-eyebrow">Organization setup</p>
+        <h1>Edit organization</h1>
+        <p class="staff-subhead">Update the business name shown in your workspace.</p>
+      </div>
+    </header>
+
+    <section class="staff-card staff-create-queue-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2>Organization details</h2>
+          <p>Changes apply to the organization profile only.</p>
+        </div>
+      </div>
+
+      <div
+        :if={@errors != []}
+        id="staff-edit-organization-errors"
+        class="staff-form-errors"
+        role="alert"
+      >
+        <p>Review the organization details:</p>
+        <ul>
+          <li :for={message <- @errors}>{message}</li>
+        </ul>
+      </div>
+
+      <.form
+        for={@form}
+        id="staff-edit-organization-form"
+        action={~p"/staff/organizations/#{@organization.id}"}
+        method="put"
+        class="staff-create-queue-form"
+      >
+        <.input
+          field={@form[:name]}
+          label="Organization name"
+          autocomplete="organization"
+          maxlength="120"
+          required
+        />
+
+        <p class="staff-form-note">
+          This updates the organization name without changing any locations, services, queues,
+          visitor records, or staff memberships.
+        </p>
+
+        <div class="staff-form-actions">
+          <.link navigate={~p"/staff"} class="staff-secondary-button">Cancel</.link>
+          <button id="staff-save-organization" type="submit" class="staff-primary-button">
+            Save changes
+          </button>
+        </div>
+      </.form>
+    </section>
+  </section>
+</Layouts.app>

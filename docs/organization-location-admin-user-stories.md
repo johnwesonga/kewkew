@@ -55,7 +55,7 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-3: Update organization details
 
-**Status** — Planned
+**Status** — Complete
 
 **User story** — As an organization administrator, I want to update my organization's name so that staff and operational pages use the current business name.
 

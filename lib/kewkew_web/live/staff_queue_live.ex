@@ -421,6 +421,7 @@ defmodule KewkewWeb.StaffQueueLive do
     socket
     |> assign(
       queue: board.queue,
+      organization: board.organization,
       location: board.location,
       service: board.service,
       session: board.session,

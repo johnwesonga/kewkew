@@ -3,6 +3,7 @@ defmodule KewkewWeb.StaffController do
 
   use KewkewWeb, :controller
 
+  alias Kewkew.Business.StaffUpdateOrganization
   alias Kewkew.Business.StaffAccess
   alias Kewkew.Queues.StaffCreateQueue
   alias Kewkew.Queues.StaffSetQueueAvailability
@@ -41,6 +42,73 @@ defmodule KewkewWeb.StaffController do
       organization_groups: organization_groups,
       queue_count: length(queues)
     )
+  end
+
+  @doc "Shows the organization name editor to an active organization administrator."
+  def edit_organization(conn, %{"organization_id" => organization_id}) do
+    case StaffUpdateOrganization.fetch_organization(
+           conn.assigns.current_user.id,
+           organization_id
+         ) do
+      {:ok, organization} ->
+        render_organization_form(conn, organization, organization.name, [])
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to edit that organization.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def edit_organization(conn, _params) do
+    conn
+    |> put_flash(:error, "Choose an organization to edit.")
+    |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Updates the organization name after rechecking organization admin access."
+  def update_organization(conn, %{"organization_id" => organization_id, "organization" => params}) do
+    case StaffUpdateOrganization.update_name(
+           conn.assigns.current_user.id,
+           organization_id,
+           Map.get(params, "name", "")
+         ) do
+      {:ok, organization} ->
+        conn
+        |> put_flash(:info, "Organization name updated to #{organization.name}.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, :invalid_name} ->
+        case StaffUpdateOrganization.fetch_organization(
+               conn.assigns.current_user.id,
+               organization_id
+             ) do
+          {:ok, organization} ->
+            render_organization_form(
+              conn,
+              organization,
+              Map.get(params, "name", ""),
+              ["Enter an organization name between 1 and 120 characters."],
+              status: :unprocessable_entity
+            )
+
+          {:error, :not_found} ->
+            conn
+            |> put_flash(:error, "You do not have permission to edit that organization.")
+            |> redirect(to: ~p"/staff")
+        end
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to edit that organization.")
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def update_organization(conn, _params) do
+    conn
+    |> put_flash(:error, "The organization details were incomplete.")
+    |> redirect(to: ~p"/staff")
   end
 
   @doc "Shows the queue creation form for an administrator's location."
@@ -201,6 +269,17 @@ defmodule KewkewWeb.StaffController do
         |> put_flash(:error, "You do not have permission to create a queue at that location.")
         |> redirect(to: ~p"/staff")
     end
+  end
+
+  defp render_organization_form(conn, organization, name, errors, opts \\ []) do
+    render(conn, :edit_organization,
+      page_title: "Organization details",
+      staff_email: to_string(conn.assigns.current_user.email),
+      organization: organization,
+      form: Phoenix.Component.to_form(%{"name" => name}, as: :organization),
+      errors: errors,
+      status: Keyword.get(opts, :status, :ok)
+    )
   end
 
   defp render_create_form(conn, location, services, params, errors, opts \\ []) do
