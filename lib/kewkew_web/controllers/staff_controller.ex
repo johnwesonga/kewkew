@@ -30,6 +30,11 @@ defmodule KewkewWeb.StaffController do
           organization: organization,
           role: role,
           can_manage?: role == :admin,
+          members:
+            if(role == :admin,
+              do: StaffAccess.memberships_for_organization(user_id, organization.id),
+              else: []
+            ),
           locations:
             Enum.map(organization_locations, fn location ->
               %{
@@ -136,6 +141,49 @@ defmodule KewkewWeb.StaffController do
     do: "The invitation could not be delivered. Please try again."
 
   defp invitation_error(_), do: "Enter a valid email and role."
+
+  def update_staff_membership(conn, %{
+        "organization_id" => organization_id,
+        "membership_id" => membership_id,
+        "active" => active
+      })
+      when active in ["true", "false"] do
+    active? = active == "true"
+
+    case StaffAccess.set_membership_active(
+           conn.assigns.current_user.id,
+           organization_id,
+           membership_id,
+           active?
+         ) do
+      {:ok, _membership} ->
+        conn
+        |> put_flash(
+          :info,
+          if(active?, do: "Staff access restored.", else: "Staff access suspended.")
+        )
+        |> redirect(to: ~p"/staff")
+
+      {:error, :last_active_admin} ->
+        conn
+        |> put_flash(:error, "Add or restore another administrator before suspending this one.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, _} ->
+        conn
+        |> put_flash(
+          :error,
+          "You do not have permission to change staff access in that organization."
+        )
+        |> redirect(to: ~p"/staff")
+    end
+  end
+
+  def update_staff_membership(conn, _params),
+    do:
+      conn
+      |> put_flash(:error, "The staff access change was incomplete.")
+      |> redirect(to: ~p"/staff")
 
   @doc "Shows the organization name editor to an active organization administrator."
   def edit_organization(conn, %{"organization_id" => organization_id}) do

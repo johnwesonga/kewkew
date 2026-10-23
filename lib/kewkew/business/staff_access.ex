@@ -3,7 +3,15 @@ defmodule Kewkew.Business.StaffAccess do
 
   import Ecto.Query
 
-  alias Kewkew.Business.{Location, Organization, Service, StaffLocationAccess, StaffMembership}
+  alias Kewkew.Business.{
+    Location,
+    Organization,
+    Service,
+    StaffLocationAccess,
+    StaffMembership,
+    StaffMembershipAudit
+  }
+
   alias Kewkew.Queues.{Queue, QueueSession}
   alias Kewkew.Repo
 
@@ -232,13 +240,33 @@ defmodule Kewkew.Business.StaffAccess do
     do: {:error, :invalid_membership}
 
   def revoke_membership(actor_id, membership_id) do
+    set_membership_active(actor_id, membership_id, false)
+  end
+
+  def set_membership_active(actor_id, membership_id, active?) when is_boolean(active?) do
+    set_membership_active(actor_id, nil, membership_id, active?)
+  end
+
+  def set_membership_active(_actor_id, _membership_id, _active?),
+    do: {:error, :invalid_membership}
+
+  def set_membership_active(actor_id, organization_id, membership_id, active?)
+      when is_boolean(active?) do
     Repo.transaction(fn ->
       membership =
         Repo.one(
           from membership in StaffMembership,
-            where: membership.id == ^membership_id,
+            where:
+              membership.id == ^membership_id and
+                (is_nil(^organization_id) or membership.organization_id == ^organization_id),
             lock: "FOR UPDATE"
         ) || Repo.rollback(:membership_not_found)
+
+      Repo.one!(
+        from organization in Organization,
+          where: organization.id == ^membership.organization_id,
+          lock: "FOR UPDATE"
+      )
 
       ensure_organization_admin!(actor_id, membership.organization_id)
 
@@ -247,10 +275,44 @@ defmodule Kewkew.Business.StaffAccess do
         Repo.rollback(:last_active_admin)
       end
 
-      membership
-      |> Ecto.Changeset.change(active?: false)
-      |> Repo.update!()
+      if membership.active? != active? do
+        membership = membership |> Ecto.Changeset.change(active?: active?) |> Repo.update!()
+
+        %StaffMembershipAudit{
+          actor_id: actor_id,
+          member_id: membership.user_id,
+          organization_id: membership.organization_id,
+          membership_id: membership.id,
+          change: if(active?, do: :restored, else: :suspended),
+          occurred_at: DateTime.utc_now()
+        }
+        |> Repo.insert!()
+
+        membership
+      else
+        membership
+      end
     end)
+  end
+
+  def set_membership_active(_actor_id, _organization_id, _membership_id, _active?),
+    do: {:error, :invalid_membership}
+
+  def memberships_for_organization(actor_id, organization_id) do
+    with {:ok, actor_id} <- Ecto.UUID.cast(actor_id),
+         {:ok, organization_id} <- Ecto.UUID.cast(organization_id),
+         true <- can_manage_organization?(actor_id, organization_id) do
+      Repo.all(
+        from membership in StaffMembership,
+          join: user in Kewkew.Accounts.User,
+          on: user.id == membership.user_id,
+          where: membership.organization_id == ^organization_id,
+          order_by: [asc: user.email],
+          select: %{membership: membership, email: user.email}
+      )
+    else
+      _ -> {:error, :not_found}
+    end
   end
 
   defp ensure_organization_admin!(actor_id, organization_id) do

@@ -20,6 +20,7 @@
             organization: organization,
             role: role,
             can_manage?: can_manage?,
+            members: members,
             locations: locations
           } <- @organization_groups
         }
@@ -60,6 +61,58 @@
             <.icon name="hero-user-plus" class="size-4" /> Invite staff
           </.link>
         </header>
+
+        <section
+          :if={can_manage?}
+          id={"staff-members-#{organization.id}"}
+          class="staff-members-section"
+        >
+          <div class="staff-location-section-heading">
+            <h3>Staff access</h3>
+          </div>
+          <ul :if={members != []} class="staff-member-list">
+            <li
+              :for={%{membership: membership, email: email} <- members}
+              id={"staff-member-#{membership.id}"}
+            >
+              <span class="staff-member-identity">
+                <strong>{email}</strong>
+                <span>{if membership.role == :admin, do: "Administrator", else: "Operator"}</span>
+              </span>
+              <span class={[
+                "staff-queue-status",
+                if(membership.active?, do: "open", else: "inactive")
+              ]}>
+                {if membership.active?, do: "Active", else: "Suspended"}
+              </span>
+              <.link
+                :if={membership.active?}
+                id={"staff-suspend-#{membership.id}"}
+                href={
+                  ~p"/staff/organizations/#{organization.id}/staff/#{membership.id}/availability?active=false"
+                }
+                method="put"
+                data-confirm={
+                  "Suspend access for #{email}? They will lose access to this organization immediately."
+                }
+                class="staff-edit-queue-link"
+              >
+                Suspend access
+              </.link>
+              <.link
+                :if={!membership.active?}
+                id={"staff-restore-#{membership.id}"}
+                href={
+                  ~p"/staff/organizations/#{organization.id}/staff/#{membership.id}/availability?active=true"
+                }
+                method="put"
+                class="staff-edit-queue-link reactivate"
+              >
+                Restore access
+              </.link>
+            </li>
+          </ul>
+        </section>
 
         <div
           :if={locations == []}

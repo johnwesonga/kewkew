@@ -178,7 +178,9 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-10: Suspend or remove staff access
 
-**Status** — In progress
+**Status** — Complete
+
+**Status note** — Administrators can suspend and restore memberships from the organization overview. Each status change is recorded with actor, member, organization, change, and timestamp; the last active admin is protected under an organization lock.
 
 **User story** — As an organization administrator, I want to suspend a staff member's organization membership so they immediately lose access when they leave or change roles.
 

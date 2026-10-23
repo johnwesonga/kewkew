@@ -78,6 +78,10 @@ defmodule KewkewWeb.Router do
          StaffController,
          :create_staff_invitation
 
+    put "/organizations/:organization_id/staff/:membership_id/availability",
+        StaffController,
+        :update_staff_membership
+
     put "/organizations/:organization_id", StaffController, :update_organization
     get "/organizations/:organization_id/locations/new", StaffController, :new_location
     post "/organizations/:organization_id/locations", StaffController, :create_location
