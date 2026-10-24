@@ -143,7 +143,9 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-8: Invite a staff member and grant initial access
 
-**Status** — Planned
+**Status** — Complete
+
+**Status note** — Organization administrators can email seven-day, single-use invitations with an initial role and operator locations. Only token hashes are stored; acceptance creates or reuses the identity and applies membership plus location access atomically. Delivery and acceptance states are persisted, and public self-registration remains disabled.
 
 **User story** — As an organization administrator, I want to invite a staff member with an initial role and location access so they can securely use Kewkew for their assigned work.
 
