@@ -22,7 +22,7 @@ defmodule KewkewWeb.StaffInvitationController do
       {:ok, _user} ->
         conn
         |> put_flash(:info, "Your invitation was accepted. Sign in to access your workspace.")
-        |> redirect(to: "/auth")
+        |> redirect(to: ~p"/sign-in")
 
       {:error, :invalid_password} ->
         case StaffInvitations.invitation(token) do
