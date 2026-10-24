@@ -93,6 +93,10 @@ defmodule Kewkew.Queues.Queue do
     end
 
     has_many :sessions, Kewkew.Queues.QueueSession
+
+    has_one :schedule, Kewkew.Queues.QueueSchedule do
+      public? true
+    end
   end
 
   identities do

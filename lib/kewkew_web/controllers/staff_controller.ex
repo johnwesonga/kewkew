@@ -997,11 +997,13 @@ defmodule KewkewWeb.StaffController do
   def edit(conn, %{"queue_id" => queue_id}) do
     case StaffUpdateQueue.fetch_queue(conn.assigns.current_user.id, queue_id) do
       {:ok, context} ->
-        params = %{
-          "name" => context.queue.name,
-          "identity_policy" => Atom.to_string(context.queue.identity_policy),
-          "max_active_tickets" => capacity_value(context.queue.max_active_tickets)
-        }
+        params =
+          %{
+            "name" => context.queue.name,
+            "identity_policy" => Atom.to_string(context.queue.identity_policy),
+            "max_active_tickets" => capacity_value(context.queue.max_active_tickets)
+          }
+          |> Map.merge(Kewkew.Queues.StaffQueueSchedule.form_params(context.schedule))
 
         public_url = request_url(conn, "/q/#{context.queue.public_slug}")
         render_edit_form(conn, context, params, public_url, [])

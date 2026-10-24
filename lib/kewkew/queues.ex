@@ -5,6 +5,7 @@ defmodule Kewkew.Queues do
 
   resources do
     resource Kewkew.Queues.Queue
+    resource Kewkew.Queues.QueueSchedule
     resource Kewkew.Queues.QueueSession
     resource Kewkew.Queues.Ticket
     resource Kewkew.Queues.TicketEvent

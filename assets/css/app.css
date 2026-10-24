@@ -254,6 +254,13 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 .staff-form-label { color: #718078; font-size: 11px; font-weight: 700; }
 .staff-form-location strong { color: #17251f; font-size: 13px; }
 .staff-form-note { margin: 0; color: #718078; font-size: 11px; line-height: 1.6; }
+.staff-form-section { display: grid; gap: 14px; padding: 18px; border: 1px solid #dfe7e2; border-radius: 12px; }
+.staff-form-section h3 { margin: 0; color: #17251f; font-size: 15px; }
+.staff-form-fieldset { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+.staff-form-fieldset legend { margin-bottom: 8px; color: #33443b; font-size: 12px; font-weight: 700; }
+.staff-form-checkboxes { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+.staff-form-checkboxes label { display: inline-flex; align-items: center; gap: 6px; color: #33443b; font-size: 12px; }
+.staff-form-checkboxes input { accent-color: #16724d; }
 .staff-form-errors { margin: 18px 24px 0; padding: 13px 15px; border-radius: 12px; color: #8b302c; background: #fff0ed; font-size: 11px; }
 .staff-form-errors p { margin: 0 0 7px; font-weight: 750; }
 .staff-form-errors ul { margin: 0; padding-left: 18px; }

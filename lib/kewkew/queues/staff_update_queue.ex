@@ -4,7 +4,7 @@ defmodule Kewkew.Queues.StaffUpdateQueue do
   import Ecto.Query
 
   alias Kewkew.Business.{Location, Service, StaffMembership}
-  alias Kewkew.Queues.{Queue, StaffCreateQueue}
+  alias Kewkew.Queues.{Queue, QueueSchedule, StaffCreateQueue, StaffQueueSchedule}
   alias Kewkew.Repo
 
   @doc "Loads a queue's editable details for an administrator in its organization."
@@ -27,16 +27,27 @@ defmodule Kewkew.Queues.StaffUpdateQueue do
       case Repo.transaction(fn ->
              context = queue_context(user_id, queue_id, true) || Repo.rollback(:not_found)
 
+             schedule_configuration =
+               case StaffQueueSchedule.validate(params, context.location.timezone) do
+                 {:ok, schedule_configuration} -> schedule_configuration
+                 {:error, errors} -> Repo.rollback({:invalid_params, errors})
+               end
+
              case Ash.update(context.queue, configuration,
                     action: :update_configuration,
                     domain: Kewkew.Queues,
                     authorize?: false
                   ) do
-               {:ok, queue} -> queue
-               {:error, _error} -> Repo.rollback(:invalid_queue)
+               {:ok, queue} ->
+                 StaffQueueSchedule.save!(queue.id, context.schedule, schedule_configuration)
+                 queue
+
+               {:error, _error} ->
+                 Repo.rollback(:invalid_queue)
              end
            end) do
         {:ok, queue} -> {:ok, queue}
+        {:error, {:invalid_params, errors}} -> {:error, :invalid_params, errors}
         {:error, reason} -> {:error, reason}
       end
     else
@@ -64,6 +75,13 @@ defmodule Kewkew.Queues.StaffUpdateQueue do
 
     query = if lock?, do: lock(query, "FOR UPDATE"), else: query
 
-    Repo.one(query)
+    case Repo.one(query) do
+      nil ->
+        nil
+
+      context ->
+        schedule = Repo.one(from schedule in QueueSchedule, where: schedule.queue_id == ^queue_id)
+        Map.put(context, :schedule, schedule)
+    end
   end
 end

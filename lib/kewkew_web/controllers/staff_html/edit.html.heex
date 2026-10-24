@@ -75,6 +75,48 @@
           placeholder="No limit"
         />
 
+        <section id="staff-recurring-queue-schedule" class="staff-form-section">
+          <h3>Recurring signup schedule</h3>
+          <p class="staff-form-note">
+            Times use the location timezone: {@context.location.timezone}. Visitors can join at the
+            signup-open time; staff service starts later. The ticket cap is private.
+          </p>
+
+          <.input
+            field={@form[:schedule_enabled]}
+            type="checkbox"
+            label="Enable a recurring schedule"
+            value="true"
+          />
+
+          <fieldset class="staff-form-fieldset">
+            <legend>Signup weekdays</legend>
+            <div class="staff-form-checkboxes">
+              <label :for={{label, value} <- Kewkew.Queues.StaffQueueSchedule.weekday_labels()}>
+                <input
+                  id={"staff-schedule-weekday-#{value}"}
+                  type="checkbox"
+                  name="queue[weekdays][]"
+                  value={value}
+                  checked={value in (@form[:weekdays].value || [])}
+                />
+                {label}
+              </label>
+            </div>
+          </fieldset>
+
+          <.input field={@form[:signup_open_time]} type="time" label="Signup opens" />
+          <.input field={@form[:service_start_time]} type="time" label="Scheduled service starts" />
+          <.input
+            field={@form[:ticket_cap]}
+            type="number"
+            label="Tickets issued per occurrence (optional)"
+            min="1"
+            step="1"
+            placeholder="No limit"
+          />
+        </section>
+
         <p class="staff-form-note">
           Changes apply to future joins. Existing tickets are unchanged. Lowering capacity below the current active count blocks new joins until the count drops under the limit.
         </p>
