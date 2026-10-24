@@ -24,7 +24,9 @@ Staff authentication uses [AshAuthentication](https://ash-authentication.hexdocs
 
 ### SF-1: Access assigned queues
 
-**Status** — In progress
+**Status** — Complete
+
+**Status note** — Staff routes require an authenticated identity with an active membership. Queue reads and actions recheck organization and location access; administrators manage staff roles, assignments, and membership status. Last-active-admin protections cover suspension and role demotion.
 
 **User story** — As a staff member, I want to sign in and see only the queues I am assigned to so that visitor information and queue controls are limited to my work.
 
