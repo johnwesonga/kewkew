@@ -15,7 +15,7 @@ defmodule Kewkew.Business.StaffInvitation do
     field :accepted_at, :utc_datetime_usec
     field :revoked_at, :utc_datetime_usec
     field :delivered_at, :utc_datetime_usec
-    field :location_ids, {:array, :binary_id}, virtual: true, default: []
+    field :location_ids, {:array, :binary_id}, default: []
     field :organization_name, :string, virtual: true
 
     belongs_to :organization, Kewkew.Business.Organization
