@@ -372,7 +372,6 @@ defmodule Kewkew.Business.StaffAccess do
             lock: "FOR UPDATE"
         )
 
-        ensure_organization_admin!(actor_id, organization_id)
         ensure_role_locations!(organization_id, role, location_ids)
 
         if membership.active? and membership.role == :admin and role == :operator and
@@ -380,20 +379,19 @@ defmodule Kewkew.Business.StaffAccess do
           Repo.rollback(:last_active_admin)
         end
 
-        updated_membership =
-          case Ash.update(membership, %{role: role},
-                 action: :change_role,
-                 domain: Kewkew.Business,
-                 actor: %Kewkew.Accounts.User{id: actor_id}
-               ) do
-            {:ok, updated_membership} -> updated_membership
-            {:error, _} -> Repo.rollback(:invalid_membership)
-          end
+        assignments =
+          Repo.all(
+            from assignment in StaffLocationAccess,
+              where: assignment.staff_membership_id == ^membership_id
+          )
 
-        Repo.delete_all(
-          from assignment in StaffLocationAccess,
-            where: assignment.staff_membership_id == ^membership_id
-        )
+        Enum.each(assignments, fn assignment ->
+          Ash.destroy!(assignment,
+            action: :unassign,
+            domain: Kewkew.Business,
+            actor: %Kewkew.Accounts.User{id: actor_id}
+          )
+        end)
 
         if role == :operator do
           Enum.each(location_ids, fn location_id ->
@@ -402,12 +400,19 @@ defmodule Kewkew.Business.StaffAccess do
               %{staff_membership_id: membership_id, location_id: location_id},
               action: :assign,
               domain: Kewkew.Business,
-              authorize?: false
+              actor: %Kewkew.Accounts.User{id: actor_id}
             )
           end)
         end
 
-        updated_membership
+        case Ash.update(membership, %{role: role},
+               action: :change_role,
+               domain: Kewkew.Business,
+               actor: %Kewkew.Accounts.User{id: actor_id}
+             ) do
+          {:ok, updated_membership} -> updated_membership
+          {:error, _} -> Repo.rollback(:invalid_membership)
+        end
       end)
     else
       {:error, reason} -> {:error, reason}

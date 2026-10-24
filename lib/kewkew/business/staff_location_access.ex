@@ -22,10 +22,16 @@ defmodule Kewkew.Business.StaffLocationAccess do
     create :assign do
       accept [:staff_membership_id, :location_id]
     end
+
+    destroy :unassign
   end
 
   policies do
-    policy always() do
+    policy action([:assign, :unassign]) do
+      authorize_if {Kewkew.Business.Policies.ActiveOrganizationAdmin, []}
+    end
+
+    policy action(:read) do
       forbid_if always()
     end
   end
