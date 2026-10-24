@@ -322,6 +322,102 @@ defmodule Kewkew.Business.StaffAccess do
     end
   end
 
+  def staff_membership_for_admin(actor_id, organization_id, membership_id) do
+    with {:ok, actor_id} <- Ecto.UUID.cast(actor_id),
+         {:ok, organization_id} <- Ecto.UUID.cast(organization_id),
+         {:ok, membership_id} <- Ecto.UUID.cast(membership_id),
+         true <- can_manage_organization?(actor_id, organization_id),
+         %{membership: %StaffMembership{}} = result <-
+           Repo.one(
+             from membership in StaffMembership,
+               join: user in Kewkew.Accounts.User,
+               on: user.id == membership.user_id,
+               where:
+                 membership.id == ^membership_id and
+                   membership.organization_id == ^organization_id,
+               select: %{membership: membership, email: user.email}
+           ) do
+      location_ids =
+        Repo.all(
+          from assignment in StaffLocationAccess,
+            where: assignment.staff_membership_id == ^membership_id,
+            select: assignment.location_id
+        )
+
+      {:ok, Map.put(result, :location_ids, location_ids)}
+    else
+      _ -> {:error, :not_found}
+    end
+  end
+
+  def update_membership_access(actor_id, organization_id, membership_id, role, location_ids)
+      when role in [:admin, :operator] and is_list(location_ids) do
+    with {:ok, actor_id} <- Ecto.UUID.cast(actor_id),
+         {:ok, organization_id} <- Ecto.UUID.cast(organization_id),
+         {:ok, membership_id} <- Ecto.UUID.cast(membership_id),
+         {:ok, location_ids} <- cast_location_ids(location_ids) do
+      Repo.transaction(fn ->
+        membership =
+          Repo.one(
+            from membership in StaffMembership,
+              where:
+                membership.id == ^membership_id and
+                  membership.organization_id == ^organization_id,
+              lock: "FOR UPDATE"
+          ) || Repo.rollback(:not_found)
+
+        Repo.one!(
+          from organization in Organization,
+            where: organization.id == ^organization_id,
+            lock: "FOR UPDATE"
+        )
+
+        ensure_organization_admin!(actor_id, organization_id)
+        ensure_role_locations!(organization_id, role, location_ids)
+
+        if membership.active? and membership.role == :admin and role == :operator and
+             active_admin_count(organization_id) == 1 do
+          Repo.rollback(:last_active_admin)
+        end
+
+        updated_membership =
+          case Ash.update(membership, %{role: role},
+                 action: :change_role,
+                 domain: Kewkew.Business,
+                 authorize?: false
+               ) do
+            {:ok, updated_membership} -> updated_membership
+            {:error, _} -> Repo.rollback(:invalid_membership)
+          end
+
+        Repo.delete_all(
+          from assignment in StaffLocationAccess,
+            where: assignment.staff_membership_id == ^membership_id
+        )
+
+        if role == :operator do
+          Enum.each(location_ids, fn location_id ->
+            Ash.create!(
+              StaffLocationAccess,
+              %{staff_membership_id: membership_id, location_id: location_id},
+              action: :assign,
+              domain: Kewkew.Business,
+              authorize?: false
+            )
+          end)
+        end
+
+        updated_membership
+      end)
+    else
+      {:error, reason} -> {:error, reason}
+      _ -> {:error, :invalid_membership}
+    end
+  end
+
+  def update_membership_access(_actor_id, _organization_id, _membership_id, _role, _location_ids),
+    do: {:error, :invalid_membership}
+
   defp ensure_organization_admin!(actor_id, organization_id) do
     unless can_manage_organization?(actor_id, organization_id),
       do: Repo.rollback(:forbidden)
@@ -347,6 +443,19 @@ defmodule Kewkew.Business.StaffAccess do
 
     if location_ids == [] or Enum.sort(valid_ids) != Enum.sort(Enum.uniq(location_ids)),
       do: Repo.rollback(:invalid_location_assignment)
+  end
+
+  defp cast_location_ids(location_ids) do
+    cast_ids = Enum.map(location_ids, &Ecto.UUID.cast/1)
+
+    if Enum.all?(cast_ids, &match?({:ok, _}, &1)) do
+      {:ok,
+       cast_ids
+       |> Enum.map(fn {:ok, id} -> id end)
+       |> Enum.uniq()}
+    else
+      {:error, :invalid_location_assignment}
+    end
   end
 
   defp active_admin_count(organization_id) do

@@ -43,6 +43,14 @@
               {if membership.active?, do: "Active", else: "Suspended"}
             </span>
             <.link
+              navigate={
+                ~p"/staff/organizations/#{entry.organization.id}/staff/#{membership.id}/edit"
+              }
+              class="staff-edit-queue-link"
+            >
+              Edit access
+            </.link>
+            <.link
               :if={membership.active?}
               href={
                 ~p"/staff/organizations/#{entry.organization.id}/staff/#{membership.id}/availability?active=false"

@@ -163,7 +163,9 @@ These stories cover the business setup and administration foundation. Queue conf
 
 ### OLA-9: Change staff roles and location assignments
 
-**Status** — In progress
+**Status** — Complete
+
+**Status note** — Administrators can edit member roles and replace operator location assignments from Staff access. Updates are organization-scoped and transactional; administrator assignments are cleared, invalid cross-organization locations are rejected, and the last active administrator cannot be demoted.
 
 **User story** — As an organization administrator, I want to update a staff member's role and location assignments so their access follows their responsibilities.
 

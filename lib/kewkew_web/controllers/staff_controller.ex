@@ -356,6 +356,202 @@ defmodule KewkewWeb.StaffController do
       |> put_flash(:error, "The staff access change was incomplete.")
       |> redirect(to: ~p"/staff")
 
+  def edit_staff_membership(conn, %{
+        "organization_id" => organization_id,
+        "membership_id" => membership_id
+      }) do
+    case StaffAccess.staff_membership_for_admin(
+           conn.assigns.current_user.id,
+           organization_id,
+           membership_id
+         ) do
+      {:ok, %{membership: membership, email: email, location_ids: location_ids}} ->
+        case StaffLocationAdministration.fetch_organization(
+               conn.assigns.current_user.id,
+               organization_id
+             ) do
+          {:ok, organization} ->
+            render_staff_membership_form(
+              conn,
+              organization,
+              membership,
+              email,
+              %{"role" => Atom.to_string(membership.role), "location_ids" => location_ids},
+              [],
+              []
+            )
+
+          {:error, :not_found} ->
+            redirect_staff_access_denied(conn)
+        end
+
+      {:error, :not_found} ->
+        redirect_staff_access_denied(conn)
+    end
+  end
+
+  def update_staff_membership_access(conn, %{
+        "organization_id" => organization_id,
+        "membership_id" => membership_id,
+        "membership" => params
+      }) do
+    role = parse_staff_role(Map.get(params, "role"))
+    location_ids = Map.get(params, "location_ids", [])
+    location_ids = if is_list(location_ids), do: location_ids, else: []
+
+    case StaffAccess.update_membership_access(
+           conn.assigns.current_user.id,
+           organization_id,
+           membership_id,
+           role,
+           location_ids
+         ) do
+      {:ok, _membership} ->
+        conn
+        |> put_flash(:info, "Staff role and location access updated.")
+        |> redirect(to: ~p"/staff/setup/staff")
+
+      {:error, :last_active_admin} ->
+        render_membership_access_error(
+          conn,
+          organization_id,
+          membership_id,
+          params,
+          "Add or promote another active administrator before changing this role."
+        )
+
+      {:error, :invalid_location_assignment} ->
+        render_membership_access_error(
+          conn,
+          organization_id,
+          membership_id,
+          params,
+          "Choose at least one location in this organization for an operator."
+        )
+
+      {:error, :not_found} ->
+        redirect_staff_access_denied(conn)
+
+      {:error, _reason} ->
+        render_membership_access_error(
+          conn,
+          organization_id,
+          membership_id,
+          params,
+          "The staff role and location access could not be updated."
+        )
+    end
+  end
+
+  def update_staff_membership_access(conn, _params),
+    do:
+      conn
+      |> put_flash(:error, "The staff access details were incomplete.")
+      |> redirect(to: ~p"/staff/setup/staff")
+
+  defp render_membership_access_error(conn, organization_id, membership_id, params, error) do
+    render_staff_membership_form(
+      conn,
+      organization_id,
+      membership_id,
+      normalize_membership_params(params),
+      [error],
+      status: :unprocessable_entity
+    )
+  end
+
+  defp render_staff_membership_form(
+         conn,
+         organization,
+         membership,
+         email,
+         params,
+         errors,
+         opts
+       )
+
+  defp render_staff_membership_form(
+         conn,
+         %Kewkew.Business.Organization{} = organization,
+         membership,
+         email,
+         params,
+         errors,
+         opts
+       ) do
+    locations = StaffLocationAdministration.locations_for_organization(organization.id)
+
+    render(conn, :staff_membership_form,
+      page_title: "Edit staff access",
+      staff_email: to_string(conn.assigns.current_user.email),
+      organization: organization,
+      membership: membership,
+      email: email,
+      locations: locations,
+      params: normalize_membership_params(params),
+      form: Phoenix.Component.to_form(normalize_membership_params(params), as: :membership),
+      errors: errors,
+      status: Keyword.get(opts, :status, :ok)
+    )
+  end
+
+  defp render_staff_membership_form(
+         conn,
+         organization_id,
+         membership_id,
+         params,
+         errors,
+         opts
+       ) do
+    case StaffAccess.staff_membership_for_admin(
+           conn.assigns.current_user.id,
+           organization_id,
+           membership_id
+         ) do
+      {:ok, %{membership: membership, email: email}} ->
+        case StaffLocationAdministration.fetch_organization(
+               conn.assigns.current_user.id,
+               organization_id
+             ) do
+          {:ok, organization} ->
+            render_staff_membership_form(
+              conn,
+              organization,
+              membership,
+              email,
+              params,
+              errors,
+              opts
+            )
+
+          {:error, :not_found} ->
+            redirect_staff_access_denied(conn)
+        end
+
+      {:error, :not_found} ->
+        redirect_staff_access_denied(conn)
+    end
+  end
+
+  defp normalize_membership_params(params) do
+    location_ids = Map.get(params, "location_ids", [])
+
+    Map.put(params, "location_ids", if(is_list(location_ids), do: location_ids, else: []))
+  end
+
+  defp parse_staff_role("admin"), do: :admin
+  defp parse_staff_role("operator"), do: :operator
+  defp parse_staff_role(_), do: nil
+
+  defp redirect_staff_access_denied(conn) do
+    conn
+    |> put_flash(
+      :error,
+      "You do not have permission to change staff access in that organization."
+    )
+    |> redirect(to: ~p"/staff")
+  end
+
   @doc "Shows the organization name editor to an active organization administrator."
   def edit_organization(conn, %{"organization_id" => organization_id}) do
     case StaffUpdateOrganization.fetch_organization(

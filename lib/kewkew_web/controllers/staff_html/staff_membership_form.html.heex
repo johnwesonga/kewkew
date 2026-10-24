@@ -1,0 +1,83 @@
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={@staff_email}
+  can_setup?={true}
+  active_nav={:staff}
+>
+  <section id="staff-membership-edit-page" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff/setup/staff"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> Staff access
+        </.link>
+        <p class="staff-eyebrow">Staff access · {@organization.name}</p>
+        <h1>Edit staff access</h1>
+        <p class="staff-subhead">Update the role and locations available to this member.</p>
+      </div>
+    </header>
+
+    <section class="staff-card staff-create-queue-card">
+      <div class="staff-card-heading">
+        <div>
+          <h2>{@email}</h2>
+          <p>Location changes take effect on the next access check.</p>
+        </div>
+      </div>
+
+      <div
+        :if={@errors != []}
+        id="staff-membership-errors"
+        class="staff-form-errors"
+        role="alert"
+      >
+        <p>Review the staff access details:</p>
+        <ul>
+          <li :for={error <- @errors}>{error}</li>
+        </ul>
+      </div>
+
+      <.form
+        for={@form}
+        id="staff-membership-form"
+        action={~p"/staff/organizations/#{@organization.id}/staff/#{@membership.id}/access"}
+        method="put"
+        class="staff-create-queue-form"
+      >
+        <.input
+          field={@form[:role]}
+          type="select"
+          label="Role"
+          options={[{"Operator", "operator"}, {"Administrator", "admin"}]}
+        />
+
+        <fieldset id="membership-locations" class="staff-invitation-locations">
+          <legend>Operator locations</legend>
+          <p class="staff-form-note">
+            Select one or more locations for an operator. Administrators have access to every location;
+            saving the administrator role clears individual assignments.
+          </p>
+          <label :for={location <- @locations} class="staff-invitation-location-option">
+            <input
+              type="checkbox"
+              name="membership[location_ids][]"
+              value={location.id}
+              checked={location.id in @params["location_ids"]}
+            />
+            <span>{location.name}</span>
+          </label>
+          <p :if={@locations == []} class="staff-form-note">
+            Create a location before assigning an operator.
+          </p>
+        </fieldset>
+
+        <div class="staff-form-actions">
+          <.link navigate={~p"/staff/setup/staff"} class="staff-secondary-button">Cancel</.link>
+          <button id="save-staff-access" type="submit" class="staff-primary-button">
+            Save access
+          </button>
+        </div>
+      </.form>
+    </section>
+  </section>
+</Layouts.app>
