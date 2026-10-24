@@ -14,6 +14,18 @@
         <p class="staff-eyebrow">{@organization.name} · {@location.name} · {@service.name}</p>
         <h1 id="staff-queue-name">{@queue.name}</h1>
         <p class="staff-subhead">Monitor visitors as they move through this queue.</p>
+        <p :if={@session && @session.opened_at} id="staff-session-opened-at" class="staff-subhead">
+          Session opened
+          <time
+            id="staff-session-opened-time"
+            datetime={DateTime.to_iso8601(@session.opened_at)}
+            data-location-time
+            data-timezone={@location.timezone}
+          >
+            {DateTime.to_iso8601(@session.opened_at)}
+          </time>
+          ({@location.timezone})
+        </p>
       </div>
       <div class="staff-heading-actions">
         <button

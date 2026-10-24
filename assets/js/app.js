@@ -26,6 +26,46 @@ import {hooks as colocatedHooks} from "phoenix-colocated/kewkew"
 import topbar from "../vendor/topbar"
 import QRCode from "qrcode"
 
+const formatLocationTimes = root => {
+  const times = []
+  if (root.matches?.("time[data-location-time]")) times.push(root)
+  times.push(...root.querySelectorAll?.("time[data-location-time]") || [])
+
+  for (const time of times) {
+    const key = `${time.dateTime}:${time.dataset.timezone}`
+    if (time.dataset.formattedKey === key) continue
+
+    try {
+      time.textContent = new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: time.dataset.timezone,
+      }).format(new Date(time.dateTime))
+      time.dataset.formattedKey = key
+    } catch (_error) {
+      // Keep the ISO UTC timestamp if the browser cannot format this timezone.
+    }
+  }
+}
+
+formatLocationTimes(document)
+new MutationObserver(records => {
+  for (const record of records) {
+    for (const node of record.addedNodes) {
+      if (node.nodeType === Node.ELEMENT_NODE) formatLocationTimes(node)
+    }
+
+    if (record.type === "attributes" && record.target.matches("time[data-location-time]")) {
+      formatLocationTimes(record.target)
+    }
+  }
+}).observe(document.documentElement, {
+  subtree: true,
+  childList: true,
+  attributes: true,
+  attributeFilter: ["datetime", "data-timezone"],
+})
+
 document.addEventListener("click", async event => {
   const button = event.target.closest("[data-copy-target]")
   if (!button) return
