@@ -180,6 +180,8 @@ These stories cover the business setup and administration foundation. Queue conf
 
 **Dependencies** — OLA-8; SF-1; organization and location authorization.
 
+**Related refactor scope** — [Move staff access updates behind Ash policies](staff-access-ash-policy-refactor.md).
+
 ### OLA-10: Suspend or remove staff access
 
 **Status** — Complete
