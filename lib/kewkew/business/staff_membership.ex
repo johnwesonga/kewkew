@@ -29,7 +29,11 @@ defmodule Kewkew.Business.StaffMembership do
   end
 
   policies do
-    policy always() do
+    policy action(:change_role) do
+      authorize_if {Kewkew.Business.Policies.ActiveOrganizationAdmin, []}
+    end
+
+    policy action([:read, :grant]) do
       forbid_if always()
     end
   end

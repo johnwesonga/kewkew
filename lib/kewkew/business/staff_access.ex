@@ -384,7 +384,7 @@ defmodule Kewkew.Business.StaffAccess do
           case Ash.update(membership, %{role: role},
                  action: :change_role,
                  domain: Kewkew.Business,
-                 authorize?: false
+                 actor: %Kewkew.Accounts.User{id: actor_id}
                ) do
             {:ok, updated_membership} -> updated_membership
             {:error, _} -> Repo.rollback(:invalid_membership)
