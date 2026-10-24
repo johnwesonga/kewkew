@@ -4,6 +4,8 @@
 
 Let a visitor join and follow a queue from a phone browser without installing an app or creating an account. The visitor flow must respect each queue's identity policy: anonymous ticket or first and last name required.
 
+For recurring signup windows and scheduled service starts, see [queue-scheduling-user-stories.md](queue-scheduling-user-stories.md).
+
 The proposed logical schema, constraints, and join transaction are documented in [visitor-flow-data-model.md](visitor-flow-data-model.md).
 Future visitor-flow ideas that are not part of the current implementation are tracked in [todo-features.md](todo-features.md).
 

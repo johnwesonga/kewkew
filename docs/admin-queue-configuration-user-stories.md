@@ -6,6 +6,8 @@ Let organization administrators configure reusable queues at their locations and
 
 These stories assume an organization, locations, services, staff memberships, and location assignments already exist. Their setup and administration are defined in [organization-location-admin-user-stories.md](organization-location-admin-user-stories.md). Staff authentication and queue authorization are defined in [staff-admin-flow-user-stories.md](staff-admin-flow-user-stories.md). Visitor-facing behavior is defined in [visitor-flow-user-stories.md](visitor-flow-user-stories.md).
 
+Recurring signup and service-start schedules are specified separately in [queue-scheduling-user-stories.md](queue-scheduling-user-stories.md).
+
 ## Shared rules
 
 - A **queue** is reusable configuration tied to one location and one service. A **queue session** is one operating period for that queue. Closing a session and opening another starts ticket numbering and line sequence at 1; pausing and resuming the same session does not reset either.
