@@ -213,6 +213,7 @@ if (visitorTicket) {
   const statusUrl = visitorTicket.dataset.statusUrl
   let lastPosition = progress?.dataset.position ? Number(progress.dataset.position) : null
   let lastStatus = visitorTicket.dataset.ticketStatus
+  let statusPollingInterval
 
   if (progress) {
     progress.dataset.progressActive = String(lastStatus === "waiting" && lastPosition !== null)
@@ -235,6 +236,14 @@ if (visitorTicket) {
       if (!response.ok) return
 
       const ticket = await response.json()
+
+      if (["completed", "cancelled", "no_show"].includes(ticket.status)) {
+        if (statusPollingInterval) window.clearInterval(statusPollingInterval)
+        document.removeEventListener("visibilitychange", refreshTicketStatus)
+        if (ticket.status !== lastStatus) window.location.reload()
+        return
+      }
+
       const positionLabel = ticket.position ? `${ticket.position} in line` : "No longer waiting"
       const positionChanged = ticket.position !== lastPosition
       const statusChanged = ticket.status !== lastStatus
@@ -261,9 +270,11 @@ if (visitorTicket) {
     }
   }
 
-  refreshTicketStatus()
-  window.setInterval(refreshTicketStatus, 3000)
-  document.addEventListener("visibilitychange", refreshTicketStatus)
+  if (!["completed", "cancelled", "no_show"].includes(lastStatus)) {
+    refreshTicketStatus()
+    statusPollingInterval = window.setInterval(refreshTicketStatus, 3000)
+    document.addEventListener("visibilitychange", refreshTicketStatus)
+  }
 }
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")

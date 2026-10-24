@@ -183,7 +183,9 @@ flowchart LR
 
 ### VF-10: See a service completion confirmation
 
-**Status** — Planned
+**Status** — Complete
+
+**Status note** — The existing private tracking URL renders a thank-you receipt for completed tickets, hides active-queue and link-copy controls, and stops polling after terminal states. Cancelled and no-show tickets retain distinct status and next-step messages.
 
 **User story** — As a visitor whose service is complete, I want a thank-you confirmation so I know I can leave and no longer need to monitor my place in line.
 

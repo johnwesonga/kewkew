@@ -9,9 +9,16 @@
       k
     </div>
     <p class="mt-5 text-xs font-extrabold uppercase tracking-[.15em] text-[#176b4b]">
-      You’re in line
+      {case @ticket.status do
+        :completed -> "Service complete"
+        :cancelled -> "Ticket cancelled"
+        :no_show -> "Call missed"
+        _ -> "You’re in line"
+      end}
     </p>
-    <h1 class="mt-3 text-3xl font-extrabold tracking-[-.05em]">Your ticket number</h1>
+    <h1 id="visitor-ticket-heading" class="mt-3 text-3xl font-extrabold tracking-[-.05em]">
+      {if(@ticket.status == :completed, do: "Thank you", else: "Your ticket number")}
+    </h1>
     <p
       id="visitor-ticket-number"
       class="mt-5 text-6xl font-extrabold tracking-[-.06em] text-[#176b4b]"
@@ -28,7 +35,24 @@
       {@status_label}
     </p>
 
-    <div class="mt-7 rounded-2xl bg-[#f4f7f4] p-4 text-center">
+    <section
+      :if={@ticket.status == :completed}
+      id="visitor-completion-message"
+      aria-live="polite"
+      class="mt-7 rounded-2xl border border-[#cde5d5] bg-[#f1f8f3] p-5 text-left"
+    >
+      <p class="text-base font-extrabold text-[#176b4b]">
+        Service for ticket ##{@ticket.ticket_number} at {@service.name} is complete.
+      </p>
+      <p class="mt-2 text-sm leading-6 text-[#526158]">
+        You’re all set. You can leave when ready.
+      </p>
+    </section>
+
+    <div
+      :if={@ticket.status not in [:completed, :cancelled, :no_show]}
+      class="mt-7 rounded-2xl bg-[#f4f7f4] p-4 text-center"
+    >
       <p class="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#87948b]">
         Position
       </p>
@@ -67,17 +91,33 @@
       </form>
     <% end %>
 
+    <p
+      :if={@ticket.status == :cancelled}
+      id="visitor-cancelled-next-step"
+      class="mt-6 text-sm leading-6 text-[#718078]"
+    >
+      This ticket was cancelled and no longer has a place in line. If you still need service, ask staff whether you can rejoin.
+    </p>
+
+    <p
+      :if={@ticket.status == :no_show}
+      id="visitor-no-show-next-step"
+      class="mt-6 text-sm leading-6 text-[#718078]"
+    >
+      This ticket is no longer active because staff could not reach you when called. If you’re still waiting, speak to staff about your next step.
+    </p>
+
     <%= if @ticket.status in [:called, :serving] do %>
       <p id="visitor-cancellation-policy" class="mt-5 text-sm text-[#718078]">
         Your number has been called. Please speak to staff if you need to leave.
       </p>
     <% end %>
 
-    <p class="mt-6 text-sm leading-6 text-[#718078]">
+    <p :if={@ticket.status != :completed} class="mt-6 text-sm leading-6 text-[#718078]">
       Your ticket number identifies your place in line. The private link below is what lets you return to this page.
     </p>
 
-    <div class="mt-6 text-left">
+    <div :if={@ticket.status != :completed} class="mt-6 text-left">
       <label for="visitor-tracking-link" class="text-xs font-extrabold text-[#5f6d64]">
         Your private tracking link
       </label>
