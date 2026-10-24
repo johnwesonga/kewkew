@@ -12,7 +12,7 @@ defmodule Kewkew.Business.StaffAccess do
     StaffMembershipAudit
   }
 
-  alias Kewkew.Queues.{Queue, QueueSession}
+  alias Kewkew.Queues.{Queue, QueueSchedule, QueueSession}
   alias Kewkew.Repo
 
   def has_active_membership?(user_id) do
@@ -131,9 +131,12 @@ defmodule Kewkew.Business.StaffAccess do
       )
 
     sessions_by_queue = latest_sessions_by_queue(queues)
+    schedules_by_queue = schedules_by_queue(queues)
 
     Enum.map(queues, fn entry ->
-      Map.put(entry, :session, Map.get(sessions_by_queue, entry.queue.id))
+      entry
+      |> Map.put(:session, Map.get(sessions_by_queue, entry.queue.id))
+      |> Map.put(:schedule, Map.get(schedules_by_queue, entry.queue.id))
     end)
   end
 
@@ -151,6 +154,15 @@ defmodule Kewkew.Business.StaffAccess do
       desc: session.inserted_at
     )
     |> Repo.all()
+    |> Map.new(&{&1.queue_id, &1})
+  end
+
+  defp schedules_by_queue([]), do: %{}
+
+  defp schedules_by_queue(queues) do
+    queue_ids = Enum.map(queues, & &1.queue.id)
+
+    Repo.all(from schedule in QueueSchedule, where: schedule.queue_id in ^queue_ids)
     |> Map.new(&{&1.queue_id, &1})
   end
 

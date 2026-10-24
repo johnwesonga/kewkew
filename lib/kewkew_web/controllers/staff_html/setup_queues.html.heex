@@ -47,6 +47,15 @@
               <span>
                 {entry.service.name} · {KewkewWeb.StaffHTML.identity_policy_label(entry.queue)}
               </span>
+              <span
+                id={"staff-setup-queue-schedule-#{entry.queue.id}"}
+                class={[
+                  "staff-queue-schedule-label",
+                  entry.schedule && "recurring"
+                ]}
+              >
+                {KewkewWeb.StaffHTML.queue_schedule_label(entry.schedule)}
+              </span>
             </div>
             <span class={[
               "staff-queue-status",
