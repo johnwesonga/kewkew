@@ -16,6 +16,22 @@
     <p class="mt-2 text-sm text-[#5f6d64]">{@queue.name}</p>
 
     <div
+      :if={@queue.schedule}
+      id="visitor-join-scheduled-service-start"
+      class="mt-5 rounded-xl bg-[#f1f8f3] p-4"
+    >
+      <p class="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#176b4b]">
+        Scheduled service start
+      </p>
+      <p class="mt-1 text-sm font-bold text-[#33443b]">
+        {KewkewWeb.VisitorQueueHTML.scheduled_service_time(
+          @queue.schedule,
+          @location.timezone
+        )}
+      </p>
+    </div>
+
+    <div
       :if={@queue.identity_policy == :anonymous}
       id="visitor-join-anonymous"
       class="mt-7 rounded-2xl bg-[#f4f7f4] p-5"
