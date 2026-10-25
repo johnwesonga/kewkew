@@ -58,7 +58,7 @@ defmodule Kewkew.Business.StaffServiceAdministration do
 
   def create_service(_user_id, _location_id, _params), do: {:error, :not_found}
 
-  @doc "Updates a service's name and description without changing its location."
+  @doc "Updates a service's details and visitor instructions without changing its location."
   def update_service(user_id, service_id, params) when is_map(params) do
     with {:ok, user_id} <- Ecto.UUID.cast(user_id),
          {:ok, service_id} <- Ecto.UUID.cast(service_id),
@@ -91,6 +91,9 @@ defmodule Kewkew.Business.StaffServiceAdministration do
     name = params |> Map.get("name", "") |> normalize_name()
     description = params |> Map.get("description", "") |> normalize_description()
 
+    visitor_instructions =
+      params |> Map.get("visitor_instructions", "") |> normalize_visitor_instructions()
+
     errors =
       []
       |> maybe_add_error(name == :missing, {:name, "Enter a service name."})
@@ -102,10 +105,23 @@ defmodule Kewkew.Business.StaffServiceAdministration do
         description == :too_long,
         {:description, "Descriptions must be 1,000 characters or fewer."}
       )
+      |> maybe_add_error(
+        visitor_instructions == :too_long,
+        {:visitor_instructions, "Visitor instructions must be 500 characters or fewer."}
+      )
 
     case errors do
-      [] -> {:ok, %{name: name, description: description}}
-      errors -> {:error, {:invalid_params, Enum.reverse(errors)}}
+      [] ->
+        {:ok,
+         %{
+           name: name,
+           description: description,
+           visitor_instructions:
+             if(visitor_instructions == :missing, do: nil, else: visitor_instructions)
+         }}
+
+      errors ->
+        {:error, {:invalid_params, Enum.reverse(errors)}}
     end
   end
 
@@ -132,6 +148,18 @@ defmodule Kewkew.Business.StaffServiceAdministration do
   end
 
   defp normalize_description(_description), do: nil
+
+  defp normalize_visitor_instructions(instructions) when is_binary(instructions) do
+    instructions = String.trim(instructions)
+
+    cond do
+      instructions == "" -> :missing
+      String.length(instructions) > 500 -> :too_long
+      true -> instructions
+    end
+  end
+
+  defp normalize_visitor_instructions(_instructions), do: :missing
 
   defp admin_location(user_id, location_id, opts \\ []) do
     query =

@@ -58,6 +58,17 @@
           maxlength="1000"
         />
 
+        <.input
+          field={@form[:visitor_instructions]}
+          type="textarea"
+          label="When it's their turn (optional)"
+          placeholder="For example: Please go to the front desk and show staff your ticket number."
+          maxlength="500"
+        />
+        <p class="staff-form-note">
+          These instructions appear on a visitor's private ticket page when staff call their number.
+        </p>
+
         <div class="staff-form-actions">
           <.link navigate={~p"/staff/setup"} class="staff-secondary-button">Cancel</.link>
           <button id="staff-save-service" type="submit" class="staff-primary-button">

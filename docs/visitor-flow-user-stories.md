@@ -170,7 +170,9 @@ flowchart LR
 
 ### VF-9: Understand when I am called
 
-**Status** — In progress
+**Status** — Complete
+
+**Status note** — The private ticket page renders a prominent called state with service-configured visitor instructions (or a clear default), renders serving and no-show states separately, and reloads from persisted state when polling detects a transition.
 
 **User story** — As a visitor whose turn has arrived, I want an unmistakable call-to-action on my tracking page so I know what to do next.
 

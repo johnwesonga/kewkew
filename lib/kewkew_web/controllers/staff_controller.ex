@@ -790,7 +790,17 @@ defmodule KewkewWeb.StaffController do
   def new_service(conn, %{"location_id" => location_id}) do
     case StaffServiceAdministration.fetch_location(conn.assigns.current_user.id, location_id) do
       {:ok, location} ->
-        render_service_form(conn, location, nil, %{"name" => "", "description" => ""}, [])
+        render_service_form(
+          conn,
+          location,
+          nil,
+          %{
+            "name" => "",
+            "description" => "",
+            "visitor_instructions" => ""
+          },
+          []
+        )
 
       {:error, :not_found} ->
         conn
@@ -852,7 +862,12 @@ defmodule KewkewWeb.StaffController do
   def edit_service(conn, %{"service_id" => service_id}) do
     case StaffServiceAdministration.fetch_service(conn.assigns.current_user.id, service_id) do
       {:ok, %{service: service, location: location}} ->
-        params = %{"name" => service.name, "description" => service.description || ""}
+        params = %{
+          "name" => service.name,
+          "description" => service.description || "",
+          "visitor_instructions" => service.visitor_instructions || ""
+        }
+
         render_service_form(conn, location, service, params, [])
 
       {:error, :not_found} ->

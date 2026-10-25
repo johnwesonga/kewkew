@@ -16,11 +16,11 @@ defmodule Kewkew.Business.Service do
 
     create :create do
       primary? true
-      accept [:name, :description, :location_id]
+      accept [:name, :description, :visitor_instructions, :location_id]
     end
 
     update :update_details do
-      accept [:name, :description]
+      accept [:name, :description, :visitor_instructions]
     end
 
     update :set_active do
@@ -40,6 +40,11 @@ defmodule Kewkew.Business.Service do
     attribute :description, :string do
       public? true
       constraints max_length: 1000
+    end
+
+    attribute :visitor_instructions, :string do
+      public? true
+      constraints max_length: 500
     end
 
     attribute :active?, :boolean do

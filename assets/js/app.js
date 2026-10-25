@@ -248,6 +248,11 @@ if (visitorTicket) {
       const positionChanged = ticket.position !== lastPosition
       const statusChanged = ticket.status !== lastStatus
 
+      if (statusChanged) {
+        window.location.reload()
+        return
+      }
+
       if (status.textContent !== ticket.status_label) status.textContent = ticket.status_label
       if (position.textContent.trim() !== positionLabel) position.textContent = positionLabel
       if (cancellationForm) cancellationForm.hidden = ticket.status !== "waiting"
