@@ -51,6 +51,39 @@ flowchart TD
 
 **Dependencies** — AQ-1, AQ-2, AQ-6, OLA-4, visitor signup and ticket tracking.
 
+## AQ-10: Set a service start time for a manual queue session
+
+**Status** — Planned
+
+**User story** — As an organization administrator or authorized staff member opening a manual queue session, I want to optionally set when service is scheduled to start so visitors and staff know the planned start time even when the queue has no recurring schedule.
+
+### Acceptance criteria
+
+- When opening a queue session manually, authorized staff can leave the scheduled service start unset or provide a date and time.
+- The entered local date and time is interpreted in the queue location's IANA timezone and stored on that specific queue-session occurrence as an unambiguous timestamp.
+- Invalid or nonexistent local times are rejected with a clear message. Ambiguous daylight-saving times require an explicit, documented choice by the staff member or a consistent product rule.
+- A manual session's scheduled service start is shown on its public queue page and join form before signup, and is retained for tickets issued in that session.
+- A manual session with no scheduled start continues to work as it does today and shows no scheduled service-start message.
+- Staff can see the session's scheduled start in the live queue view. This story does not prevent staff from calling visitors before that time; start-time gating is scoped separately.
+- Recurring schedules continue to provide the start time for sessions they create. Editing a recurring schedule does not alter existing sessions.
+- If a session has a scheduled start, that occurrence value is authoritative for display even if the recurring schedule or location timezone changes later.
+
+### Scope
+
+- Add an optional scheduled service-start timestamp to `QueueSession` and its migration.
+- Add the field to the manual session-opening flow, validate it in the location timezone, and persist it atomically with session creation.
+- Include the session value in public queue, join, ticket tracking, and staff live queue views.
+- Keep recurring queue configuration separate. AQ-9's schedule values are templates for future occurrences; AQ-10's session timestamp is the value for one concrete occurrence.
+
+### Out of scope
+
+- Automatically opening sessions or scheduling background jobs; covered by AQ-9.
+- Preventing staff from calling visitors before the scheduled start.
+- Changing ticket order, estimates, or queue capacity behavior.
+- A start time attached to the reusable service or queue without a specific session date.
+
+**Dependencies** — AQ-1, AQ-2, AQ-9, visitor signup and ticket tracking.
+
 ## VF-11: See when queue service is scheduled to begin
 
 **Status** — Planned
