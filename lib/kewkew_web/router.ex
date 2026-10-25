@@ -112,6 +112,7 @@ defmodule KewkewWeb.Router do
     get "/queues/:queue_id/edit", StaffController, :edit
     put "/queues/:queue_id", StaffController, :update
     put "/queues/:queue_id/availability", StaffController, :update_availability
+    delete "/queues/:queue_id", StaffController, :delete_queue
   end
 
   scope "/staff", KewkewWeb do

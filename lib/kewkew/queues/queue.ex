@@ -35,6 +35,8 @@ defmodule Kewkew.Queues.Queue do
       accept [:active?]
     end
 
+    destroy :delete
+
     read :by_public_slug do
       argument :slug, :string do
         allow_nil? false

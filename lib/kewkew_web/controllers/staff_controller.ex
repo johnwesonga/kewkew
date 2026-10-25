@@ -11,6 +11,7 @@ defmodule KewkewWeb.StaffController do
   alias Kewkew.Business.StaffAccess
   alias Kewkew.Accounts.StaffInvitations
   alias Kewkew.Queues.StaffCreateQueue
+  alias Kewkew.Queues.StaffDeleteQueue
   alias Kewkew.Queues.StaffSetQueueAvailability
   alias Kewkew.Queues.StaffUpdateQueue
 
@@ -1082,6 +1083,40 @@ defmodule KewkewWeb.StaffController do
     conn
     |> put_flash(:error, "The queue availability setting was invalid.")
     |> redirect(to: ~p"/staff")
+  end
+
+  @doc "Deletes a queue only if it has no session history."
+  def delete_queue(conn, %{"queue_id" => queue_id}) do
+    case StaffDeleteQueue.delete_queue(conn.assigns.current_user.id, queue_id) do
+      {:ok, queue} ->
+        conn
+        |> put_flash(:info, "#{queue.name} was deleted.")
+        |> redirect(to: ~p"/staff/setup/queues")
+
+      {:error, :has_history} ->
+        conn
+        |> put_flash(
+          :error,
+          "This queue has session history and cannot be deleted. Deactivate it instead."
+        )
+        |> redirect(to: ~p"/staff/setup/queues")
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "You do not have permission to delete that queue.")
+        |> redirect(to: ~p"/staff")
+
+      {:error, _reason} ->
+        conn
+        |> put_flash(:error, "The queue could not be deleted.")
+        |> redirect(to: ~p"/staff/setup/queues")
+    end
+  end
+
+  def delete_queue(conn, _params) do
+    conn
+    |> put_flash(:error, "Choose a queue to delete.")
+    |> redirect(to: ~p"/staff/setup/queues")
   end
 
   defp render_create_error(conn, user_id, location_id, params, errors) do

@@ -70,6 +70,21 @@
               Edit
             </.link>
             <.link
+              :if={is_nil(entry.session)}
+              href={~p"/staff/queues/#{entry.queue.id}"}
+              method="delete"
+              data-confirm={
+                "Permanently delete #{entry.queue.name}? This cannot be undone."
+              }
+              class="staff-edit-queue-link delete"
+              id={"staff-delete-queue-#{entry.queue.id}"}
+            >
+              Delete
+            </.link>
+            <span :if={entry.session} class="staff-form-note">
+              Session history prevents deletion. Use availability to control public access.
+            </span>
+            <.link
               href={
                 if entry.queue.active?,
                   do: ~p"/staff/queues/#{entry.queue.id}/availability?active=false",

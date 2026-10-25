@@ -149,6 +149,22 @@ Recurring signup and service-start schedules are specified separately in [queue-
 
 **Dependencies** — AQ-6 and AQ-7; ticket history and staff transitions SF-3 through SF-9.
 
+### AQ-9: Delete an unused queue
+
+**Status** — Complete
+
+**User story** — As an organization administrator, I want to delete a queue that has never been opened so I can remove configuration created by mistake without leaving an unusable public link.
+
+**Acceptance criteria**
+
+- An administrator can delete a queue only when it has never had a queue session.
+- Deleting an unused queue also removes its recurring schedule and makes its public link unavailable.
+- A queue with any session history cannot be deleted, even if all tickets are terminal. The administrator receives a clear message to deactivate it instead, preserving sessions, tickets, and events.
+- Only an administrator of the queue's organization can delete it. Unauthorized and stale requests have no effect.
+- Queue history checks and deletion are atomic so a concurrent session open cannot race with deletion.
+
+**Dependencies** — AQ-1, AQ-2, AQ-5, and AQ-6; recurring schedule configuration.
+
 ## Suggested implementation order
 
 1. **Queue discovery and configuration** — AQ-1 through AQ-3, including authorization and validation.
