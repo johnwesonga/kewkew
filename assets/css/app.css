@@ -264,6 +264,7 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
 .staff-queue-schedule-label { color: #718078; font-size: 11px; }
 .staff-queue-schedule-label.recurring { color: #16724d; font-weight: 700; }
 .staff-edit-queue-link.delete { color: #9b3f35; }
+.staff-queue-history-note { display: inline-flex; align-items: center; gap: 4px; color: #718078; font-size: 10px; white-space: nowrap; }
 .staff-form-errors { margin: 18px 24px 0; padding: 13px 15px; border-radius: 12px; color: #8b302c; background: #fff0ed; font-size: 11px; }
 .staff-form-errors p { margin: 0 0 7px; font-weight: 750; }
 .staff-form-errors ul { margin: 0; padding-left: 18px; }

@@ -81,8 +81,13 @@
             >
               Delete
             </.link>
-            <span :if={entry.session} class="staff-form-note">
-              Session history prevents deletion. Use availability to control public access.
+            <span
+              :if={entry.session}
+              class="staff-queue-history-note"
+              title="Queues with session history are kept to preserve their tickets and events."
+            >
+              <.icon name="hero-archive-box" class="size-3" />
+              Session history · deactivate instead
             </span>
             <.link
               href={
