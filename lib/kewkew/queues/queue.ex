@@ -41,7 +41,7 @@ defmodule Kewkew.Queues.Queue do
       end
 
       filter expr(public_slug == ^arg(:slug))
-      prepare build(load: [:location, :service])
+      prepare build(load: [:location, :service, :schedule])
       get? true
     end
   end
