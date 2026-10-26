@@ -54,16 +54,20 @@
 
         <.input
           field={@form[:timezone]}
+          type="select"
           label="Timezone"
-          placeholder="Etc/UTC"
-          maxlength="64"
+          options={[
+            {"America/Los_Angeles", "America/Los_Angeles"},
+            {"US/Mountain", "US/Mountain"},
+            {"America/New_York", "America/New_York"},
+            {"Africa/Nairobi", "Africa/Nairobi"}
+          ]}
           required
         />
 
         <p class="staff-form-note">
-          Use an IANA timezone such as Etc/UTC, Africa/Nairobi, or America/Los_Angeles. This setting
-          changes how future location-specific times are displayed; existing event timestamps are
-          not rewritten.
+          This setting changes how future location-specific times are displayed; existing event
+          timestamps are not rewritten.
         </p>
 
         <div class="staff-form-actions">

@@ -6,6 +6,13 @@ defmodule Kewkew.Business.StaffLocationAdministration do
   alias Kewkew.Business.{Location, Organization, StaffMembership}
   alias Kewkew.Repo
 
+  @supported_timezones [
+    "America/Los_Angeles",
+    "US/Mountain",
+    "America/New_York",
+    "Africa/Nairobi"
+  ]
+
   @doc "Fetches an organization only when the user has an active admin membership."
   def fetch_organization(user_id, organization_id) do
     with {:ok, user_id} <- Ecto.UUID.cast(user_id),
@@ -134,20 +141,12 @@ defmodule Kewkew.Business.StaffLocationAdministration do
 
     cond do
       timezone == "" -> :missing
-      String.length(timezone) > 64 -> :invalid
-      valid_timezone?(timezone) -> timezone
+      timezone in @supported_timezones -> timezone
       true -> :invalid
     end
   end
 
   defp normalize_timezone(_timezone), do: :missing
-
-  defp valid_timezone?(timezone) do
-    case Repo.query("SELECT 1 FROM pg_timezone_names WHERE name = $1", [timezone]) do
-      {:ok, %{rows: [[1]]}} -> true
-      _ -> false
-    end
-  end
 
   defp admin_organization(user_id, organization_id, opts \\ []) do
     query =
