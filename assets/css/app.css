@@ -503,3 +503,80 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator { transform: translateX
   .staff-queue-qr-panel { width: 320px; }
   .staff-queue-qr-panel svg { width: 300px; }
 }
+
+/* Keep staff workspace rows and actions within narrow mobile viewports. */
+@media (max-width: 650px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .staff-workspace,
+  .staff-main,
+  .staff-content,
+  .staff-page,
+  .staff-card {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .staff-workspace,
+  .staff-main {
+    width: 100%;
+  }
+
+  .staff-ticket-row {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 6px;
+    min-height: 68px;
+    padding: 10px 0;
+  }
+
+  .staff-ticket-row > .staff-status-pill {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .staff-ticket-row > .staff-ticket-actions {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    flex-direction: row;
+    justify-self: end;
+  }
+
+  .staff-setup-member-list {
+    gap: 12px;
+    padding: 0 16px 16px;
+  }
+
+  .staff-setup-member-list li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 12px 0;
+    border-bottom: 1px solid #eff2ef;
+  }
+
+  .staff-setup-member-list li:last-child {
+    border-bottom: 0;
+  }
+
+  .staff-setup-member-list .staff-member-identity {
+    grid-column: 1 / -1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .staff-setup-member-list .staff-queue-status {
+    justify-self: start;
+  }
+
+  .staff-setup-member-list .staff-edit-queue-link {
+    justify-content: center;
+    margin: 0;
+    padding: 8px 10px;
+  }
+}
