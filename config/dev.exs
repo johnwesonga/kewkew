@@ -1,6 +1,9 @@
 import Config
 config :ash, policies: [show_policy_breakdowns?: true]
 
+# Let developers repeat visitor joins while retesting queues in the browser.
+config :kewkew, :browser_duplicate_signup_prevention, false
+
 # Configure your database
 config :kewkew, Kewkew.Repo,
   username: "postgres",

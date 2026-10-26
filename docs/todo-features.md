@@ -47,7 +47,16 @@ Features below are product requirements that are intentionally not part of the c
 
 ## TODO-VF-1: Prevent repeat signups from the same browser
 
-**Status** — TODO
+**Status** — Complete
+
+**Implementation note** — The join page sets a persistent, HttpOnly browser credential cookie
+before form submission. Only its SHA-256 digest is stored in a claim scoped to one queue session.
+Repeat visits or submissions resolve to the existing active ticket and issue a fresh private
+tracking link. Claims are removed when a ticket becomes completed, cancelled, or a no-show, and
+when the session closes. The cookie lasts one year; visitors who clear, block, or outlive the
+cookie can still join, but duplicate detection is unavailable in that browser.
+Duplicate prevention is disabled in development so the same browser can repeatedly test a queue;
+it defaults to enabled in test and production.
 
 **User story** — As a visitor who has already joined a queue in this browser, I want another attempt to take me to my existing ticket so I do not accidentally take another place in line.
 

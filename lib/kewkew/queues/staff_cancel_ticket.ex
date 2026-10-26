@@ -4,7 +4,7 @@ defmodule Kewkew.Queues.StaffCancelTicket do
   import Ecto.Query
 
   alias Kewkew.Business.StaffAccess
-  alias Kewkew.Queues.{QueueSession, Ticket, TicketEvent, Updates}
+  alias Kewkew.Queues.{BrowserTicketClaims, QueueSession, Ticket, TicketEvent, Updates}
   alias Kewkew.Repo
 
   @cancellable_statuses [:waiting, :called]
@@ -49,6 +49,8 @@ defmodule Kewkew.Queues.StaffCancelTicket do
                action: :record_transition,
                domain: Kewkew.Queues
              )
+
+             BrowserTicketClaims.release_for_ticket(ticket.id)
 
              {cancelled_ticket, session.id}
            end) do

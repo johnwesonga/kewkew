@@ -4,7 +4,7 @@ defmodule Kewkew.Queues.StaffCloseQueueSession do
   import Ecto.Query
 
   alias Kewkew.Business.StaffAccess
-  alias Kewkew.Queues.{Queue, QueueSession, Ticket, Updates}
+  alias Kewkew.Queues.{BrowserTicketClaims, Queue, QueueSession, Ticket, Updates}
   alias Kewkew.Repo
 
   @active_ticket_statuses [:waiting, :called, :serving]
@@ -30,9 +30,13 @@ defmodule Kewkew.Queues.StaffCloseQueueSession do
                Repo.rollback(:active_tickets_remain)
              end
 
-             session
-             |> Ecto.Changeset.change(status: :closed, closed_at: DateTime.utc_now())
-             |> Repo.update!()
+             closed_session =
+               session
+               |> Ecto.Changeset.change(status: :closed, closed_at: DateTime.utc_now())
+               |> Repo.update!()
+
+             BrowserTicketClaims.release_for_session(session.id)
+             closed_session
            end) do
         {:ok, session} ->
           Updates.broadcast_queue_updated(queue_id)

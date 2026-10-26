@@ -3,7 +3,7 @@ defmodule Kewkew.Queues.VisitorCancellation do
 
   import Ecto.Query
 
-  alias Kewkew.Queues.{Ticket, TicketEvent, TrackingCredential, Updates}
+  alias Kewkew.Queues.{BrowserTicketClaims, Ticket, TicketEvent, TrackingCredential, Updates}
   alias Kewkew.Repo
 
   def cancel_by_tracking_token(token) when is_binary(token) do
@@ -81,6 +81,8 @@ defmodule Kewkew.Queues.VisitorCancellation do
       action: :record_transition,
       domain: Kewkew.Queues
     )
+
+    BrowserTicketClaims.release_for_ticket(ticket.id)
 
     {:cancelled, ticket.queue_session_id}
   end

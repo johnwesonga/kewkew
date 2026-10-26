@@ -51,6 +51,11 @@
       </p>
     </div>
 
+    <p :if={@browser_duplicate_prevention?} class="mt-5 text-xs leading-5 text-[#718078]">
+      This browser can take you back to your active ticket if you return to join. Clearing or
+      blocking cookies disables this convenience; you can still join the queue.
+    </p>
+
     <p
       :if={@message}
       id="visitor-join-message"

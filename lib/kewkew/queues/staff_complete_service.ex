@@ -4,7 +4,7 @@ defmodule Kewkew.Queues.StaffCompleteService do
   import Ecto.Query
 
   alias Kewkew.Business.StaffAccess
-  alias Kewkew.Queues.{QueueSession, Ticket, TicketEvent, Updates}
+  alias Kewkew.Queues.{BrowserTicketClaims, QueueSession, Ticket, TicketEvent, Updates}
   alias Kewkew.Repo
 
   @doc "Moves a serving ticket to completed and records its staff transition atomically."
@@ -45,6 +45,8 @@ defmodule Kewkew.Queues.StaffCompleteService do
                action: :record_transition,
                domain: Kewkew.Queues
              )
+
+             BrowserTicketClaims.release_for_ticket(ticket.id)
 
              {completed_ticket, session.id}
            end) do

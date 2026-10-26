@@ -3,6 +3,9 @@ defmodule KewkewWeb.VisitorQueueController do
 
   use KewkewWeb, :controller
 
+  @browser_credential_cookie "kewkew_browser"
+  @browser_credential_max_age 365 * 24 * 60 * 60
+
   @doc "Displays a public queue's details and current visitor availability."
   def show(conn, %{"slug" => slug}) do
     case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
@@ -52,28 +55,46 @@ defmodule KewkewWeb.VisitorQueueController do
 
   @doc "Displays the queue's join form based on its configured identity policy."
   def join(conn, %{"slug" => slug}) do
-    case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
-      {:ok, %{queue: queue, session: session, active_ticket_count: active_ticket_count}} ->
-        render_join(conn, queue, session, active_ticket_count, nil, %{})
+    conn = fetch_cookies(conn)
+    browser_credential = Map.get(conn.cookies, @browser_credential_cookie)
 
-      _ ->
-        conn
-        |> put_status(:not_found)
-        |> render(:unavailable, page_title: "Queue unavailable")
+    case Kewkew.Queues.VisitorJoin.return_to_existing_ticket(slug, browser_credential) do
+      {:ok, %{tracking_token: token}} ->
+        redirect(conn, to: "/t/#{token}")
+
+      :none ->
+        case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
+          {:ok, %{queue: queue, session: session, active_ticket_count: active_ticket_count}} ->
+            conn = ensure_browser_credential(conn, browser_credential)
+            render_join(conn, queue, session, active_ticket_count, nil, %{})
+
+          _ ->
+            conn
+            |> put_status(:not_found)
+            |> render(:unavailable, page_title: "Queue unavailable")
+        end
     end
   end
 
   @doc "Handles a visitor join submission according to the queue's persisted identity policy."
   def create_join(conn, %{"slug" => slug, "join" => params}) when is_map(params) do
+    conn = fetch_cookies(conn)
     attempt_token = Map.get(params, "attempt_token")
+    browser_credential = Map.get(conn.cookies, @browser_credential_cookie)
 
-    case Kewkew.Queues.VisitorJoin.join_visitor(slug, attempt_token, params) do
+    case Kewkew.Queues.VisitorJoin.join_visitor(
+           slug,
+           attempt_token,
+           params,
+           browser_credential
+         ) do
       {:ok, %{tracking_token: token}} ->
         redirect(conn, to: "/t/#{token}")
 
       {:error, reason} ->
         case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
           {:ok, %{queue: queue, session: session, active_ticket_count: active_ticket_count}} ->
+            conn = ensure_browser_credential(conn, browser_credential)
             render_join(conn, queue, session, active_ticket_count, reason, params)
 
           _ ->
@@ -101,6 +122,53 @@ defmodule KewkewWeb.VisitorQueueController do
         |> put_status(:not_found)
         |> render(:unavailable, page_title: "Queue unavailable")
     end
+  end
+
+  defp ensure_browser_credential(conn, credential) do
+    if browser_duplicate_signup_prevention?() do
+      credential =
+        if valid_browser_credential?(credential),
+          do: credential,
+          else: random_browser_credential()
+
+      if Map.get(conn.cookies, @browser_credential_cookie) == credential do
+        conn
+      else
+        put_resp_cookie(conn, @browser_credential_cookie, credential,
+          max_age: @browser_credential_max_age,
+          http_only: true,
+          same_site: "Lax",
+          secure: conn.scheme == :https or endpoint_scheme() == "https",
+          path: "/"
+        )
+      end
+    else
+      conn
+    end
+  end
+
+  defp browser_duplicate_signup_prevention? do
+    Application.get_env(:kewkew, :browser_duplicate_signup_prevention, true)
+  end
+
+  defp valid_browser_credential?(credential) when is_binary(credential) do
+    case Base.url_decode64(credential, padding: false) do
+      {:ok, bytes} -> byte_size(bytes) == 32
+      _ -> false
+    end
+  end
+
+  defp valid_browser_credential?(_credential), do: false
+
+  defp random_browser_credential do
+    :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+  end
+
+  defp endpoint_scheme do
+    :kewkew
+    |> Application.get_env(KewkewWeb.Endpoint, [])
+    |> Keyword.get(:url, [])
+    |> Keyword.get(:scheme)
   end
 
   @doc "Displays the private ticket page authorized by its tracking token."
@@ -207,6 +275,7 @@ defmodule KewkewWeb.VisitorQueueController do
         first_name: field_error(error_reason, :first_name),
         last_name: field_error(error_reason, :last_name)
       },
+      browser_duplicate_prevention?: browser_duplicate_signup_prevention?(),
       form: Phoenix.Component.to_form(form_params, as: :join)
     )
   end

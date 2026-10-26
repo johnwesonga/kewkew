@@ -6,7 +6,17 @@ defmodule Kewkew.Queues.VisitorJoin do
   require Ash.Query
 
   alias Kewkew.Queues
-  alias Kewkew.Queues.{Queue, QueueSession, Ticket, TicketEvent, TrackingCredential, Updates}
+
+  alias Kewkew.Queues.{
+    BrowserTicketClaim,
+    Queue,
+    QueueSession,
+    Ticket,
+    TicketEvent,
+    TrackingCredential,
+    Updates
+  }
+
   alias Kewkew.Repo
 
   def join_anonymous(slug, attempt_token) when is_binary(slug) and is_binary(attempt_token) do
@@ -17,12 +27,42 @@ defmodule Kewkew.Queues.VisitorJoin do
 
   def join_visitor(slug, attempt_token, params)
       when is_binary(slug) and is_binary(attempt_token) and is_map(params) do
-    perform_join(slug, attempt_token, params, :any)
+    join_visitor(slug, attempt_token, params, nil)
   end
 
   def join_visitor(_slug, _attempt_token, _params), do: {:error, :invalid_attempt}
 
-  defp perform_join(slug, attempt_token, params, expected_policy) do
+  def join_visitor(slug, attempt_token, params, browser_credential)
+      when is_binary(slug) and is_binary(attempt_token) and is_map(params) do
+    browser_digest = browser_credential_digest(browser_credential)
+    perform_join(slug, attempt_token, params, :any, browser_digest)
+  end
+
+  def join_visitor(_slug, _attempt_token, _params, _browser_credential),
+    do: {:error, :invalid_attempt}
+
+  def return_to_existing_ticket(slug, browser_credential)
+      when is_binary(slug) and is_binary(browser_credential) do
+    with {:ok, digest} when not is_nil(digest) <-
+           {:ok, browser_credential_digest(browser_credential)},
+         {:ok, %{queue: queue, session: %QueueSession{} = session}} <-
+           Kewkew.Queues.PublicLookup.fetch_queue(slug) do
+      case Repo.transaction(fn ->
+             lock_session(session.id)
+             return_existing_browser_ticket(queue, session, digest)
+           end) do
+        {:ok, nil} -> :none
+        {:ok, result} -> {:ok, result}
+        {:error, _reason} -> :none
+      end
+    else
+      _ -> :none
+    end
+  end
+
+  def return_to_existing_ticket(_slug, _browser_credential), do: :none
+
+  defp perform_join(slug, attempt_token, params, expected_policy, browser_digest \\ nil) do
     with :ok <- validate_attempt_token(attempt_token) do
       token_digest = digest(attempt_token)
 
@@ -32,7 +72,14 @@ defmodule Kewkew.Queues.VisitorJoin do
                  %{ticket: ticket, tracking_token: attempt_token}
 
                nil ->
-                 create_ticket(slug, attempt_token, token_digest, params, expected_policy)
+                 create_ticket(
+                   slug,
+                   attempt_token,
+                   token_digest,
+                   params,
+                   expected_policy,
+                   browser_digest
+                 )
              end
            end) do
         {:ok, result} ->
@@ -45,7 +92,7 @@ defmodule Kewkew.Queues.VisitorJoin do
     end
   end
 
-  defp create_ticket(slug, tracking_token, token_digest, params, expected_policy) do
+  defp create_ticket(slug, tracking_token, token_digest, params, expected_policy, browser_digest) do
     queue = fetch_queue_for_join(slug)
 
     if is_nil(queue) or not queue.active? or not queue.location.active? or
@@ -56,8 +103,6 @@ defmodule Kewkew.Queues.VisitorJoin do
     if expected_policy == :anonymous and queue.identity_policy != :anonymous,
       do: Repo.rollback(:name_required)
 
-    names = names_for_policy(queue.identity_policy, params)
-
     session =
       Repo.one(
         from session in QueueSession,
@@ -67,6 +112,13 @@ defmodule Kewkew.Queues.VisitorJoin do
           lock: "FOR UPDATE"
       )
 
+    names = names_for_policy(queue.identity_policy, params)
+
+    browser_ticket =
+      if browser_digest && session do
+        active_browser_ticket(session.id, browser_digest)
+      end
+
     cond do
       is_nil(session) ->
         Repo.rollback(:unavailable)
@@ -75,13 +127,21 @@ defmodule Kewkew.Queues.VisitorJoin do
         Repo.rollback(:unavailable)
 
       ticket = existing_ticket(token_digest) ->
+        if browser_digest and ticket.status in [:waiting, :called, :serving] do
+          claim_ticket_for_browser(ticket, browser_digest)
+        end
+
         %{ticket: ticket, tracking_token: tracking_token}
+
+      browser_ticket ->
+        tracking_token = create_tracking_credential(browser_ticket)
+        %{ticket: browser_ticket, tracking_token: tracking_token, existing?: true}
 
       queue_is_full?(queue, session) ->
         Repo.rollback(:full)
 
       true ->
-        create_ticket_records(session, tracking_token, token_digest, names)
+        create_ticket_records(session, tracking_token, token_digest, names, browser_digest)
     end
   end
 
@@ -110,7 +170,7 @@ defmodule Kewkew.Queues.VisitorJoin do
     end
   end
 
-  defp create_ticket_records(session, tracking_token, token_digest, names) do
+  defp create_ticket_records(session, tracking_token, token_digest, names, browser_digest) do
     ticket_number = session.next_ticket_number
     queue_sequence = session.next_queue_sequence
 
@@ -153,7 +213,66 @@ defmodule Kewkew.Queues.VisitorJoin do
       domain: Queues
     )
 
+    if browser_digest do
+      Repo.insert!(%BrowserTicketClaim{
+        queue_session_id: session.id,
+        ticket_id: ticket.id,
+        credential_digest: browser_digest
+      })
+    end
+
     %{ticket: ticket, tracking_token: tracking_token}
+  end
+
+  defp return_existing_browser_ticket(queue, session, digest) do
+    with true <- queue.active? and queue.location.active? and queue.service.active?,
+         %Ticket{} = ticket <- active_browser_ticket(session.id, digest) do
+      tracking_token = create_tracking_credential(ticket)
+      %{ticket: ticket, tracking_token: tracking_token}
+    else
+      _ -> nil
+    end
+  end
+
+  defp claim_ticket_for_browser(ticket, digest) do
+    Repo.insert!(
+      %BrowserTicketClaim{
+        queue_session_id: ticket.queue_session_id,
+        ticket_id: ticket.id,
+        credential_digest: digest
+      },
+      on_conflict: :nothing
+    )
+  end
+
+  defp active_browser_ticket(session_id, digest) do
+    Repo.one(
+      from claim in BrowserTicketClaim,
+        join: ticket in Ticket,
+        on: ticket.id == claim.ticket_id,
+        where:
+          claim.queue_session_id == ^session_id and claim.credential_digest == ^digest and
+            ticket.status in [:waiting, :called, :serving],
+        lock: "FOR UPDATE",
+        select: ticket
+    )
+  end
+
+  defp lock_session(session_id) do
+    Repo.one(from session in QueueSession, where: session.id == ^session_id, lock: "FOR UPDATE")
+  end
+
+  defp create_tracking_credential(ticket) do
+    token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+
+    Ash.create!(
+      TrackingCredential,
+      %{ticket_id: ticket.id, token_digest: digest(token)},
+      action: :create_for_ticket,
+      domain: Queues
+    )
+
+    token
   end
 
   defp names_for_policy(:anonymous, _params), do: %{first_name: nil, last_name: nil}
@@ -203,6 +322,17 @@ defmodule Kewkew.Queues.VisitorJoin do
       _ -> {:error, :invalid_attempt}
     end
   end
+
+  defp browser_credential_digest(token) when is_binary(token) do
+    if Application.get_env(:kewkew, :browser_duplicate_signup_prevention, true) do
+      case Base.url_decode64(token, padding: false) do
+        {:ok, bytes} when byte_size(bytes) == 32 -> digest(token)
+        _ -> nil
+      end
+    end
+  end
+
+  defp browser_credential_digest(_token), do: nil
 
   defp digest(token), do: :crypto.hash(:sha256, token) |> Base.encode16(case: :lower)
 end
