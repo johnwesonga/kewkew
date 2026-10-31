@@ -124,6 +124,7 @@ defmodule KewkewWeb.Router do
         {KewkewWeb.StaffLiveAuth, :require_membership}
       ] do
       live "/queues/:queue_id", StaffQueueLive, :show
+      live "/queues/:queue_id/stats", StaffQueueStatsLive, :show
     end
   end
 

@@ -1354,6 +1354,49 @@ html[data-kewkew-theme="system"] .theme-toggle-indicator {
   overflow: hidden;
 }
 
+.staff-select {
+  display: block;
+  min-width: 145px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid #d9e3dc;
+  border-radius: 9px;
+  color: #24342b;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.queue-stats-chart {
+  margin: 22px 20px 12px;
+  overflow-x: auto;
+}
+
+.queue-stats-chart svg {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: 230px;
+}
+
+.queue-stats-axis {
+  stroke: #dfe8e2;
+  stroke-width: 1;
+}
+
+.queue-stats-bar {
+  fill: #26845d;
+}
+
+.queue-stats-labels {
+  display: flex;
+  justify-content: space-between;
+  min-width: 560px;
+  margin-top: 4px;
+  color: #718078;
+  font-size: 9px;
+}
+
 .staff-queue-notice {
   display: flex;
   align-items: center;

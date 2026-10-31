@@ -1,0 +1,98 @@
+<Layouts.app
+  flash={@flash}
+  staff?={true}
+  staff_email={to_string(@current_user.email)}
+  can_setup?={@can_setup?}
+  location_name={@location.name}
+>
+  <section id="staff-queue-stats" class="staff-page">
+    <header class="staff-page-heading">
+      <div>
+        <.link navigate={~p"/staff/queues/#{@queue.id}"} class="staff-back-link">
+          <.icon name="hero-arrow-left" class="size-4" /> Back to queue
+        </.link>
+        <p class="staff-eyebrow">{@organization.name} · {@location.name} · {@service.name}</p>
+        <h1 id="staff-queue-stats-title">{@queue.name} statistics</h1>
+        <p class="staff-subhead">Daily completed services and average wait to service start.</p>
+      </div>
+    </header>
+
+    <section class="staff-stats" aria-label="Queue statistics summary">
+      <article class="staff-card staff-stat-card">
+        <span class="staff-stat-icon mint">
+          <.icon name="hero-check-circle" class="size-5" />
+        </span>
+        <p class="staff-stat-label">Visitors served</p>
+        <p id="queue-stats-served" class="staff-stat-value">{@total_served}</p>
+        <p class="staff-stat-note">In the selected period</p>
+      </article>
+      <article class="staff-card staff-stat-card">
+        <span class="staff-stat-icon amber"><.icon name="hero-clock" class="size-5" /></span>
+        <p class="staff-stat-label">Average wait</p>
+        <p id="queue-stats-average-wait" class="staff-stat-value">
+          {format_wait(@average_wait_minutes)}
+        </p>
+        <p class="staff-stat-note">Join to service start</p>
+      </article>
+    </section>
+
+    <section class="staff-card staff-visitors-card" aria-labelledby="queue-stats-chart-heading">
+      <div class="staff-card-heading">
+        <div>
+          <h2 id="queue-stats-chart-heading">Daily activity</h2>
+          <p>Only completed tickets count toward visitors served or average wait.</p>
+        </div>
+        <form id="queue-stats-period-form" phx-change="select_period">
+          <label for="queue-stats-period">Date range</label>
+          <select id="queue-stats-period" name="days" class="staff-select">
+            <option value="7" selected={@days == 7}>Last 7 days</option>
+            <option value="30" selected={@days == 30}>Last 30 days</option>
+            <option value="90" selected={@days == 90}>Last 90 days</option>
+          </select>
+        </form>
+      </div>
+
+      <p :if={@stats_error?} id="queue-stats-error" role="alert" class="staff-queue-notice">
+        Statistics could not be loaded. Please try selecting the date range again.
+      </p>
+      <p
+        :if={@total_served == 0 and not @stats_error?}
+        id="queue-stats-empty"
+        class="staff-empty-state"
+      >
+        No completed services in this date range yet.
+      </p>
+
+      <div
+        :if={not @stats_error?}
+        id="queue-stats-chart"
+        role="img"
+        aria-label={"Daily visitors served over the last #{@days} days"}
+        class="queue-stats-chart"
+      >
+        <svg viewBox="0 0 900 230" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="0" y1="190" x2="900" y2="190" class="queue-stats-axis" />
+          <rect
+            :for={{point, index} <- Enum.with_index(@points)}
+            x={bar_x(index, length(@points)) + 2}
+            y={190 - bar_height(point.served, @max_served)}
+            width={bar_width(length(@points))}
+            height={bar_height(point.served, @max_served)}
+            rx="3"
+            class="queue-stats-bar"
+          >
+            <title>{Calendar.strftime(point.date, "%B %-d")}: {point.served} served</title>
+          </rect>
+        </svg>
+        <div class="queue-stats-labels" aria-hidden="true">
+          <span :for={point <- @points}>{date_label(point.date, @days)}</span>
+        </div>
+      </div>
+
+      <p class="staff-stat-note">
+        Average wait is calculated only for completed tickets with a recorded service start.
+        Dates and wait times use UTC.
+      </p>
+    </section>
+  </section>
+</Layouts.app>
