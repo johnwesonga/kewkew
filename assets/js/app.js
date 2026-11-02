@@ -180,6 +180,40 @@ const visitorTicket = document.getElementById("visitor-ticket")
 
 const visitorQueuePage = document.querySelector("[data-availability-url]")
 
+const signupWindow = document.getElementById("visitor-signup-window")
+
+if (signupWindow) {
+  const opensAt = Number(signupWindow.dataset.opensAt)
+  const closesAt = Number(signupWindow.dataset.closesAt)
+  let closeReloadStarted = false
+
+  const updateSignupCountdown = () => {
+    const now = Date.now()
+
+    if (now < opensAt) {
+      const minutes = Math.max(Math.ceil((opensAt - now) / 60000), 1)
+      signupWindow.textContent = `Signup opens in ${minutes} ${minutes === 1 ? "minute" : "minutes"}.`
+      return
+    }
+
+    if (now < closesAt) {
+      const minutes = Math.max(Math.ceil((closesAt - now) / 60000), 1)
+      signupWindow.textContent = `You have ${minutes} ${minutes === 1 ? "minute" : "minutes"} to sign up.`
+      return
+    }
+
+    signupWindow.textContent = "This signup window has closed. Please check back at the next scheduled signup time."
+
+    if (!closeReloadStarted) {
+      closeReloadStarted = true
+      window.setTimeout(() => window.location.reload(), 1000)
+    }
+  }
+
+  updateSignupCountdown()
+  window.setInterval(updateSignupCountdown, 1000)
+}
+
 if (visitorQueuePage) {
   const refreshQueueAvailability = async () => {
     if (document.hidden) return

@@ -55,6 +55,55 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
            |> LazyHTML.attribute("disabled") != []
   end
 
+  test "shows a live countdown for an open scheduled signup window", %{conn: conn} do
+    queue = create_queue_fixture()
+    add_signup_window(queue, 60, 10)
+
+    queue_document =
+      conn
+      |> get("/q/#{queue.public_slug}")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(queue_document, "visitor-signup-window")
+
+    assert LazyHTML.text(LazyHTML.query_by_id(queue_document, "visitor-signup-window")) =~
+             "You have"
+
+    join_document =
+      conn
+      |> recycle()
+      |> get("/q/#{queue.public_slug}/join")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(join_document, "visitor-signup-window")
+
+    assert LazyHTML.text(LazyHTML.query_by_id(join_document, "visitor-signup-window")) =~
+             "You have"
+  end
+
+  test "shows the closed-window message and rejects a stale signup attempt", %{conn: conn} do
+    queue = create_queue_fixture()
+    add_signup_window(queue, 1, 5)
+    token = new_attempt_token()
+
+    assert {:error, :signup_window_closed} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, token)
+
+    document =
+      conn
+      |> get("/q/#{queue.public_slug}/join")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(document, "visitor-join-message")
+           |> LazyHTML.text() =~ "This signup window has closed"
+
+    assert LazyHTML.query_by_id(document, "visitor-join-form") |> LazyHTML.text() == ""
+    assert count_tickets(latest_session(queue).id) == 0
+  end
+
   test "explains a paused queue and disables joining", %{conn: conn} do
     queue = create_queue_fixture(session_status: :paused)
 
@@ -629,6 +678,31 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
 
   defp new_attempt_token do
     :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+  end
+
+  defp add_signup_window(queue, duration_minutes, minutes_ago) do
+    now = DateTime.utc_now()
+    current_time = Time.truncate(DateTime.to_time(now), :second)
+    signup_open_time = Time.add(current_time, -minutes_ago * 60, :second)
+
+    signup_date =
+      if Time.compare(signup_open_time, current_time) == :gt,
+        do: Date.add(DateTime.to_date(now), -1),
+        else: DateTime.to_date(now)
+
+    Ash.create!(
+      Kewkew.Queues.QueueSchedule,
+      %{
+        queue_id: queue.id,
+        weekdays: [Date.day_of_week(signup_date)],
+        signup_open_time: signup_open_time,
+        signup_duration_minutes: duration_minutes,
+        service_start_time: Time.add(signup_open_time, 2 * 60 * 60, :second)
+      },
+      action: :create,
+      domain: Kewkew.Queues,
+      authorize?: false
+    )
   end
 
   defp latest_session(queue) do

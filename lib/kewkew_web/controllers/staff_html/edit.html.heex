@@ -106,6 +106,15 @@
           </fieldset>
 
           <.input field={@form[:signup_open_time]} type="time" label="Signup opens" />
+          <.input
+            field={@form[:signup_duration_minutes]}
+            type="number"
+            label="Signup window duration (minutes, optional)"
+            min="1"
+            max="1440"
+            step="1"
+            placeholder="No time limit"
+          />
           <.input field={@form[:service_start_time]} type="time" label="Scheduled service starts" />
           <.input
             field={@form[:ticket_cap]}

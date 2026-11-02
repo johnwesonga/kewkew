@@ -46,7 +46,9 @@
               @availability.state == :open && "bg-[#e6f4ec] text-[#176b4b]",
               @availability.state == :paused && "bg-[#fff4d8] text-[#936516]",
               @availability.state == :closed && "bg-[#eef2ef] text-[#66736b]",
-              @availability.state == :full && "bg-[#fff0e8] text-[#9b4c25]"
+              @availability.state == :full && "bg-[#fff0e8] text-[#9b4c25]",
+              @availability.state == :signup_upcoming && "bg-[#fff4d8] text-[#936516]",
+              @availability.state == :signup_closed && "bg-[#eef2ef] text-[#66736b]"
             ]}
             id="visitor-queue-status"
           >
@@ -55,7 +57,9 @@
               @availability.state == :open && "bg-[#45ac73]",
               @availability.state == :paused && "bg-[#d3a23d]",
               @availability.state == :closed && "bg-[#98a39b]",
-              @availability.state == :full && "bg-[#d8794b]"
+              @availability.state == :full && "bg-[#d8794b]",
+              @availability.state == :signup_upcoming && "bg-[#d3a23d]",
+              @availability.state == :signup_closed && "bg-[#98a39b]"
             ]}>
             </span>
             {@availability.label}
@@ -72,6 +76,18 @@
 
         <p id="visitor-queue-availability" class="mt-4 text-sm leading-6 text-[#5f6d64]">
           {@availability.message}
+        </p>
+
+        <p
+          :if={@signup_window && @signup_window.state in [:open, :upcoming]}
+          id="visitor-signup-window"
+          data-signup-window-state={@signup_window.state}
+          data-opens-at={DateTime.to_unix(@signup_window.opens_at, :millisecond)}
+          data-closes-at={DateTime.to_unix(@signup_window.closes_at, :millisecond)}
+          class="mt-4 rounded-xl bg-[#fff4d8] p-4 text-sm font-bold text-[#765515]"
+          role="status"
+        >
+          {KewkewWeb.VisitorQueueHTML.signup_countdown_copy(@signup_window)}
         </p>
 
         <div

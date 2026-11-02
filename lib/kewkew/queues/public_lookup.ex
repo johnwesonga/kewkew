@@ -37,7 +37,7 @@ defmodule Kewkew.Queues.PublicLookup do
           Queue
           |> Ash.Query.filter(location_id == ^location.id)
           |> Ash.Query.filter(active? == true)
-          |> Ash.Query.load(:service)
+          |> Ash.Query.load([:service, :schedule])
           |> Ash.read!(domain: Kewkew.Queues)
           |> Enum.filter(& &1.service.active?)
           |> Enum.map(&queue_with_session/1)

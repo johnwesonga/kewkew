@@ -100,6 +100,24 @@ flowchart TD
 
 **Dependencies** — AQ-9; VF-1, VF-2, VF-4, VF-5, VF-6, and VF-7.
 
+## AQ-11: Set a duration for recurring signup windows
+
+**Status** — Complete
+
+**User story** — As an organization administrator, I want to set how long signup stays open after its scheduled opening so visitors know how much time they have and cannot join after the window closes.
+
+### Acceptance criteria
+
+- When configuring a recurring signup time, an administrator can set a positive duration in minutes for each occurrence; existing schedules without a duration retain their current behavior until configured.
+- The signup window opens at the configured local signup time and closes after the configured elapsed duration, calculated using the queue location's timezone and the server's authoritative clock.
+- While the window is open, the public queue page and join form show a live countdown with a message such as “You have X minutes to sign up.”
+- A visitor viewing the page before signup opens sees when it opens; the countdown changes to remaining signup time at opening without requiring a manual refresh.
+- When the window closes, the page displays a clear closed-window message and no longer offers signup.
+- The server rejects submissions made after the window closes, including submissions from a stale form, and returns the visitor to a page showing the closed-window message.
+- Queues without a configured duration retain their current availability behavior.
+
+**Dependencies** — AQ-9; public queue availability, join, and schedule configuration flows.
+
 ## Initial policy decisions
 
 - Signup opens at the configured local time. It remains available after service begins until the occurrence reaches its cap or staff close it under the existing queue-session rules. A separate signup-close time is out of scope for this first slice.

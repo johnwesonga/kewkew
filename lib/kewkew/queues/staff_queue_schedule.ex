@@ -31,6 +31,7 @@ defmodule Kewkew.Queues.StaffQueueSchedule do
       "schedule_enabled" => "false",
       "weekdays" => [],
       "signup_open_time" => "",
+      "signup_duration_minutes" => "",
       "service_start_time" => "",
       "ticket_cap" => ""
     }
@@ -41,6 +42,11 @@ defmodule Kewkew.Queues.StaffQueueSchedule do
       "schedule_enabled" => "true",
       "weekdays" => Enum.map(schedule.weekdays, &to_string/1),
       "signup_open_time" => Calendar.strftime(schedule.signup_open_time, "%H:%M"),
+      "signup_duration_minutes" =>
+        if(schedule.signup_duration_minutes,
+          do: to_string(schedule.signup_duration_minutes),
+          else: ""
+        ),
       "service_start_time" => Calendar.strftime(schedule.service_start_time, "%H:%M"),
       "ticket_cap" => if(schedule.ticket_cap, do: to_string(schedule.ticket_cap), else: "")
     }
@@ -90,6 +96,7 @@ defmodule Kewkew.Queues.StaffQueueSchedule do
   defp validate_enabled_schedule(params, timezone) do
     weekdays = parse_weekdays(Map.get(params, "weekdays"))
     signup_open_time = parse_time(Map.get(params, "signup_open_time"))
+    signup_duration_minutes = parse_signup_duration(Map.get(params, "signup_duration_minutes"))
     service_start_time = parse_time(Map.get(params, "service_start_time"))
     ticket_cap = parse_ticket_cap(Map.get(params, "ticket_cap"))
     valid_timezone? = valid_timezone?(timezone)
@@ -100,6 +107,10 @@ defmodule Kewkew.Queues.StaffQueueSchedule do
       |> maybe_add_error(
         signup_open_time == :invalid,
         {:signup_open_time, "Enter a valid signup-open time."}
+      )
+      |> maybe_add_error(
+        signup_duration_minutes == :invalid,
+        {:signup_duration_minutes, "Enter a duration from 1 to 1440 minutes or leave it blank."}
       )
       |> maybe_add_error(
         service_start_time == :invalid,
@@ -125,6 +136,7 @@ defmodule Kewkew.Queues.StaffQueueSchedule do
          %{
            weekdays: weekdays,
            signup_open_time: signup_open_time,
+           signup_duration_minutes: signup_duration_minutes,
            service_start_time: service_start_time,
            ticket_cap: ticket_cap
          }}
@@ -166,6 +178,17 @@ defmodule Kewkew.Queues.StaffQueueSchedule do
   end
 
   defp parse_ticket_cap(_value), do: :invalid
+
+  defp parse_signup_duration(value) when value in [nil, ""], do: nil
+
+  defp parse_signup_duration(value) when is_binary(value) do
+    case Integer.parse(value) do
+      {minutes, ""} when minutes in 1..1440 -> minutes
+      _ -> :invalid
+    end
+  end
+
+  defp parse_signup_duration(_value), do: :invalid
 
   defp valid_timezone?(timezone) when is_binary(timezone) do
     case Repo.query("SELECT EXISTS(SELECT 1 FROM pg_timezone_names WHERE name = $1)", [timezone]) do

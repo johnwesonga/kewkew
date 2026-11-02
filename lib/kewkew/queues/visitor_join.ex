@@ -100,6 +100,15 @@ defmodule Kewkew.Queues.VisitorJoin do
       Repo.rollback(:unavailable)
     end
 
+    signup_window =
+      Kewkew.Queues.SignupWindow.current_or_next(
+        queue.schedule,
+        queue.location.timezone
+      )
+
+    if not Kewkew.Queues.SignupWindow.joinable?(signup_window),
+      do: Repo.rollback(:signup_window_closed)
+
     if expected_policy == :anonymous and queue.identity_policy != :anonymous,
       do: Repo.rollback(:name_required)
 

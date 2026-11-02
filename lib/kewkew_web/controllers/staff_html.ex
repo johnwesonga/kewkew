@@ -32,9 +32,13 @@ defmodule KewkewWeb.StaffHTML do
 
     signup_time = Calendar.strftime(schedule.signup_open_time, "%H:%M")
     service_time = Calendar.strftime(schedule.service_start_time, "%H:%M")
+    signup_duration = signup_duration_label(schedule.signup_duration_minutes)
 
-    "Recurring · #{weekdays} · Opens #{signup_time}, service #{service_time}"
+    "Recurring · #{weekdays} · Opens #{signup_time} · #{signup_duration}, service #{service_time}"
   end
+
+  defp signup_duration_label(nil), do: "No signup time limit"
+  defp signup_duration_label(minutes), do: "Signup for #{minutes} min"
 
   defp weekday_label(1), do: "Mon"
   defp weekday_label(2), do: "Tue"

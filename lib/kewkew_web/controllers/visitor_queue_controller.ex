@@ -15,8 +15,10 @@ defmodule KewkewWeb.VisitorQueueController do
         |> render(:unavailable, page_title: "Queue unavailable")
 
       {:ok, %{queue: queue, session: session, active_ticket_count: active_ticket_count}} ->
+        signup_window = signup_window(queue, queue.location.timezone)
+
         current_availability =
-          availability(session, active_ticket_count, queue.max_active_tickets)
+          queue_availability(session, active_ticket_count, queue, signup_window)
 
         conn
         |> render(:show,
@@ -24,6 +26,7 @@ defmodule KewkewWeb.VisitorQueueController do
           queue: queue,
           location: queue.location,
           service: queue.service,
+          signup_window: signup_window,
           availability: current_availability
         )
 
@@ -39,8 +42,10 @@ defmodule KewkewWeb.VisitorQueueController do
     response =
       case Kewkew.Queues.PublicLookup.fetch_queue(slug) do
         {:ok, %{session: session, active_ticket_count: active_ticket_count, queue: queue}} ->
+          signup_window = signup_window(queue, queue.location.timezone)
+
           current_availability =
-            availability(session, active_ticket_count, queue.max_active_tickets)
+            queue_availability(session, active_ticket_count, queue, signup_window)
 
           %{state: Atom.to_string(current_availability.state)}
 
@@ -238,7 +243,8 @@ defmodule KewkewWeb.VisitorQueueController do
   end
 
   defp render_join(conn, queue, session, active_ticket_count, error_reason, params) do
-    availability = availability(session, active_ticket_count, queue.max_active_tickets)
+    signup_window = signup_window(queue, queue.location.timezone)
+    availability = queue_availability(session, active_ticket_count, queue, signup_window)
     can_join? = availability.state == :open
 
     attempt_token =
@@ -268,6 +274,7 @@ defmodule KewkewWeb.VisitorQueueController do
       queue: queue,
       location: queue.location,
       service: queue.service,
+      signup_window: signup_window,
       availability: availability,
       can_join?: can_join?,
       message: message,
@@ -323,10 +330,12 @@ defmodule KewkewWeb.VisitorQueueController do
       {:ok, %{location: location, queues: queues}} ->
         services =
           Enum.map(queues, fn %{queue: queue, session: session, active_ticket_count: count} ->
+            signup_window = signup_window(queue, location.timezone)
+
             %{
               queue: queue,
               service: queue.service,
-              availability: availability(session, count, queue.max_active_tickets)
+              availability: queue_availability(session, count, queue, signup_window)
             }
           end)
 
@@ -369,6 +378,44 @@ defmodule KewkewWeb.VisitorQueueController do
       state: :closed,
       message: "This queue is currently closed. Please check back later."
     }
+
+  defp signup_window(queue, timezone) do
+    Kewkew.Queues.SignupWindow.current_or_next(queue.schedule, timezone)
+  end
+
+  defp queue_availability(session, count, queue, signup_window) do
+    current = availability(session, count, queue.max_active_tickets)
+
+    case {current.state, signup_window && signup_window.state} do
+      {:open, :upcoming} ->
+        %{
+          current
+          | state: :signup_upcoming,
+            label: "Signup opens soon",
+            message: "Signup has not opened yet. Check back at the scheduled time."
+        }
+
+      {_state, :closed} ->
+        %{
+          current
+          | state: :signup_closed,
+            label: "Signup window closed",
+            message:
+              "This signup window has closed. Please check back at the next scheduled signup time."
+        }
+
+      {state, :unavailable} when state in [:open, :full] ->
+        %{
+          current
+          | state: :signup_closed,
+            label: "Signup unavailable",
+            message: "Signup is temporarily unavailable. Please try again later."
+        }
+
+      _ ->
+        current
+    end
+  end
 
   defp request_url(conn, path) do
     uri = URI.parse(Plug.Conn.request_url(conn))

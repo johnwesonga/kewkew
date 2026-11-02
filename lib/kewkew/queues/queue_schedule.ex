@@ -19,11 +19,24 @@ defmodule Kewkew.Queues.QueueSchedule do
     defaults [:read]
 
     create :create do
-      accept [:queue_id, :weekdays, :signup_open_time, :service_start_time, :ticket_cap]
+      accept [
+        :queue_id,
+        :weekdays,
+        :signup_open_time,
+        :signup_duration_minutes,
+        :service_start_time,
+        :ticket_cap
+      ]
     end
 
     update :update do
-      accept [:weekdays, :signup_open_time, :service_start_time, :ticket_cap]
+      accept [
+        :weekdays,
+        :signup_open_time,
+        :signup_duration_minutes,
+        :service_start_time,
+        :ticket_cap
+      ]
     end
 
     destroy :delete
@@ -39,6 +52,11 @@ defmodule Kewkew.Queues.QueueSchedule do
 
     attribute :signup_open_time, :time do
       allow_nil? false
+      public? true
+    end
+
+    attribute :signup_duration_minutes, :integer do
+      constraints min: 1, max: 1440
       public? true
     end
 
