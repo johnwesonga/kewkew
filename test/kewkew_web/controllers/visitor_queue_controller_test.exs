@@ -83,6 +83,37 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
              "You have"
   end
 
+  test "opens a scheduled queue session on the first signup when the window begins", %{conn: conn} do
+    queue = create_queue_fixture(session_status: nil)
+    add_signup_window(queue, 60, 10)
+
+    page =
+      conn
+      |> get("/q/#{queue.public_slug}")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert LazyHTML.query_by_id(page, "visitor-queue-status") |> LazyHTML.text() =~ "Open now"
+
+    assert LazyHTML.query_by_id(page, "visitor-join-queue")
+           |> LazyHTML.attribute("href") == ["/q/#{queue.public_slug}/join"]
+
+    assert {:ok, first_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, new_attempt_token())
+
+    assert first_join.session_created?
+    session = latest_session(queue)
+    assert session.status == :open
+    assert first_join.ticket.queue_session_id == session.id
+
+    assert {:ok, second_join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, new_attempt_token())
+
+    refute second_join.session_created?
+    assert second_join.ticket.queue_session_id == session.id
+    assert second_join.ticket.ticket_number == 2
+  end
+
   test "shows the closed-window message and rejects a stale signup attempt", %{conn: conn} do
     queue = create_queue_fixture()
     add_signup_window(queue, 1, 5)

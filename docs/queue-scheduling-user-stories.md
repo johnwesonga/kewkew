@@ -110,6 +110,7 @@ flowchart TD
 
 - When configuring a recurring signup time, an administrator can set a positive duration in minutes for each occurrence; existing schedules without a duration retain their current behavior until configured.
 - The signup window opens at the configured local signup time and closes after the configured elapsed duration, calculated using the queue location's timezone and the server's authoritative clock.
+- If no session exists for the active scheduled signup occurrence, the first valid signup creates that occurrence's session atomically; later signups reuse it, and a closed occurrence is not reopened.
 - While the window is open, the public queue page and join form show a live countdown with a message such as “You have X minutes to sign up.”
 - A visitor viewing the page before signup opens sees when it opens; the countdown changes to remaining signup time at opening without requiring a manual refresh.
 - When the window closes, the page displays a clear closed-window message and no longer offers signup.

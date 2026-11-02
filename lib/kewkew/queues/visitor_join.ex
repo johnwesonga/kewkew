@@ -84,6 +84,10 @@ defmodule Kewkew.Queues.VisitorJoin do
            end) do
         {:ok, result} ->
           Updates.broadcast_session_updated(result.ticket.queue_session_id)
+
+          if Map.get(result, :session_created?, false),
+            do: Updates.broadcast_queue_updated(result.queue_id)
+
           {:ok, result}
 
         {:error, reason} ->
@@ -112,14 +116,7 @@ defmodule Kewkew.Queues.VisitorJoin do
     if expected_policy == :anonymous and queue.identity_policy != :anonymous,
       do: Repo.rollback(:name_required)
 
-    session =
-      Repo.one(
-        from session in QueueSession,
-          where: session.queue_id == ^queue.id and session.status in [:open, :paused],
-          order_by: [desc: session.opened_at],
-          limit: 1,
-          lock: "FOR UPDATE"
-      )
+    {session, session_created?} = signup_session(queue, signup_window)
 
     names = names_for_policy(queue.identity_policy, params)
 
@@ -150,8 +147,71 @@ defmodule Kewkew.Queues.VisitorJoin do
         Repo.rollback(:full)
 
       true ->
-        create_ticket_records(session, tracking_token, token_digest, names, browser_digest)
+        create_ticket_records(
+          session,
+          tracking_token,
+          token_digest,
+          names,
+          browser_digest,
+          session_created?
+        )
     end
+  end
+
+  defp signup_session(queue, %{state: :open, opens_at: opens_at}) do
+    active_session = lock_active_session(queue.id)
+
+    case active_session do
+      %{status: :open} = session ->
+        {session, false}
+
+      %{status: :paused} ->
+        Repo.rollback(:unavailable)
+
+      nil ->
+        case lock_scheduled_session(queue.id, opens_at) do
+          nil ->
+            session =
+              Ash.create!(
+                QueueSession,
+                %{queue_id: queue.id, status: :open, opened_at: opens_at},
+                action: :create,
+                domain: Queues,
+                authorize?: false
+              )
+
+            {session, true}
+
+          %{status: :open} = session ->
+            {session, false}
+
+          _closed_session ->
+            Repo.rollback(:unavailable)
+        end
+    end
+  end
+
+  defp signup_session(queue, _signup_window) do
+    session = lock_active_session(queue.id)
+    {session, false}
+  end
+
+  defp lock_active_session(queue_id) do
+    Repo.one(
+      from session in QueueSession,
+        where: session.queue_id == ^queue_id and session.status in [:open, :paused],
+        order_by: [desc: session.opened_at],
+        limit: 1,
+        lock: "FOR UPDATE"
+    )
+  end
+
+  defp lock_scheduled_session(queue_id, opens_at) do
+    Repo.one(
+      from session in QueueSession,
+        where: session.queue_id == ^queue_id and session.opened_at == ^opens_at,
+        lock: "FOR UPDATE"
+    )
   end
 
   defp queue_is_full?(%{max_active_tickets: nil}, _session), do: false
@@ -179,7 +239,14 @@ defmodule Kewkew.Queues.VisitorJoin do
     end
   end
 
-  defp create_ticket_records(session, tracking_token, token_digest, names, browser_digest) do
+  defp create_ticket_records(
+         session,
+         tracking_token,
+         token_digest,
+         names,
+         browser_digest,
+         session_created?
+       ) do
     ticket_number = session.next_ticket_number
     queue_sequence = session.next_queue_sequence
 
@@ -230,7 +297,12 @@ defmodule Kewkew.Queues.VisitorJoin do
       })
     end
 
-    %{ticket: ticket, tracking_token: tracking_token}
+    %{
+      ticket: ticket,
+      tracking_token: tracking_token,
+      queue_id: session.queue_id,
+      session_created?: session_created?
+    }
   end
 
   defp return_existing_browser_ticket(queue, session, digest) do

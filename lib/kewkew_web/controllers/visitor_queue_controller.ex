@@ -386,8 +386,18 @@ defmodule KewkewWeb.VisitorQueueController do
   defp queue_availability(session, count, queue, signup_window) do
     current = availability(session, count, queue.max_active_tickets)
 
-    case {current.state, signup_window && signup_window.state} do
-      {:open, :upcoming} ->
+    case {current.state, signup_window && signup_window.state, session} do
+      {:closed, :open, nil} ->
+        %{current | state: :open, label: "Open now", message: "You can join this queue now."}
+
+      {:closed, :open, %{status: :closed} = session} ->
+        if DateTime.compare(session.opened_at, signup_window.opens_at) == :eq do
+          current
+        else
+          %{current | state: :open, label: "Open now", message: "You can join this queue now."}
+        end
+
+      {:open, :upcoming, _session} ->
         %{
           current
           | state: :signup_upcoming,
@@ -395,7 +405,7 @@ defmodule KewkewWeb.VisitorQueueController do
             message: "Signup has not opened yet. Check back at the scheduled time."
         }
 
-      {_state, :closed} ->
+      {_state, :closed, _session} ->
         %{
           current
           | state: :signup_closed,
@@ -404,7 +414,7 @@ defmodule KewkewWeb.VisitorQueueController do
               "This signup window has closed. Please check back at the next scheduled signup time."
         }
 
-      {state, :unavailable} when state in [:open, :full] ->
+      {state, :unavailable, _session} when state in [:open, :full] ->
         %{
           current
           | state: :signup_closed,
