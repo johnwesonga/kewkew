@@ -45,7 +45,7 @@ defmodule KewkewWeb.Router do
   scope "/", KewkewWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    get "/", StaffController, :index
     get "/q/:slug", VisitorQueueController, :show
     get "/q/:slug/join", VisitorQueueController, :join
     post "/q/:slug/join", VisitorQueueController, :create_join
