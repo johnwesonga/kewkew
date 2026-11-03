@@ -4,15 +4,16 @@ defmodule Kewkew.Queues.StaffCallNext do
   import Ecto.Query
 
   alias Kewkew.Business.StaffAccess
-  alias Kewkew.Queues.{QueueSession, Ticket, TicketEvent, Updates}
+  alias Kewkew.Queues.{QueueSchedule, QueueSession, Ticket, TicketEvent, Updates}
   alias Kewkew.Repo
 
   @doc "Moves the earliest waiting ticket to called and records the staff transition atomically."
   def call_next(user_id, queue_id) when is_binary(user_id) and is_binary(queue_id) do
-    with %{queue: queue} <- StaffAccess.queue_for_user(user_id, queue_id),
+    with %{queue: queue, location: location} <- StaffAccess.queue_for_user(user_id, queue_id),
          {:ok, user_id} <- Ecto.UUID.cast(user_id) do
       case Repo.transaction(fn ->
              session = lock_latest_session(queue.id) || Repo.rollback(:no_session)
+             enforce_scheduled_start!(session, location.timezone)
              ticket = lock_next_waiting_ticket(session.id) || Repo.rollback(:no_waiting)
              now = DateTime.utc_now()
 
@@ -69,5 +70,23 @@ defmodule Kewkew.Queues.StaffCallNext do
         limit: 1,
         lock: "FOR UPDATE"
     )
+  end
+
+  defp enforce_scheduled_start!(%{scheduled_service_start_at: %DateTime{} = starts_at}, _timezone) do
+    if DateTime.compare(DateTime.utc_now(), starts_at) == :lt,
+      do: Repo.rollback(:service_not_started)
+  end
+
+  defp enforce_scheduled_start!(%{scheduled_service_start_at: nil} = session, timezone) do
+    schedule =
+      Repo.one(from schedule in QueueSchedule, where: schedule.queue_id == ^session.queue_id)
+
+    if schedule do
+      window =
+        Kewkew.Queues.SignupWindow.current_or_next(schedule, timezone, DateTime.utc_now())
+
+      if window && DateTime.compare(DateTime.utc_now(), window.service_starts_at) == :lt,
+        do: Repo.rollback(:service_not_started)
+    end
   end
 end

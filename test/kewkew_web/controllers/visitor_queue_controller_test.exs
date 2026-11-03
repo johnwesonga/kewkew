@@ -279,6 +279,45 @@ defmodule KewkewWeb.VisitorQueueControllerTest do
              "1"
   end
 
+  test "a scheduled occurrence cap counts terminal tickets and hides its value", %{conn: conn} do
+    queue = create_queue_fixture(session_status: nil)
+
+    signup_time =
+      Time.add(Time.truncate(DateTime.to_time(DateTime.utc_now()), :second), -60, :second)
+
+    weekday = Date.day_of_week(DateTime.to_date(DateTime.utc_now()))
+
+    schedule =
+      Ash.create!(
+        Kewkew.Queues.QueueSchedule,
+        %{
+          queue_id: queue.id,
+          weekdays: [weekday],
+          signup_open_time: signup_time,
+          service_start_time: Time.add(signup_time, 2 * 60 * 60, :second),
+          ticket_cap: 1
+        },
+        action: :create,
+        domain: Kewkew.Queues,
+        authorize?: false
+      )
+
+    assert schedule.ticket_cap == 1
+
+    assert {:ok, join} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, new_attempt_token())
+
+    Kewkew.Repo.update!(Ecto.Changeset.change(join.ticket, status: :completed))
+
+    assert {:error, :full} =
+             Kewkew.Queues.VisitorJoin.join_anonymous(queue.public_slug, new_attempt_token())
+
+    conn = get(conn, "/q/#{queue.public_slug}")
+    document = conn |> html_response(200) |> LazyHTML.from_document()
+    assert LazyHTML.query_by_id(document, "visitor-queue-status") |> LazyHTML.text() =~ "full"
+    refute LazyHTML.text(document) =~ "cap"
+  end
+
   test "successful visitor joins broadcast a minimal session update only after success" do
     queue = create_queue_fixture(max_active_tickets: 1)
     session = latest_session(queue)

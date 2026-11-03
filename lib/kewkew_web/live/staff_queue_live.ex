@@ -160,6 +160,14 @@ defmodule KewkewWeb.StaffQueueLive do
         {:noreply,
          Phoenix.LiveView.put_flash(socket, :error, "This queue has no active session.")}
 
+      {:error, :service_not_started} ->
+        {:noreply,
+         Phoenix.LiveView.put_flash(
+           socket,
+           :info,
+           "The scheduled service start has not been reached yet."
+         )}
+
       {:error, _reason} ->
         {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Unable to call the next visitor.")}
     end
@@ -425,6 +433,8 @@ defmodule KewkewWeb.StaffQueueLive do
       location: board.location,
       service: board.service,
       session: board.session,
+      schedule: board.schedule,
+      service_starts_at: staff_service_start(board),
       session_status: session_status(board.session),
       can_open_session?:
         (is_nil(board.session) or board.session.status == :closed) and board.queue.active? and
@@ -449,6 +459,23 @@ defmodule KewkewWeb.StaffQueueLive do
     |> stream(:tickets, board.tickets, reset: true)
     |> stream(:no_show_tickets, board.no_show_tickets, reset: true)
   end
+
+  defp staff_service_start(%{session: %{scheduled_service_start_at: %DateTime{} = starts_at}}),
+    do: starts_at
+
+  defp staff_service_start(%{
+         session: %{scheduled_service_start_at: nil},
+         schedule: schedule,
+         location: location
+       })
+       when not is_nil(schedule) do
+    case Kewkew.Queues.SignupWindow.current_or_next(schedule, location.timezone) do
+      %{service_starts_at: starts_at} -> starts_at
+      _ -> nil
+    end
+  end
+
+  defp staff_service_start(_board), do: nil
 
   defp session_status(nil), do: "No queue session"
   defp session_status(%{status: :open}), do: "Open"

@@ -16,6 +16,14 @@ defmodule KewkewWeb.VisitorQueueHTML do
     "#{weekdays} at #{time} (#{timezone})"
   end
 
+  def scheduled_service_time(_schedule, timezone, %{service_starts_at: starts_at}) do
+    local = DateTime.shift_zone!(starts_at, timezone)
+    "#{Calendar.strftime(local, "%A, %B %-d at %-I:%M %p")} (#{timezone})"
+  end
+
+  def scheduled_service_time(schedule, timezone, _signup_window),
+    do: scheduled_service_time(schedule, timezone)
+
   def signup_countdown_copy(%{state: :open, seconds_until_close: seconds}) do
     minutes = max(div(seconds + 59, 60), 1)
     "You have #{minutes} #{if minutes == 1, do: "minute", else: "minutes"} to sign up."

@@ -33,7 +33,7 @@ flowchart TD
 
 ## AQ-9: Schedule recurring queue signup and service start
 
-**Status** — Planned
+**Status** — Complete
 
 **User story** — As an organization administrator, I want to schedule recurring signup and service times for a queue so visitors can claim tickets before service begins and staff know when to start calling them.
 

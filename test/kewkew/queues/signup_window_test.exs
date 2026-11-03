@@ -8,11 +8,18 @@ defmodule Kewkew.Queues.SignupWindowTest do
   test "returns the remaining duration while signup is open" do
     schedule = schedule(~T[14:50:00], 30)
 
-    assert %{state: :open, seconds_until_close: 1200, opens_at: opens_at, closes_at: closes_at} =
+    assert %{
+             state: :open,
+             seconds_until_close: 1200,
+             opens_at: opens_at,
+             closes_at: closes_at,
+             service_starts_at: service_starts_at
+           } =
              SignupWindow.current_or_next(schedule, "Etc/UTC", @monday)
 
     assert DateTime.compare(opens_at, ~U[2026-11-02 14:50:00Z]) == :eq
     assert DateTime.compare(closes_at, ~U[2026-11-02 15:20:00Z]) == :eq
+    assert DateTime.compare(service_starts_at, ~U[2026-11-02 16:00:00Z]) == :eq
     assert SignupWindow.joinable?(%{state: :open})
   end
 
@@ -54,7 +61,11 @@ defmodule Kewkew.Queues.SignupWindowTest do
   end
 
   test "keeps queues without a duration unlimited" do
-    refute SignupWindow.current_or_next(%{signup_duration_minutes: nil}, "Etc/UTC", @monday)
+    schedule = schedule(~T[14:50:00], nil)
+
+    assert %{state: :open, closes_at: nil} =
+             SignupWindow.current_or_next(schedule, "Etc/UTC", @monday)
+
     assert SignupWindow.joinable?(nil)
   end
 
@@ -62,7 +73,8 @@ defmodule Kewkew.Queues.SignupWindowTest do
     %{
       weekdays: [1],
       signup_open_time: signup_open_time,
-      signup_duration_minutes: duration_minutes
+      signup_duration_minutes: duration_minutes,
+      service_start_time: Time.add(signup_open_time, 70 * 60, :second)
     }
   end
 end

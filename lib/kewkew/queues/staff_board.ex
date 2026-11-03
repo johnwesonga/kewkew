@@ -4,7 +4,7 @@ defmodule Kewkew.Queues.StaffBoard do
   import Ecto.Query
 
   alias Kewkew.Business.StaffAccess
-  alias Kewkew.Queues.{QueueSession, Ticket}
+  alias Kewkew.Queues.{QueueSchedule, QueueSession, Ticket}
   alias Kewkew.Repo
 
   @active_ticket_statuses [:waiting, :called, :serving]
@@ -23,6 +23,8 @@ defmodule Kewkew.Queues.StaffBoard do
               order_by: [desc: session.opened_at, desc: session.inserted_at],
               limit: 1
           )
+
+        schedule = Repo.one(from schedule in QueueSchedule, where: schedule.queue_id == ^queue.id)
 
         {tickets, no_show_tickets} =
           case session do
@@ -50,7 +52,12 @@ defmodule Kewkew.Queues.StaffBoard do
           end
 
         {:ok,
-         Map.merge(data, %{session: session, tickets: tickets, no_show_tickets: no_show_tickets})}
+         Map.merge(data, %{
+           session: session,
+           schedule: schedule,
+           tickets: tickets,
+           no_show_tickets: no_show_tickets
+         })}
     end
   end
 

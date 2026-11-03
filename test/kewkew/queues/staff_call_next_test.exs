@@ -4,6 +4,7 @@ defmodule Kewkew.Queues.StaffCallNextTest do
   require Ash.Query
 
   alias Kewkew.Queues.{StaffCallNext, Ticket, TicketEvent, Updates}
+  alias Kewkew.Repo
 
   test "calls the earliest waiting ticket and records its staff actor atomically" do
     %{user: user, queue: queue, session: session} = staff_queue_fixture()
@@ -49,6 +50,18 @@ defmodule Kewkew.Queues.StaffCallNextTest do
     %{user: unassigned_user} = staff_queue_fixture(assign_access?: false)
 
     assert {:error, :not_found} = StaffCallNext.call_next(unassigned_user.id, queue.id)
+  end
+
+  test "does not call the next visitor before a scheduled occurrence starts" do
+    %{user: user, queue: queue, session: session} = staff_queue_fixture()
+    ticket = create_ticket(session, 1, 1)
+    starts_at = DateTime.add(DateTime.utc_now(), 3600, :second)
+
+    Repo.update!(Ecto.Changeset.change(session, scheduled_service_start_at: starts_at))
+
+    assert {:error, :service_not_started} = StaffCallNext.call_next(user.id, queue.id)
+    assert Repo.get!(Ticket, ticket.id).status == :waiting
+    assert Ash.count!(TicketEvent, domain: Kewkew.Queues) == 0
   end
 
   defp staff_queue_fixture(opts \\ []) do

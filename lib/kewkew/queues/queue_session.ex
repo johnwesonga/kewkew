@@ -20,7 +20,7 @@ defmodule Kewkew.Queues.QueueSession do
 
     create :create do
       primary? true
-      accept [:status, :opened_at, :queue_id]
+      accept [:status, :opened_at, :scheduled_service_start_at, :ticket_cap, :queue_id]
     end
 
     read :latest_for_queue do
@@ -66,6 +66,15 @@ defmodule Kewkew.Queues.QueueSession do
 
     attribute :closed_at, :utc_datetime_usec do
       public? true
+    end
+
+    attribute :scheduled_service_start_at, :utc_datetime_usec do
+      public? true
+    end
+
+    attribute :ticket_cap, :integer do
+      constraints min: 1
+      public? false
     end
 
     create_timestamp :inserted_at

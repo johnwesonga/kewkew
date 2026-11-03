@@ -14,6 +14,19 @@
         <p class="staff-eyebrow">{@organization.name} · {@location.name} · {@service.name}</p>
         <h1 id="staff-queue-name">{@queue.name}</h1>
         <p class="staff-subhead">Monitor visitors as they move through this queue.</p>
+        <p :if={@service_starts_at} id="staff-scheduled-service-start" class="staff-subhead">
+          Scheduled service starts
+          <time
+            datetime={DateTime.to_iso8601(@service_starts_at)}
+            data-location-time
+            data-timezone={@location.timezone}
+          >
+            {DateTime.to_iso8601(@service_starts_at)}
+          </time>
+          <span :if={DateTime.compare(DateTime.utc_now(), @service_starts_at) == :lt}>
+            Staff may view the waiting line; calling is available at the scheduled start.
+          </span>
+        </p>
         <.link
           id="staff-queue-stats-link"
           navigate={~p"/staff/queues/#{@queue.id}/stats"}
@@ -83,7 +96,11 @@
           type="button"
           class="staff-primary-button"
           phx-click="call_next"
-          disabled={@waiting_count == 0}
+          disabled={
+            @waiting_count == 0 ||
+              (@service_starts_at &&
+                 DateTime.compare(DateTime.utc_now(), @service_starts_at) == :lt)
+          }
         >
           <.icon name="hero-megaphone" class="size-4" /> Call next visitor
         </button>

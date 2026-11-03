@@ -2,6 +2,7 @@ defmodule KewkewWeb.VisitorQueueController do
   @moduledoc "Public controller actions for visitor queue discovery, joining, and ticket tracking."
 
   use KewkewWeb, :controller
+  require Ash.Query
 
   @browser_credential_cookie "kewkew_browser"
   @browser_credential_max_age 365 * 24 * 60 * 60
@@ -191,6 +192,7 @@ defmodule KewkewWeb.VisitorQueueController do
         |> render(:ticket,
           page_title: "Ticket ##{ticket_data.ticket.ticket_number}",
           ticket: ticket_data.ticket,
+          session: ticket_data.session,
           queue: ticket_data.queue,
           location: ticket_data.location,
           service: ticket_data.service,
@@ -386,6 +388,16 @@ defmodule KewkewWeb.VisitorQueueController do
   defp queue_availability(session, count, queue, signup_window) do
     current = availability(session, count, queue.max_active_tickets)
 
+    current =
+      if scheduled_occurrence_full?(session),
+        do: %{
+          current
+          | state: :full,
+            label: "Queue is full",
+            message: "This queue is currently full. Please check again later."
+        },
+        else: current
+
     case {current.state, signup_window && signup_window.state, session} do
       {:closed, :open, nil} ->
         %{current | state: :open, label: "Open now", message: "You can join this queue now."}
@@ -426,6 +438,15 @@ defmodule KewkewWeb.VisitorQueueController do
         current
     end
   end
+
+  defp scheduled_occurrence_full?(%{ticket_cap: cap} = session) when is_integer(cap) do
+    Kewkew.Queues.Ticket
+    |> Ash.Query.filter(queue_session_id == ^session.id)
+    |> Ash.count!(domain: Kewkew.Queues)
+    |> Kernel.>=(cap)
+  end
+
+  defp scheduled_occurrence_full?(_session), do: false
 
   defp request_url(conn, path) do
     uri = URI.parse(Plug.Conn.request_url(conn))

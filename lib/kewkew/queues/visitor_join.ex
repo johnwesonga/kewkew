@@ -143,7 +143,7 @@ defmodule Kewkew.Queues.VisitorJoin do
         tracking_token = create_tracking_credential(browser_ticket)
         %{ticket: browser_ticket, tracking_token: tracking_token, existing?: true}
 
-      queue_is_full?(queue, session) ->
+      queue_is_full?(queue, session) or occurrence_is_full?(session) ->
         Repo.rollback(:full)
 
       true ->
@@ -158,7 +158,7 @@ defmodule Kewkew.Queues.VisitorJoin do
     end
   end
 
-  defp signup_session(queue, %{state: :open, opens_at: opens_at}) do
+  defp signup_session(queue, %{state: :open, opens_at: opens_at} = signup_window) do
     active_session = lock_active_session(queue.id)
 
     case active_session do
@@ -174,7 +174,13 @@ defmodule Kewkew.Queues.VisitorJoin do
             session =
               Ash.create!(
                 QueueSession,
-                %{queue_id: queue.id, status: :open, opened_at: opens_at},
+                %{
+                  queue_id: queue.id,
+                  status: :open,
+                  opened_at: opens_at,
+                  scheduled_service_start_at: signup_window.service_starts_at,
+                  ticket_cap: queue.schedule && queue.schedule.ticket_cap
+                },
                 action: :create,
                 domain: Queues,
                 authorize?: false
@@ -225,6 +231,17 @@ defmodule Kewkew.Queues.VisitorJoin do
       |> Ash.count!(domain: Queues)
 
     active_count >= queue.max_active_tickets
+  end
+
+  defp occurrence_is_full?(%{ticket_cap: nil}), do: false
+
+  defp occurrence_is_full?(session) do
+    issued_count =
+      Ticket
+      |> Ash.Query.filter(queue_session_id == ^session.id)
+      |> Ash.count!(domain: Queues)
+
+    issued_count >= session.ticket_cap
   end
 
   defp fetch_queue_for_join(slug) do

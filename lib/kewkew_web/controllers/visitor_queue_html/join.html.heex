@@ -16,7 +16,9 @@
     <p class="mt-2 text-sm text-[#5f6d64]">{@queue.name}</p>
 
     <p
-      :if={@signup_window && @signup_window.state in [:open, :upcoming]}
+      :if={
+        @signup_window && @signup_window.state in [:open, :upcoming] && @signup_window.closes_at
+      }
       id="visitor-signup-window"
       data-signup-window-state={@signup_window.state}
       data-opens-at={DateTime.to_unix(@signup_window.opens_at, :millisecond)}
@@ -38,7 +40,8 @@
       <p class="mt-1 text-sm font-bold text-[#33443b]">
         {KewkewWeb.VisitorQueueHTML.scheduled_service_time(
           @queue.schedule,
-          @location.timezone
+          @location.timezone,
+          @signup_window
         )}
       </p>
     </div>
