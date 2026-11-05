@@ -1,4 +1,6 @@
 import Config
+
+config :kewkew, :public_base_url, "http://localhost:4000"
 config :ash, policies: [show_policy_breakdowns?: true]
 
 # Let developers repeat visitor joins while retesting queues in the browser.

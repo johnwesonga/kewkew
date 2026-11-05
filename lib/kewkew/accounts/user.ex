@@ -22,6 +22,10 @@ defmodule Kewkew.Accounts.User do
         identity_field :email
         hash_provider AshAuthentication.BcryptProvider
         registration_enabled? false
+
+        resettable do
+          sender Kewkew.Accounts.PasswordResetSender
+        end
       end
     end
   end

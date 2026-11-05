@@ -60,11 +60,19 @@ defmodule KewkewWeb.Router do
       overrides: [KewkewWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
 
     sign_in_route auth_routes_prefix: "/auth",
+                  reset_path: "/password-reset",
                   on_mount: [{KewkewWeb.LiveUserAuth, :live_no_user}],
                   overrides: [
                     KewkewWeb.AuthOverrides,
                     AshAuthentication.Phoenix.Overrides.DaisyUI
                   ]
+
+    reset_route auth_routes_prefix: "/auth",
+                on_mount: [{KewkewWeb.LiveUserAuth, :live_no_user}],
+                overrides: [
+                  KewkewWeb.AuthOverrides,
+                  AshAuthentication.Phoenix.Overrides.DaisyUI
+                ]
   end
 
   scope "/staff", KewkewWeb do
