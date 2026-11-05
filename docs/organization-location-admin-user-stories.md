@@ -13,7 +13,7 @@ These stories cover the business setup and administration foundation. Queue conf
 - **Kewkew platform operator**: performs the initial trusted organization bootstrap. This is not a public self-signup flow.
 - A user's authenticated identity is separate from their membership in an organization. One user may have memberships in more than one organization.
 - Every read and write is authorized on the server and scoped to the current organization. Hiding a control in the UI does not enforce access.
-- Locations and services that have queues or operational history are deactivated rather than physically deleted. Deactivation preserves their queues, sessions, tickets, and events.
+- Locations are deactivated rather than physically deleted. Services may be deleted only when none of their queues has session history; otherwise they are deactivated. Deactivation preserves queues, sessions, tickets, and events.
 - Deactivating a location or service blocks new public joins and opening new sessions that depend on it. Authorized staff may continue to resolve tickets in an already-open session.
 - There are two initial staff roles: `admin` and `operator`. Operators must have one or more location assignments. Administrators have access to all locations in their organization.
 
@@ -141,6 +141,22 @@ These stories cover the business setup and administration foundation. Queue conf
 
 **Dependencies** — OLA-6; AQ-5 through AQ-8; visitor availability checks.
 
+### OLA-7A: Delete a service with no session history
+
+**Status** — Planned
+
+**User story** — As an organization administrator, I want to delete a service that has no active queue sessions or session history so I can remove unused setup without leaving broken queues or public links.
+
+**Acceptance criteria**
+
+- Only an active administrator of the service's organization can delete it; operators and users outside the organization cannot.
+- A service can be deleted only when none of its queues has any queue session, whether open, paused, or closed. Any session history blocks deletion, even if every session has ended and all tickets are terminal.
+- If deletion is allowed, the service and its queue configurations (including unused schedules and public links) are removed atomically. If any dependent record prevents deletion, no partial deletion occurs.
+- If a queue has session history, the service is retained and the administrator is told to deactivate it instead. Existing queue, session, ticket, and event history remains intact.
+- The authorization, history check, and deletion are atomic so a concurrent session open cannot race with deletion.
+
+**Dependencies** — OLA-6 and OLA-7; queue and session history; administrator-scoped service management.
+
 ### OLA-8: Invite a staff member and grant initial access
 
 **Status** — Complete
@@ -214,7 +230,7 @@ Keep each story independently reviewable. Do not bundle location or service mana
 ## Out of scope for this initial administration flow
 
 - Public self-service business registration or paid plan selection.
-- Physical deletion of locations, services, memberships, queues, or ticket history.
+- Physical deletion of locations, memberships, or ticket history; services with any queue session history.
 - Opening hours, holidays, addresses, maps, geofencing, and per-location branding.
 - Fine-grained permissions beyond administrator and location-assigned operator.
 - Bulk imports, organization mergers, or transferring locations between organizations.
