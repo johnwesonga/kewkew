@@ -9,7 +9,7 @@ defmodule Kewkew.Accounts.PasswordResetSender do
   @impl true
   def send(user, token, _opts) do
     base_url = Application.fetch_env!(:kewkew, :public_base_url)
-    link = base_url <> "/password-reset?" <> URI.encode_query(token: token)
+    link = base_url <> "/password-reset/#{URI.encode(token)}"
 
     Email.new()
     |> Email.to(to_string(user.email))
