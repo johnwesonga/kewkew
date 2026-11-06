@@ -3,7 +3,7 @@
   staff?={true}
   staff_email={@staff_email}
   can_setup?={true}
-  active_nav={:setup}
+  active_nav={:queue_setup}
 >
   <section id="staff-create-queue" class="staff-page">
     <header class="staff-page-heading">
@@ -22,24 +22,23 @@
         <div>
           <h2>Queue details</h2>
           <p>Visitors will use these settings each time a new session opens.</p>
+          <div
+            :if={@errors != []}
+            id="staff-create-queue-errors"
+            class="staff-form-errors"
+            role="alert"
+          >
+            <p>Review the queue details below:</p>
+            <ul>
+              <li :for={{_field, message} <- @errors}>{message}</li>
+            </ul>
+          </div>
+
+          <p :if={@services == []} id="staff-no-active-services" class="staff-form-note">
+            This location has no active services. Activate or create a service before setting up a queue.
+          </p>
         </div>
       </div>
-
-      <div
-        :if={@errors != []}
-        id="staff-create-queue-errors"
-        class="staff-form-errors"
-        role="alert"
-      >
-        <p>Review the queue details below:</p>
-        <ul>
-          <li :for={{_field, message} <- @errors}>{message}</li>
-        </ul>
-      </div>
-
-      <p :if={@services == []} id="staff-no-active-services" class="staff-form-note">
-        This location has no active services. Activate or create a service before setting up a queue.
-      </p>
 
       <.form
         :if={@services != []}
